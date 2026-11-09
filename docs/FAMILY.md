@@ -6,8 +6,8 @@ Setting: Birmingham, West Midlands. The family lives in a 3-bed semi-detached ho
 |---|---|---|---|---|
 | Dad | Tom | 36 | Software engineer, works from home, £70–80k | Main earner. Office hours at home. |
 | Mum | Sarah | 34 | Stay-at-home mum | Runs the home, childcare, bills. |
-| Child | Oliver | 7 | Primary school (Year 2/3) | School run, homework, friends. |
-| Toddler | Ruby | 2 | Home (nursery later) | Needs constant care. Can't cook or be left alone. |
+| Child | Oliver | 5 | Primary school (Reception or Year 1, depends on birthday) | School run, homework, friends. |
+| Toddler | Ruby | 1 | Home | Needs constant care. Can't walk far, cook or be left alone. |
 
 Personalities: fully random, rolled from the seed at the start.
 

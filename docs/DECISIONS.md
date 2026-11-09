@@ -15,7 +15,7 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-09 — The family lives in an urban UK city. Dad is a WFH software engineer on £70-80k. Mum is a stay-at-home mum. They have a mortgage and average UK bills. — User choice.
 - 2026-11-09 — The world must feel life-like and keep evolving over time (ongoing events, ageing, economy, seasons), not reset or repeat. — User choice.
 - 2026-11-09 — City: Birmingham (West Midlands). — User choice; the city is a single setting, so it's easy to change later.
-- 2026-11-09 — Family names kept as proposed: Dad Tom, Mum Sarah, Oliver (7), Ruby (2). — User choice.
+- 2026-11-09 — Family names kept as proposed: Dad Tom, Mum Sarah, Oliver (5), Ruby (1). — User choice; ages changed from 7 and 2 the same day.
 - 2026-11-09 — Personalities are fully random at the start (rolled from the seed). — User choice.
 - 2026-11-09 — Money uses realistic starting levels for a family who bought the house within the last couple of years (see FAMILY.md). — User choice. Sources for the figures are listed in FAMILY.md.
 
