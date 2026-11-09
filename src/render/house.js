@@ -2,6 +2,7 @@
 // flat shading bands, a limited colour palette and dark outlines.
 import { project, facesViewer, shade } from './camera.js';
 import { OUTLINE, BACKGROUND, nearestColour } from './palette.js';
+import { fillPolygon, outlinePolygon } from './raster.js';
 
 // The five faces of a box that can ever face the viewer (the underside is never seen).
 function boxFaces(b) {
@@ -29,8 +30,6 @@ function pixelColour(hex, factor) {
   return [ch(16, WARM[0]), ch(8, WARM[1]), ch(0, WARM[2])];
 }
 
-const rgb = ([r, g, b]) => `rgb(${r}, ${g}, ${b})`;
-
 // Snap every pixel of a w x h canvas to the palette, so no blurry in-between colours remain.
 export function snapFrame(ctx, w, h) {
   const img = ctx.getImageData(0, 0, w, h);
@@ -46,9 +45,16 @@ export function snapFrame(ctx, w, h) {
 }
 
 // Draw the whole scene. width and height are in the units of ctx (pixels of its canvas).
+// Every face is filled and outlined pixel by pixel, so edges are never blurred.
 export function drawScene(ctx, boxes, cam, width, height) {
-  ctx.fillStyle = rgb(BACKGROUND);
-  ctx.fillRect(0, 0, width, height);
+  const buf = ctx.createImageData(width, height);
+  const bg = BACKGROUND;
+  for (let i = 0; i < buf.data.length; i += 4) {
+    buf.data[i] = bg[0];
+    buf.data[i + 1] = bg[1];
+    buf.data[i + 2] = bg[2];
+    buf.data[i + 3] = 255;
+  }
 
   const faces = [];
   for (const b of boxes) {
@@ -56,22 +62,15 @@ export function drawScene(ctx, boxes, cam, width, height) {
       if (!facesViewer(cam, face.n)) continue;
       const pts = face.corners.map(([x, y, z]) => project(cam, width, height, x, y, z));
       const depth = pts.reduce((sum, p) => sum + p.depth, 0) / pts.length;
-      faces.push({ pts, depth, fill: rgb(pixelColour(b.colour, shade(cam, face.n))) });
+      faces.push({ pts, depth, fill: pixelColour(b.colour, shade(cam, face.n)) });
     }
   }
 
   // Far faces first, so near faces paint over them.
   faces.sort((a, b) => b.depth - a.depth);
-
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = rgb(OUTLINE);
-  ctx.lineJoin = 'miter';
   for (const f of faces) {
-    ctx.beginPath();
-    f.pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy)));
-    ctx.closePath();
-    ctx.fillStyle = f.fill;
-    ctx.fill();
-    ctx.stroke();
+    fillPolygon(buf, f.pts.map((p) => ({ sx: p.sx, sy: p.sy })), f.fill);
+    outlinePolygon(buf, f.pts.map((p) => ({ sx: p.sx, sy: p.sy })), OUTLINE);
   }
+  ctx.putImageData(buf, 0, 0);
 }

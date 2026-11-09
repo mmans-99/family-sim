@@ -6,6 +6,7 @@
 Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
 
 ## Last session (2026-11-09)
+- Step 1 of the hand-drawn plan is done: `src/render/raster.js` draws every face and outline pixel by pixel with no anti-aliasing, so edges are hard. Tests: 30 passing. The shapes are still plain blocks; sprites are step 3.
 - Restyled the house view to a cosy Kairosoft-style look (warm cream backdrop, dark brown outlines, wood-tile floors, warm window light, two lamps). Snapped all furniture, doors, windows and stairs to whole grid tiles, and made key pieces chunkier. Files: `data/house.json`, `src/render/scene.js`, `src/render/house.js`, `src/render/palette.js`. Tests: 26 passing.
 - This is a close approximation, not a copy of hand-drawn sprites. Sprites are still the open option.
 - Fixed the blurry house view: every pixel is now snapped to a fixed palette (`src/render/palette.js`, `snapFrame` in `house.js`), and art pixels are whole screen-pixel blocks. The backdrop is navy and outlines dark violet, closer to the user's reference. Tests: 26 passing.
@@ -23,9 +24,9 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. Get feedback on the house view on the phone (cutaway, camera, text size).
-2. Phase 1 continued: the first adult walks between rooms (pathfinding on the floor plan), with needs that drop over time and simple actions (eat, sleep, use the toilet).
-3. Status panel: tap a person to see their needs and mood. Watch only, no controls over them.
+1. Hand-drawn sprites, step 3 of the approved plan: sofa, bed and table, each drawn in four angles, replacing the blocks. Check each on a screenshot.
+2. Get feedback on the house view on the phone (cutaway, camera, text size).
+3. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
 
 ## Known issues
 - A GitHub Pages build (run #1, from 18:26 on 9 Nov) is still listed as queued. It's harmless: a later build succeeded.

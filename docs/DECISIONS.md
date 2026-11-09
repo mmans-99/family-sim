@@ -23,9 +23,11 @@ Newest at the bottom. Format: date — decision — why.
 
 - 2026-11-09 — House view looks crisp, not blurry: every pixel is snapped to a fixed 10-level-per-channel palette, and each art pixel is a whole number of screen pixels. Backdrop is navy and outlines dark violet, to match the reference style the user shared. — The blurry look came from anti-aliased edges mixing in-between colours. Procedural 3D can't match hand-drawn art exactly; see OPEN for sprites.
 - 2026-11-09 — Look changed to a Kairosoft-style cosy house: warm cream backdrop, dark brown outlines, wood-tile floors drawn one tile at a time, and warm window light and lamps. Furniture and rooms snap to whole grid tiles (doors one tile wide, windows one tile wide, stairs one tile per step). Key pieces are chunkier (chibi proportions). — User asked for this after rejecting the blue, blurry look. Whole tiles stop items looking awkwardly placed.
+- 2026-11-09 — Hand-drawn pixel art is the goal. Art is drawn by hand as pixel sprites (I draw it, not a bought pack). Camera: free rotation. Each sprite needs drawing in four angles. — User chose this after rejecting the blurry 3D look. Trade-off: about four times the art of a fixed view; edges step while turning.
+- 2026-11-09 — Drawing is pixel-exact (`raster.js`): no anti-aliasing, so every edge is on whole pixels. — The blur came from anti-aliased canvas fills.
 
 ## OPEN
 - Bill figures not yet covered: broadband, phone, car or transport, food and general spending. Need checked sources before they go in `data/`.
 - Whether to add a car (affects bills and commuting).
 - Always-on option. Not possible on GitHub Pages alone (it only serves files). If wanted later: a free cloud service or the Chromebox. Catch-up mode covers the main need for now.
-- Hand-drawn pixel sprites instead of pixel-styled 3D shapes. The user's reference image (a hand-drawn isometric shop in pixel art) is closer to this. Later, if the current look isn't enough.
+- Hand-drawn pixel sprites, four angles each, replacing the block shapes one item at a time. Plan: sofa, bed and table first. Approved 2026-11-09.
