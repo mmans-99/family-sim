@@ -3,20 +3,18 @@
 import { viewY } from './camera.js';
 
 export const COLOURS = {
-  wall: '#f1ead9',
-  brick: '#a65d3f',
-  door: '#7a4e2d',
-  glass: '#bfe6f2',
-  fence: '#8b6b43',
-  lawn: '#9cc37a',
-  floor: '#efe6d2',
+  wall: '#f6e7c8',
+  brick: '#b8653c',
+  door: '#8a5530',
+  glass: '#ffe59a',   // warm window light
+  fence: '#9a7048',
+  lawn: '#8fc06a',
+  floor: '#e0b98a',   // wood
 };
 
 const DOOR_HEIGHT = 2.1;
 const DOOR_THICKNESS = 0.06;
 const FENCE_THICKNESS = 0.1;
-const WINDOW_SPACING = 1.5;  // one window per 1.5 grid squares of outside wall
-const WINDOW_WIDTH = 0.8;
 const WINDOW_SILL = 0.9;     // height of the window bottom above the floor
 const WINDOW_HEIGHT = 1.1;
 const WINDOW_EXTRA_THICKNESS = 0.05; // windows stand a little proud of the wall
@@ -94,17 +92,22 @@ function isOuter(e, b) {
     : e.at === b.minX || e.at === b.maxX;
 }
 
+// One window per two grid tiles of outside wall, each exactly one tile wide.
 function addWindows(boxes, e, piece, z0, thickness) {
-  const length = piece.to - piece.from;
-  const count = Math.floor(length / WINDOW_SPACING);
   const mid = segMid(e.axis, e.at, piece.from, piece.to);
-  for (let i = 0; i < count; i++) {
-    const c = piece.from + ((i + 0.5) * length) / count;
+  for (let p = piece.from + 1; p + 1 <= piece.to - 0.5; p += 2) {
     boxes.push(tag(wallBox(
-      e.axis, e.at, c - WINDOW_WIDTH / 2, c + WINDOW_WIDTH / 2,
+      e.axis, e.at, p, p + 1,
       z0 + WINDOW_SILL, WINDOW_HEIGHT, thickness + WINDOW_EXTRA_THICKNESS, COLOURS.glass,
     ), 'window', mid));
   }
+}
+
+// A slightly darker copy of a #rrggbb colour, for alternate floor tiles.
+function darker(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (s) => Math.round(((n >> s) & 255) * f);
+  return `#${[16, 8, 0].map((s) => ch(s).toString(16).padStart(2, '0')).join('')}`;
 }
 
 function addFloor(boxes, house, floor, lift) {
@@ -115,13 +118,16 @@ function addFloor(boxes, house, floor, lift) {
   const doors = floor.doors ?? [];
   const inside = floor.rooms.filter((r) => !r.outside);
 
-  // Floor slabs. The garden's slab is the lawn.
+  // Floor tiles: one box per grid square, alternate squares a shade darker.
   for (const room of floor.rooms) {
     if (room.noSlab) continue;
-    boxes.push(tag(box(
-      room.x, room.y, z0 - slab, room.x + room.w, room.y + room.h, z0,
-      room.outside ? COLOURS.lawn : (room.floor ?? COLOURS.floor),
-    ), 'slab'));
+    const base = room.outside ? COLOURS.lawn : (room.floor ?? COLOURS.floor);
+    for (let cx = room.x; cx < room.x + room.w; cx++) {
+      for (let cy = room.y; cy < room.y + room.h; cy++) {
+        const colour = (cx + cy) % 2 ? darker(base, 0.95) : base;
+        boxes.push(tag(box(cx, cy, z0 - slab, cx + 1, cy + 1, z0, colour), 'slab'));
+      }
+    }
   }
 
   // Walls: each shared edge once, with doorways cut out.

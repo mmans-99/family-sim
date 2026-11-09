@@ -6,6 +6,8 @@
 Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
 
 ## Last session (2026-11-09)
+- Restyled the house view to a cosy Kairosoft-style look (warm cream backdrop, dark brown outlines, wood-tile floors, warm window light, two lamps). Snapped all furniture, doors, windows and stairs to whole grid tiles, and made key pieces chunkier. Files: `data/house.json`, `src/render/scene.js`, `src/render/house.js`, `src/render/palette.js`. Tests: 26 passing.
+- This is a close approximation, not a copy of hand-drawn sprites. Sprites are still the open option.
 - Fixed the blurry house view: every pixel is now snapped to a fixed palette (`src/render/palette.js`, `snapFrame` in `house.js`), and art pixels are whole screen-pixel blocks. The backdrop is navy and outlines dark violet, closer to the user's reference. Tests: 26 passing.
 - Set the children's ages (Oliver 5, Ruby 1), the Birmingham setting, random personalities, and the mortgage and bill figures in `docs/FAMILY.md`.
 - Clocks: 1 game hour = 6.25 real minutes, a game day = 2.5 real hours, a game year = 70 real hours. Speeds: pause, 1x, 2x, 4x.
@@ -29,6 +31,7 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 - A GitHub Pages build (run #1, from 18:26 on 9 Nov) is still listed as queued. It's harmless: a later build succeeded.
 - Rooms have no name labels in the 3D view yet.
 - No roof. Walls are plain. The look is rendered from 3D shapes, so it's close to, not the same as, the hand-drawn reference. Colours are a first pass and may need tuning on a phone.
+- Floor tiles and furniture colours are busy in places. Needs a visual pass after the user's feedback.
 - The house view has only been tested in a desktop-sized preview, not on a real phone.
 
 ## Notes for next session

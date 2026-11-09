@@ -2,11 +2,11 @@
 // entry here, so there are no blurry in-between colours at edges.
 // Pure logic (no DOM), so it can be tested without a browser.
 
-// Each colour channel can only be one of these six levels.
-const LEVELS = [0, 36, 73, 109, 146, 182, 219, 255];
+// Each colour channel can only be one of these ten levels.
+const LEVELS = [0, 28, 57, 85, 113, 142, 170, 198, 227, 255];
 
-export const OUTLINE = [29, 22, 51];       // dark violet edge lines
-export const BACKGROUND = [62, 69, 119];   // navy backdrop behind the house
+export const OUTLINE = [59, 36, 22];       // dark brown edge lines
+export const BACKGROUND = [246, 222, 186]; // warm cream backdrop behind the house
 
 const PALETTE = [];
 for (const r of LEVELS) for (const g of LEVELS) for (const b of LEVELS) PALETTE.push([r, g, b]);

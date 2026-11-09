@@ -16,15 +16,17 @@ function boxFaces(b) {
 }
 
 // Four flat brightness steps, from darkest side to brightest top.
-const BRIGHTNESS = [0.55, 0.7, 0.85, 1];
+const BRIGHTNESS = [0.7, 0.82, 0.92, 1];
+// Warm light: a little less blue and green everywhere, so the house feels cosy.
+const WARM = [1, 0.95, 0.84];
 
 // Multiply a #rrggbb colour by a light factor (0.6 to 1.0), in flat steps.
 function pixelColour(hex, factor) {
   const n = parseInt(hex.slice(1), 16);
   const t = Math.min(1, Math.max(0, (factor - 0.6) / 0.4));
   const band = BRIGHTNESS[Math.round(t * (BRIGHTNESS.length - 1))];
-  const ch = (shift) => Math.round(((n >> shift) & 255) * band);
-  return [ch(16), ch(8), ch(0)];
+  const ch = (shift, warm) => Math.round(((n >> shift) & 255) * band * warm);
+  return [ch(16, WARM[0]), ch(8, WARM[1]), ch(0, WARM[2])];
 }
 
 const rgb = ([r, g, b]) => `rgb(${r}, ${g}, ${b})`;

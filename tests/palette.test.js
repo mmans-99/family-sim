@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { nearestColour, OUTLINE, BACKGROUND } from '../src/render/palette.js';
 
-const LEVELS = [0, 36, 73, 109, 146, 182, 219, 255];
+const LEVELS = [0, 28, 57, 85, 113, 142, 170, 198, 227, 255];
 
 test('palette entries map to themselves', () => {
   assert.deepEqual(nearestColour(...OUTLINE), OUTLINE);
