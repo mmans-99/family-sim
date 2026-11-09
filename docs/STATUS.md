@@ -16,12 +16,13 @@ Phase 1 — first slice built: clock with speed controls, house floor plan. No p
 - Not yet checked in a browser. The drawing and buttons have not been looked at on screen.
 
 ## Next step
-1. Open the app locally (see below) and check that the clock, speed buttons and floor buttons work.
+1. Done: the app is live on GitHub Pages and the clock, speed and floor buttons load on a phone.
 2. Add doors and an isometric pixel-art view of the house.
 3. Add the first adult who walks around and has needs.
 
 ## Known bugs / problems
-- Browser preview not yet tested. Expect small layout issues on phone screens.
+- Pages builds can queue behind GitHub incidents. A fresh push starts a new build.
+- Phone layout checked by the user (loads OK); fine-tuning still to do.
 
 ## How to run it locally
 ES modules don't load from `file://`, so run a small server from the project folder:

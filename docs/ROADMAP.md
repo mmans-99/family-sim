@@ -6,7 +6,7 @@ Each phase ends with something you can open and watch.
 - [x] Vision, architecture, simulation design docs
 - [x] Settle open decisions (see DECISIONS.md)
 - [x] Create GitHub repo (`mmans-99/family-sim`, public)
-- [ ] GitHub Pages hosting turned on
+- [x] GitHub Pages hosting turned on (live at mmans-99.github.io/family-sim)
 
 ## Phase 1 — The house and one person
 - [x] Clock with speed controls (pause / 1x / 2x / 4x)
