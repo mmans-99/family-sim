@@ -4,12 +4,13 @@ Each phase ends with something you can open and watch.
 
 ## Phase 0 — Planning
 - [x] Vision, architecture, simulation design docs
-- [ ] Settle open decisions
-- [ ] Create GitHub repo + Pages hosting
+- [x] Settle open decisions (see DECISIONS.md)
+- [x] Create GitHub repo (`mmans-99/family-sim`, public)
+- [ ] GitHub Pages hosting turned on
 
 ## Phase 1 — The house and one person
-- [ ] Clock with speed controls (pause / 1x / 3x / 10x)
-- [ ] House map: rooms, walls, doors (from `data/house.json`)
+- [x] Clock with speed controls (pause / 1x / 2x / 4x)
+- [~] House map: rooms done (top-down placeholder, `data/house.json`). Doors, walls detail and isometric pixel art still to do.
 - [ ] Objects: bed, fridge, cooker, toilet, shower, sofa, TV, table
 - [ ] One adult who walks (pathfinding) and uses objects
 - [ ] Needs that drop over time; picks actions to fix them
@@ -31,7 +32,7 @@ Each phase ends with something you can open and watch.
 
 ## Phase 4 — The world
 - [ ] Weather + seasons (affects mood, plans, bills)
-- [ ] Economy: prices, pay rises, job loss, recession/boom
+- [ ] Economy: prices, pay rises, job loss, recession/boom, energy price cap changes
 - [ ] Random life events (illness, promotion, broken boiler, birthday)
 - [ ] "While you were away" catch-up summary
 
