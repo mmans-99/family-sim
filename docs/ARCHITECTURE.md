@@ -1,70 +1,50 @@
 # Architecture
 
-(Assumes the recommended browser platform; revise if DECISIONS changes it.)
+(Browser app, hosted on GitHub Pages. See DECISIONS.md.)
 
-## The big idea: three separate layers
-1. **Simulation** (`src/sim/`) — pure logic. Knows people, needs, time, money.
-   Never draws anything. Can run 1000x speed to catch up.
-2. **Renderer** (`src/render/`) — reads the sim state and draws the house and
-   people. Smoothly animates between sim steps.
-3. **UI** (`src/ui/`) — clock, speed buttons, commentary feed, person panels,
-   diary, family tree.
+## The big idea: separate layers
+1. **Simulation** (`src/sim/`) — pure logic. Knows time, and later people, needs, money. Never draws anything. Can run fast to catch up.
+2. **Scene and rendering** (`src/render/`) — turns the house data into 3D boxes, projects them with the camera, and draws them in a pixel-art style.
+3. **UI** (`src/ui/`, `src/main.js`) — buttons, camera controls, clock display. Later: commentary feed, person panels, diary, family tree.
 
-## Planned folder layout
+## Folder layout (as built)
 ```
 simulator/
 ├── CLAUDE.md               working rules
-├── docs/                   the memory of the project (see CLAUDE.md)
-├── index.html              entry point
-├── manifest.json, sw.js    offline PWA
-├── data/                   content, not code
-│   ├── house.json          rooms, walls, doors, object positions
-│   ├── objects.json        what each object offers (fridge → eat, +hunger)
-│   ├── actions.json        actions, durations, need effects, who can do them
-│   ├── jobs.json           jobs, hours, pay
-│   ├── traits.json         personality traits and their effects
-│   ├── events.json         random life events
-│   └── text/               commentary sentence templates
-├── assets/                 sprites, tiles, sounds
+├── index.html              the page (loads src/main.js as a module)
+├── package.json            `npm test` runs node --test
+├── .nojekyll               tells GitHub Pages to skip Jekyll (plain static site)
+├── docs/                   project memory (see CLAUDE.md)
+├── data/
+│   └── house.json          house: floors, rooms, doorways, fences, furniture
 ├── src/
-│   ├── main.js             starts everything
+│   ├── main.js             starts everything: clock, views, camera, drawing loop
 │   ├── sim/
-│   │   ├── clock.js        game time, speeds, day/year
-│   │   ├── rng.js          seeded random
-│   │   ├── world.js        top-level state + tick()
-│   │   ├── person.js       a person's data
-│   │   ├── needs.js        need decay and effects
-│   │   ├── brain.js        decides what to do next (utility AI)
-│   │   ├── emotions.js     mood and emotions
-│   │   ├── relationships.js
-│   │   ├── schedule.js     work/school/nursery
-│   │   ├── offsite.js      what happens outside the house
-│   │   ├── life.js         ageing, life stages, births, deaths
-│   │   ├── economy.js      money, prices, bills
-│   │   ├── weather.js      weather and seasons
-│   │   ├── events.js       random events
-│   │   └── log.js          event log → commentary + diaries
+│   │   ├── clock.js        game time, speeds, day/season/year reading
+│   │   └── rng.js          seeded random numbers (mulberry32)
 │   ├── render/
-│   │   ├── house.js        draws the map
-│   │   ├── sprites.js      draws people, animations
-│   │   ├── path.js         pathfinding (A*) on the grid
-│   │   └── camera.js       pan/zoom for phone
-│   ├── ui/
-│   │   ├── controls.js     clock and speed
-│   │   ├── feed.js         running commentary
-│   │   ├── panel.js        tap a person → needs, mood, thoughts
-│   │   └── tree.js         family tree, diaries
-│   └── save/
-│       └── store.js        save/load (IndexedDB), version upgrades
-└── tests/                  sim tests (run headless)
+│   │   ├── scene.js        house data -> list of solid boxes; cutaway rule
+│   │   ├── camera.js       orbit, zoom, pan maths; projection; face visibility; shading
+│   │   └── house.js        draws the boxes (sorted faces, pixel-art colours and outlines)
+│   └── ui/
+│       └── camera-controls.js   drag, two-finger, pinch, wheel; button actions
+└── tests/
+    ├── sim.test.js         clock and random numbers
+    └── render.test.js      cutaway, scene contents, camera maths
 ```
+Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.js`, `offsite.js`, `economy.js`, `weather.js`, `events.js`, `life.js`, `log.js`, and `src/save/store.js`. Also `manifest.json` and `sw.js` for offline use.
 
 ## The tick
-- Sim steps in fixed game-minutes (1 tick = 1 game minute).
-- Each tick: clock → weather/economy (rarely) → each person: needs decay,
-  continue current action or ask brain for a new one → log events.
-- Renderer draws at screen frame rate, interpolating positions.
+- The sim steps in fixed game minutes (1 tick = 1 game minute at 1x).
+- Each tick: clock → (later) weather and economy → each person: needs decay, continue current action or ask brain for a new one → log events.
+- The drawing loop runs every screen frame and reads the latest state.
 
-## Save format
+## The house view
+- `scene.js` builds solid boxes for the chosen floors. Walls are built from room edges, with doorways cut out. Outside walls are brick and get windows. Furniture comes straight from `data/house.json`.
+- `applyCutaway` runs every frame. Walls nearer the camera than the middle of the house drop to a low ledge, and their doors and windows are removed.
+- `house.js` projects each visible face, sorts far to near, and fills it with a snapped colour and a dark outline.
+- `main.js` draws into a small canvas (one art pixel = 3 screen pixels), then scales it up with hard edges. Pan is scaled to match.
+
+## Save format (planned)
 One JSON object: `{ version, seed, time, world, people[], log[] }`.
 `version` lets future sessions upgrade old saves instead of breaking them.

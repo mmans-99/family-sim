@@ -3,32 +3,37 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 — first slice built: clock with speed controls, house floor plan. No people yet.
+Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
 
-## Last session
-- 2026-11-09: Checked bill figures (energy cap £1,723/yr, Birmingham Band D £2,363, Severn Trent water £587/yr) and recorded them in `docs/FAMILY.md`.
-- Built the first Phase 1 slice:
-  - `src/sim/clock.js`: game clock (1 game minute = 6.25 real seconds at 1x; day 2.5 h; year 70 h). Pure logic.
-  - `src/sim/rng.js`: seeded random numbers.
-  - `data/house.json`: 3-bed semi floor plan (ground, first, garden), top-down.
-  - `src/render/house.js` and `src/main.js`: draws the floor, clock and speed buttons.
-  - `tests/sim.test.js`: 12 tests, all passing (`npm test`).
-- Not yet checked in a browser. The drawing and buttons have not been looked at on screen.
+## Last session (2026-11-09)
+- Set the children's ages (Oliver 5, Ruby 1), the Birmingham setting, random personalities, and the mortgage and bill figures in `docs/FAMILY.md`.
+- Clocks: 1 game hour = 6.25 real minutes, a game day = 2.5 real hours, a game year = 70 real hours. Speeds: pause, 1x, 2x, 4x.
+- Built and pushed:
+  - `src/sim/clock.js` and `src/sim/rng.js`: game clock and seeded random numbers. Pure logic.
+  - `data/house.json`: the house (ground floor, first floor, garden), doorways, fence and all furniture.
+  - `src/render/scene.js`: turns the data into solid boxes, with walls, doors, windows, stairs and furniture. Also the cutaway rule.
+  - `src/render/camera.js`: free camera maths (turn, tilt, zoom, pan).
+  - `src/render/house.js`: draws the scene with painter's-order sorting and a pixel-art look (low-resolution draw, limited palette, flat shading bands, dark outlines).
+  - `src/ui/camera-controls.js`: drag, two-finger, pinch, wheel and button controls.
+  - `src/main.js` and `index.html`: the page, clock, view buttons, cutaway toggle and camera buttons.
+  - Tests: 23 passing (`npm test`).
+- The app is live on GitHub Pages at https://mmans-99.github.io/family-sim/. The user has confirmed it loads.
+- The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. Done: the app is live on GitHub Pages and the clock, speed and floor buttons load on a phone.
-2. Add doors and an isometric pixel-art view of the house.
-3. Add the first adult who walks around and has needs.
+1. Get feedback on the house view on the phone (cutaway, camera, text size).
+2. Phase 1 continued: the first adult walks between rooms (pathfinding on the floor plan), with needs that drop over time and simple actions (eat, sleep, use the toilet).
+3. Status panel: tap a person to see their needs and mood. Watch only, no controls over them.
 
-## Known bugs / problems
-- Pages builds can queue behind GitHub incidents. A fresh push starts a new build.
-- Phone layout checked by the user (loads OK); fine-tuning still to do.
-
-## How to run it locally
-ES modules don't load from `file://`, so run a small server from the project folder:
-`python3 -m http.server 8000`, then open http://localhost:8000 in the browser.
+## Known issues
+- A GitHub Pages build (run #1, from 18:26 on 9 Nov) is still listed as queued. It's harmless: a later build succeeded.
+- Rooms have no name labels in the 3D view yet.
+- No roof. Walls are plain, and the pixel-art look is rendered from 3D shapes, not hand-drawn sprites.
+- The house view has only been tested in a desktop-sized preview, not on a real phone.
 
 ## Notes for next session
 - GitHub Pages only serves files. It can't run the sim while the browser is closed; catch-up on open covers this.
 - The always-on option needs a server (cloud or Chromebox). Parked for later.
+- Pages builds can queue behind GitHub incidents. A fresh push starts a new build.
+- To run locally: `python3 -m http.server 8000`, then open http://localhost:8000.
 - Bill sources and the mortgage assumption are in `docs/FAMILY.md`.

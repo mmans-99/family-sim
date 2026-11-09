@@ -10,15 +10,19 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-09 — Time (first pass): 1 game hour = 2.5 real minutes, game year ≈ 28 real hours. — Superseded the same day by the entry below.
 - 2026-11-09 — Time (current): both clocks run 2.5x slower than the first pass. 1 game hour = 6.25 real minutes. 1 game day = 2.5 real hours. 1 game year (28 game days) = 70 real hours (about 3 real days). Speeds: pause, 1x, 2x, 4x, and skip. — User asked for both clocks to be 2.5x longer so nothing is missed.
 - 2026-11-09 — When the app is closed, the sim is not paused. On reopen, it catches up all missed time from the saved state and shows a "while you were away" summary. — User wants the family to keep living without a server.
-- 2026-11-09 — Art style: isometric pixel art. House is a UK 3-bed semi-detached with two floors plus a back garden. — User choice.
-- 2026-11-09 — Player control: watch only. No controls over the family. The player can view status, health, mood, money and history, but cannot change anything. — User choice.
+- 2026-11-09 — Art style: pixel art. The house is a UK 3-bed semi-detached with two floors plus a back garden. — User choice.
+- 2026-11-09 — Player control of the family: watch only. The player can view status, health, mood, money and history, but cannot change anything. — User choice.
+- 2026-11-09 — Camera control is for viewing only. The player can turn, tilt, pan and zoom the house, but cannot change what the family does. — Keeps the watch-only rule while letting the player look around.
+- 2026-11-09 — House view: a 3D dollhouse (walls, doorways, windows, stairs, furniture) rendered in a pixel-art style, with a cutaway on by default that lowers the walls nearest the camera. — User asked for the house to look like a real house with innards, plus pixel art and a cutaway.
 - 2026-11-09 — The family lives in an urban UK city. Dad is a WFH software engineer on £70-80k. Mum is a stay-at-home mum. They have a mortgage and average UK bills. — User choice.
 - 2026-11-09 — The world must feel life-like and keep evolving over time (ongoing events, ageing, economy, seasons), not reset or repeat. — User choice.
 - 2026-11-09 — City: Birmingham (West Midlands). — User choice; the city is a single setting, so it's easy to change later.
-- 2026-11-09 — Family names kept as proposed: Dad Tom, Mum Sarah, Oliver (5), Ruby (1). — User choice; ages changed from 7 and 2 the same day.
+- 2026-11-09 — Family names: Dad Tom, Mum Sarah, Oliver (5), Ruby (1). — User choice. Ages changed from 7 and 2 the same day.
 - 2026-11-09 — Personalities are fully random at the start (rolled from the seed). — User choice.
 - 2026-11-09 — Money uses realistic starting levels for a family who bought the house within the last couple of years (see FAMILY.md). — User choice. Sources for the figures are listed in FAMILY.md.
 
 ## OPEN
-- Exact bill and council tax figures for Birmingham. Set them in `data/` once checked against current official figures.
+- Bill figures not yet covered: broadband, phone, car or transport, food and general spending. Need checked sources before they go in `data/`.
+- Whether to add a car (affects bills and commuting).
 - Always-on option. Not possible on GitHub Pages alone (it only serves files). If wanted later: a free cloud service or the Chromebox. Catch-up mode covers the main need for now.
+- Hand-drawn pixel sprites instead of pixel-styled 3D shapes. Later, if the current look isn't enough.
