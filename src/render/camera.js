@@ -2,11 +2,11 @@
 // Units: 1 unit = one grid square of the house. z is height above the ground.
 
 export const TARGET = { x: 6, y: 5, z: 1.2 }; // middle of the house
-// Fixed isometric tilt (about 35 degrees, the classic isometric angle). The house is
-// turned in 90-degree steps, so sprites only need drawing in four directions.
-export const ISO_PITCH = Math.atan(1 / Math.SQRT2);
+// Fixed isometric tilt: 30 degrees, which gives the 2:1 tile shape pixel-art sprites use.
+// The house is turned in 90-degree steps, so sprites only need drawing in four directions.
+export const ISO_PITCH = Math.asin(0.5);
 export const QUARTER_TURN = Math.PI / 2;
-const UNITS_ACROSS_AT_ZOOM_1 = 16;
+export const UNITS_ACROSS_AT_ZOOM_1 = 16;
 
 function normalise([x, y, z]) {
   const len = Math.hypot(x, y, z);

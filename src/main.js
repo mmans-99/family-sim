@@ -2,13 +2,14 @@
 import { createClock, advance, setSpeed, readClock, SPEEDS } from './sim/clock.js';
 import { buildScene, applyCutaway } from './render/scene.js';
 import { drawScene, snapFrame } from './render/house.js';
+import { loadPack } from './render/pack.js';
 import { createCamera } from './render/camera.js';
 import { BACKGROUND } from './render/palette.js';
 import { attachCameraControls, nudge } from './ui/camera-controls.js';
 
 // One art pixel is a whole number of screen pixels, so every pixel is the same size.
 // The art grid is about 190 art pixels across, whatever the screen width.
-const ART_PIXELS_ACROSS = 190;
+const ART_PIXELS_ACROSS = 181; // one grid tile is 16 art pixels across, as in the sprite pack
 const MIN_PIXEL = 3;
 
 const clock = createClock();
@@ -41,6 +42,7 @@ const CAMERA_BUTTONS = [
 ];
 
 let house = null;
+let pack = null; // sprites, if the pack is present
 let scene = [];
 let cutaway = true;
 let lastMinute = -1;
@@ -123,7 +125,7 @@ function drawFrame() {
   }
   // Pan is in screen pixels, so scale it down to art pixels.
   const artCam = { ...cam, panX: cam.panX / pixel, panY: cam.panY / pixel };
-  drawScene(lowCtx, applyCutaway(scene, cam, cutaway), artCam, lw, lh);
+  drawScene(lowCtx, applyCutaway(scene, cam, cutaway), artCam, lw, lh, pack);
   snapFrame(lowCtx, lw, lh); // remove blurry in-between colours before scaling up
 
   ctx.imageSmoothingEnabled = false;
@@ -147,6 +149,7 @@ function frame(now) {
 async function start() {
   const res = await fetch('data/house.json');
   house = await res.json();
+  pack = await loadPack();
   buildControls();
   attachCameraControls(canvas, cam);
   resizeCanvas();

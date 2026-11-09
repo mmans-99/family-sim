@@ -27,6 +27,8 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-09 — Drawing is pixel-exact (`raster.js`): no anti-aliasing, so every edge is on whole pixels. — The blur came from anti-aliased canvas fills.
 - 2026-11-09 — Camera changed for a trial: fixed isometric tilt (about 35 degrees). The house turns in 90-degree steps with the turn buttons. One-finger drag pans. Pinch and wheel zoom. Look-down and level buttons removed. — Hand-drawn sprites from packs are drawn in fixed isometric angles, so free rotation is not practical. User asked to see the house at 90 degrees. Supersedes the free-rotation choice above if the trial is kept.
 - 2026-11-09 — Art source for the hand-drawn look: the free Pixel Isometric Modern Interior pack by Cryovex (free version). Licence: commercial use and editing allowed, credit appreciated, no redistribution. User chose it. Not yet downloaded, because the build sandbox cannot reach itch.io.
+- 2026-11-09 — Camera tilt changed to 30 degrees (2:1 tiles), to match the sprite pack. — The pack's floor tiles are 16 by 8 pixels.
+- 2026-11-09 — Pack images are kept in `assets/cryovex/`, which git ignores, so they never reach the public repo. The game falls back to blocks without them. — Cryovex licence forbids redistribution. Revisit when the repo is private.
 
 ## OPEN
 - Cryovex pack licence: the page says the asset may not be redistributed, even if modified. The house is on a public GitHub Pages site, so the pack's image files cannot go in the repo as they are. Options: get written permission from Cryovex, use our own art, or find a pack that allows redistribution (CC0 or CC BY). Decide before any pack art is committed.

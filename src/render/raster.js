@@ -72,3 +72,31 @@ export function outlinePolygon(buf, pts, rgb) {
     drawLine(buf, p.sx, p.sy, q.sx, q.sy, rgb);
   }
 }
+
+// Copy a sprite (RGBA, from pack.js) onto the buffer, unscaled or scaled by a
+// whole-number-ish factor using nearest-neighbour sampling. (ax, ay) is the pixel
+// at the middle of the sprite's bottom edge, where it stands on the ground.
+// Transparent sprite pixels are skipped, so the scene behind shows through.
+export function blitSprite(buf, sprite, ax, ay, scale = 1) {
+  const w = Math.max(1, Math.round(sprite.width * scale));
+  const h = Math.max(1, Math.round(sprite.height * scale));
+  const left = Math.round(ax - w / 2);
+  const top = Math.round(ay) - h;
+  for (let dy = 0; dy < h; dy++) {
+    const py = top + dy;
+    if (py < 0 || py >= buf.height) continue;
+    const sy = Math.min(sprite.height - 1, Math.floor((dy * sprite.height) / h));
+    for (let dx = 0; dx < w; dx++) {
+      const px = left + dx;
+      if (px < 0 || px >= buf.width) continue;
+      const sx = Math.min(sprite.width - 1, Math.floor((dx * sprite.width) / w));
+      const si = (sy * sprite.width + sx) * 4;
+      if (sprite.data[si + 3] === 0) continue;
+      const di = (py * buf.width + px) * 4;
+      buf.data[di] = sprite.data[si];
+      buf.data[di + 1] = sprite.data[si + 1];
+      buf.data[di + 2] = sprite.data[si + 2];
+      buf.data[di + 3] = 255;
+    }
+  }
+}

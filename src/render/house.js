@@ -1,8 +1,13 @@
 // Draws the 3D house scene onto a 2D canvas, in a pixel-art style:
 // flat shading bands, a limited colour palette and dark outlines.
-import { project, facesViewer, shade } from './camera.js';
+import { project, facesViewer, shade, UNITS_ACROSS_AT_ZOOM_1 } from './camera.js';
 import { OUTLINE, BACKGROUND, nearestColour } from './palette.js';
-import { fillPolygon, outlinePolygon } from './raster.js';
+import { fillPolygon, outlinePolygon, blitSprite } from './raster.js';
+import { NAME_TO_SPRITE, PACK_HIDDEN, FLOOR_ANCHOR } from './pack.js';
+
+// Sprites are drawn for a tile 16 pixels across. This many screen pixels is one grid unit at that size.
+const PACK_UNIT_PX = 11.3;
+const FLOOR_TILE_SIZE = 16;
 
 // The five faces of a box that can ever face the viewer (the underside is never seen).
 function boxFaces(b) {
@@ -45,10 +50,13 @@ export function snapFrame(ctx, w, h) {
 }
 
 // Draw the whole scene. width and height are in the units of ctx (pixels of its canvas).
-// Every face is filled and outlined pixel by pixel, so edges are never blurred.
-export function drawScene(ctx, boxes, cam, width, height) {
+// If a sprite pack is loaded (pack.js), floor tiles and furniture are drawn as sprites.
+// Everything is drawn pixel by pixel, so edges are never blurred.
+export function drawScene(ctx, boxes, cam, width, height, pack = null) {
   const buf = ctx.createImageData(width, height);
   const bg = BACKGROUND;
+  // Sprites scale with the zoom, relative to their drawn size.
+  const scale = ((width / UNITS_ACROSS_AT_ZOOM_1) * cam.zoomMul) / PACK_UNIT_PX;
   for (let i = 0; i < buf.data.length; i += 4) {
     buf.data[i] = bg[0];
     buf.data[i + 1] = bg[1];
@@ -56,21 +64,35 @@ export function drawScene(ctx, boxes, cam, width, height) {
     buf.data[i + 3] = 255;
   }
 
-  const faces = [];
+  const items = []; // far things first, so near things paint over them
   for (const b of boxes) {
+    if (pack && b.tile && pack.tiles[b.tile]) {
+      // A floor tile: a sprite on the top of its grid square. Floors sit under everything.
+      const p = project(cam, width, height, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, b.z1);
+      items.push({ depth: p.depth + 1000, draw: () => blitSprite(buf, pack.tiles[b.tile], p.sx, p.sy + (FLOOR_TILE_SIZE - FLOOR_ANCHOR.y), scale) });
+      continue;
+    }
+    if (pack && PACK_HIDDEN.has(b.name)) continue;
+    if (pack && b.name && NAME_TO_SPRITE[b.name] && pack.sprites[NAME_TO_SPRITE[b.name]]) {
+      // A furniture piece: a sprite standing on the middle of its footprint.
+      const sprite = pack.sprites[NAME_TO_SPRITE[b.name]];
+      const p = project(cam, width, height, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, b.z0);
+      items.push({ depth: p.depth, draw: () => blitSprite(buf, sprite, p.sx, p.sy, scale) });
+      continue;
+    }
     for (const face of boxFaces(b)) {
       if (!facesViewer(cam, face.n)) continue;
       const pts = face.corners.map(([x, y, z]) => project(cam, width, height, x, y, z));
       const depth = pts.reduce((sum, p) => sum + p.depth, 0) / pts.length;
-      faces.push({ pts, depth, fill: pixelColour(b.colour, shade(cam, face.n)) });
+      const fill = pixelColour(b.colour, shade(cam, face.n));
+      items.push({ depth, draw: () => {
+        fillPolygon(buf, pts.map((p) => ({ sx: p.sx, sy: p.sy })), fill);
+        outlinePolygon(buf, pts.map((p) => ({ sx: p.sx, sy: p.sy })), OUTLINE);
+      } });
     }
   }
 
-  // Far faces first, so near faces paint over them.
-  faces.sort((a, b) => b.depth - a.depth);
-  for (const f of faces) {
-    fillPolygon(buf, f.pts.map((p) => ({ sx: p.sx, sy: p.sy })), f.fill);
-    outlinePolygon(buf, f.pts.map((p) => ({ sx: p.sx, sy: p.sy })), OUTLINE);
-  }
+  items.sort((a, b) => b.depth - a.depth);
+  for (const it of items) it.draw();
   ctx.putImageData(buf, 0, 0);
 }

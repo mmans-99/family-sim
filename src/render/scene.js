@@ -1,6 +1,7 @@
 // Turns data/house.json into a flat list of solid boxes for the 3D view.
 // Pure logic (no drawing), so it can be tested without a browser.
 import { viewY } from './camera.js';
+import { ROOM_TILE } from './pack.js';
 
 export const COLOURS = {
   wall: '#f6e7c8',
@@ -125,7 +126,9 @@ function addFloor(boxes, house, floor, lift) {
     for (let cx = room.x; cx < room.x + room.w; cx++) {
       for (let cy = room.y; cy < room.y + room.h; cy++) {
         const colour = (cx + cy) % 2 ? darker(base, 0.95) : base;
-        boxes.push(tag(box(cx, cy, z0 - slab, cx + 1, cy + 1, z0, colour), 'slab'));
+        const tile = box(cx, cy, z0 - slab, cx + 1, cy + 1, z0, colour);
+        tile.tile = ROOM_TILE[room.id] ?? null; // pack floor tile, if this room has one
+        boxes.push(tag(tile, 'slab'));
       }
     }
   }
@@ -162,7 +165,9 @@ function addFloor(boxes, house, floor, lift) {
   }
   for (const item of (house.furniture ?? []).filter((i) => i.floor === floor.id)) {
     const bz = z0 + (item.z ?? 0);
-    boxes.push(tag(box(item.x, item.y, bz, item.x + item.w, item.y + item.d, bz + item.h, item.colour), 'furniture'));
+    const piece = box(item.x, item.y, bz, item.x + item.w, item.y + item.d, bz + item.h, item.colour);
+    piece.name = item.name; // lets the pack swap the block for a sprite
+    boxes.push(tag(piece, 'furniture'));
   }
 }
 

@@ -6,6 +6,8 @@
 Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
 
 ## Last session (2026-11-09)
+- Wired the Cryovex pack into the renderer (`src/render/pack.js`, `blitSprite` in `raster.js`, pack-aware `drawScene`). Images stay in `assets/cryovex/`, which git ignores. Camera tilt set to 30 degrees for the 2:1 tiles. Tests: 30 passing.
+- Known problems from the last screenshot: floor tiles are not visible (needs checking), the wardrobe sprite is too big for its footprint, walls are still blocks, and sprites don't turn with the 90-degree camera yet (they only show the default angle).
 - Received the Cryovex free pack (4 sheets: furniture, floor, wall, decoration). Found the licence forbids redistribution, so nothing from it is committed. Built a local prototype outside the repo to test the look.
 - Trial camera: fixed isometric tilt, the house turns in 90-degree steps, one-finger drag pans. Look-down and level buttons removed. Tests: 30 passing.
 - Found free pixel-art packs. Chose the Cryovex free isometric interior pack (commercial use and editing allowed, credit appreciated, no redistribution). The build sandbox can't reach itch.io (403), so the user must download the zip and attach it. Not in the repo yet.
@@ -27,8 +29,8 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. Decide the art licence (see DECISIONS OPEN): the Cryovex terms forbid redistribution, so its files can't go in the public repo yet. Until then, the prototype lives outside the repo (not committed).
-2. Prototype so far: ground floor with pack floor tiles and sofa, bed and table sprites, in a 2:1 isometric view. Walls and most furniture are still blocks. The pack is 16 px tiles, so the camera tilt and art scale need matching before the real build.
+1. Fix the known problems above: floor tiles, sprite sizes, then walls.
+2. Once the user makes the repo private, commit the pack images (the licence forbids public redistribution). Note: GitHub Pages won't publish a private repo on a free account.
 2. Get feedback on the house view on the phone (cutaway, camera, text size).
 3. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
 
