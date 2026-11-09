@@ -1,5 +1,6 @@
 // Turns data/house.json into a flat list of solid boxes for the 3D view.
 // Pure logic (no drawing), so it can be tested without a browser.
+import { viewY } from './camera.js';
 
 export const COLOURS = {
   wall: '#f1ead9',
@@ -20,8 +21,23 @@ const WINDOW_SILL = 0.9;     // height of the window bottom above the floor
 const WINDOW_HEIGHT = 1.1;
 const WINDOW_EXTRA_THICKNESS = 0.05; // windows stand a little proud of the wall
 
+// Cutaway: walls nearer the camera than this (in view units) are lowered to a ledge.
+export const CUT_HEIGHT = 0.3;
+export const CUT_NEAR = -0.5;
+
 export function box(x0, y0, z0, x1, y1, z1, colour) {
-  return { x0, y0, z0, x1, y1, z1, colour };
+  return { x0, y0, z0, x1, y1, z1, colour, kind: 'other', mid: null };
+}
+
+function tag(b, kind, mid = null) {
+  b.kind = kind;
+  b.mid = mid;
+  return b;
+}
+
+// Midpoint of a straight wall segment, in grid units.
+function segMid(axis, at, from, to) {
+  return axis === 'h' ? { x: (from + to) / 2, y: at } : { x: at, y: (from + to) / 2 };
 }
 
 // A straight wall centred on the line at `at`.
@@ -81,12 +97,13 @@ function isOuter(e, b) {
 function addWindows(boxes, e, piece, z0, thickness) {
   const length = piece.to - piece.from;
   const count = Math.floor(length / WINDOW_SPACING);
+  const mid = segMid(e.axis, e.at, piece.from, piece.to);
   for (let i = 0; i < count; i++) {
     const c = piece.from + ((i + 0.5) * length) / count;
-    boxes.push(wallBox(
+    boxes.push(tag(wallBox(
       e.axis, e.at, c - WINDOW_WIDTH / 2, c + WINDOW_WIDTH / 2,
       z0 + WINDOW_SILL, WINDOW_HEIGHT, thickness + WINDOW_EXTRA_THICKNESS, COLOURS.glass,
-    ));
+    ), 'window', mid));
   }
 }
 
@@ -101,10 +118,10 @@ function addFloor(boxes, house, floor, lift) {
   // Floor slabs. The garden's slab is the lawn.
   for (const room of floor.rooms) {
     if (room.noSlab) continue;
-    boxes.push(box(
+    boxes.push(tag(box(
       room.x, room.y, z0 - slab, room.x + room.w, room.y + room.h, z0,
       room.outside ? COLOURS.lawn : (room.floor ?? COLOURS.floor),
-    ));
+    ), 'slab'));
   }
 
   // Walls: each shared edge once, with doorways cut out.
@@ -118,10 +135,10 @@ function addFloor(boxes, house, floor, lift) {
         seen.add(key);
         const outer = isOuter(e, b);
         for (const piece of cutOpenings(e, doors)) {
-          boxes.push(wallBox(
+          boxes.push(tag(wallBox(
             e.axis, e.at, piece.from, piece.to, z0, height, thickness,
             outer ? COLOURS.brick : COLOURS.wall,
-          ));
+          ), 'wall', segMid(e.axis, e.at, piece.from, piece.to)));
           if (outer) addWindows(boxes, e, piece, z0, thickness);
         }
       }
@@ -129,14 +146,17 @@ function addFloor(boxes, house, floor, lift) {
   }
 
   for (const d of doors) {
-    boxes.push(wallBox(d.axis, d.at, d.from, d.to, z0, DOOR_HEIGHT, DOOR_THICKNESS, COLOURS.door));
+    boxes.push(tag(
+      wallBox(d.axis, d.at, d.from, d.to, z0, DOOR_HEIGHT, DOOR_THICKNESS, COLOURS.door),
+      'door', segMid(d.axis, d.at, d.from, d.to),
+    ));
   }
   for (const f of floor.fence ?? []) {
-    boxes.push(wallBox(f.axis, f.at, f.from, f.to, z0, height, FENCE_THICKNESS, COLOURS.fence));
+    boxes.push(tag(wallBox(f.axis, f.at, f.from, f.to, z0, height, FENCE_THICKNESS, COLOURS.fence), 'fence'));
   }
   for (const item of (house.furniture ?? []).filter((i) => i.floor === floor.id)) {
     const bz = z0 + (item.z ?? 0);
-    boxes.push(box(item.x, item.y, bz, item.x + item.w, item.y + item.d, bz + item.h, item.colour));
+    boxes.push(tag(box(item.x, item.y, bz, item.x + item.w, item.y + item.d, bz + item.h, item.colour), 'furniture'));
   }
 }
 
@@ -148,4 +168,22 @@ export function buildScene(house, floorIds, lift = {}) {
     if (floorIds.includes(floor.id)) addFloor(boxes, house, floor, lift[floor.id] ?? 0);
   }
   return boxes;
+}
+
+// Cutaway: walls between the camera and the middle of the house are lowered to a ledge,
+// and the doors and windows in them are removed. Everything else is left alone.
+export function applyCutaway(boxes, cam, enabled) {
+  if (!enabled) return boxes;
+  const out = [];
+  for (const b of boxes) {
+    const isCuttable = b.kind === 'wall' || b.kind === 'door' || b.kind === 'window';
+    const near = isCuttable && b.mid && viewY(cam, b.mid.x, b.mid.y) < CUT_NEAR;
+    if (!near) {
+      out.push(b);
+    } else if (b.kind === 'wall') {
+      out.push({ ...b, z1: Math.min(b.z1, b.z0 + CUT_HEIGHT) });
+    }
+    // doors and windows on a near wall are dropped with it
+  }
+  return out;
 }

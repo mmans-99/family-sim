@@ -60,3 +60,32 @@ test('with no turn, points further along +y have a bigger depth', () => {
   const far = project(cam, 400, 300, 6, 9, 0);
   assert.ok(far.depth > near.depth);
 });
+
+import { applyCutaway, CUT_HEIGHT } from '../src/render/scene.js';
+
+test('cutaway lowers the walls nearest the camera and keeps the far ones', () => {
+  const cam = createCamera();
+  cam.yaw = 0;
+  const cut = applyCutaway(buildScene(house, ['ground']), cam, true);
+  const front = cut.filter((b) => b.kind === 'wall' && Math.abs((b.y0 + b.y1) / 2) < 0.1);
+  const back = cut.filter((b) => b.kind === 'wall' && Math.abs((b.y0 + b.y1) / 2 - 6) < 0.1);
+  assert.ok(front.length > 0 && back.length > 0);
+  assert.ok(front.every((b) => Math.abs(b.z1 - b.z0 - CUT_HEIGHT) < 1e-9));
+  assert.ok(back.every((b) => Math.abs(b.z1 - b.z0 - 2.6) < 1e-9));
+});
+
+test('cutaway also removes the doors and windows on the near walls', () => {
+  const cam = createCamera();
+  cam.yaw = 0;
+  const cut = applyCutaway(buildScene(house, ['ground']), cam, true);
+  const nearOpenings = cut.filter(
+    (b) => (b.kind === 'door' || b.kind === 'window') && Math.abs(b.mid.y) < 0.1,
+  );
+  assert.equal(nearOpenings.length, 0);
+});
+
+test('turning cutaway off leaves the scene untouched', () => {
+  const cam = createCamera();
+  const boxes = buildScene(house, ['ground']);
+  assert.equal(applyCutaway(boxes, cam, false), boxes);
+});

@@ -1,9 +1,11 @@
 // Entry point: clock, 3D house view and camera controls, wired together.
 import { createClock, advance, setSpeed, readClock, SPEEDS } from './sim/clock.js';
-import { buildScene } from './render/scene.js';
+import { buildScene, applyCutaway } from './render/scene.js';
 import { drawScene } from './render/house.js';
 import { createCamera } from './render/camera.js';
 import { attachCameraControls, nudge } from './ui/camera-controls.js';
+
+const PIXEL = 3; // one art pixel = this many screen pixels
 
 const clock = createClock();
 const cam = createCamera();
@@ -13,6 +15,10 @@ const clockEl = document.getElementById('clock');
 const speedBar = document.getElementById('speeds');
 const viewBar = document.getElementById('views');
 const cameraBar = document.getElementById('camera');
+
+// The scene is drawn small, then scaled up with hard edges for the pixel-art look.
+const lowres = document.createElement('canvas');
+const lowCtx = lowres.getContext('2d');
 
 const SPEED_LABELS = { 0: 'Pause', 1: '1x', 2: '2x', 4: '4x' };
 // "lift" pulls a floor up so the house can be seen in layers ("exploded" view).
@@ -34,6 +40,7 @@ const CAMERA_BUTTONS = [
 
 let house = null;
 let scene = [];
+let cutaway = true;
 let lastMinute = -1;
 let lastTime = performance.now();
 
@@ -59,6 +66,14 @@ function buildControls() {
     btn.addEventListener('click', () => showView(id));
     viewBar.appendChild(btn);
   }
+  const cutBtn = document.createElement('button');
+  cutBtn.dataset.cutaway = 'true';
+  cutBtn.textContent = 'Cutaway walls';
+  cutBtn.addEventListener('click', () => {
+    cutaway = !cutaway;
+    cutBtn.setAttribute('aria-pressed', String(cutaway));
+  });
+  cameraBar.appendChild(cutBtn);
   for (const [action, label] of CAMERA_BUTTONS) {
     const btn = document.createElement('button');
     btn.textContent = label;
@@ -77,10 +92,12 @@ function resizeCanvas() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-function updateSpeedButtons() {
+function updateButtons() {
   for (const btn of speedBar.children) {
     btn.setAttribute('aria-pressed', String(Number(btn.dataset.speed) === clock.speed));
   }
+  const cutBtn = cameraBar.querySelector('[data-cutaway]');
+  if (cutBtn) cutBtn.setAttribute('aria-pressed', String(cutaway));
 }
 
 function renderClock() {
@@ -92,6 +109,23 @@ function renderClock() {
     (t.speed === 0 ? 'paused' : SPEED_LABELS[t.speed]);
 }
 
+function drawFrame() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  const lw = Math.ceil(w / PIXEL);
+  const lh = Math.ceil(h / PIXEL);
+  if (lowres.width !== lw || lowres.height !== lh) {
+    lowres.width = lw;
+    lowres.height = lh;
+  }
+  // Pan is in screen pixels, so scale it down to art pixels.
+  const artCam = { ...cam, panX: cam.panX / PIXEL, panY: cam.panY / PIXEL };
+  drawScene(lowCtx, applyCutaway(scene, cam, cutaway), artCam, lw, lh);
+
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(lowres, 0, 0, w, h);
+}
+
 function frame(now) {
   advance(clock, now - lastTime);
   lastTime = now;
@@ -99,8 +133,8 @@ function frame(now) {
     lastMinute = clock.totalMinutes;
     renderClock();
   }
-  drawScene(ctx, scene, cam, canvas.clientWidth, canvas.clientHeight);
-  updateSpeedButtons();
+  drawFrame();
+  updateButtons();
   requestAnimationFrame(frame);
 }
 

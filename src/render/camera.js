@@ -23,6 +23,12 @@ function rotateDir(cam, [x, y, z]) {
   return [x * c - y * s, x * s + y * c, z];
 }
 
+// How far a ground position is from the middle of the house, towards the viewer
+// (negative = nearer the viewer than the middle).
+export function viewY(cam, x, y) {
+  return rotateDir(cam, [x - TARGET.x, y - TARGET.y, 0])[1];
+}
+
 // World point -> screen pixels. depth: bigger means further from the viewer.
 export function project(cam, width, height, x, y, z) {
   const [xr, yr] = rotateDir(cam, [x - TARGET.x, y - TARGET.y, 0]);
