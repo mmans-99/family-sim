@@ -10,7 +10,7 @@ Each phase ends with something you can open and watch.
 
 ## Phase 1 — The house and one person
 - [x] Clock with speed controls (pause / 1x / 2x / 4x)
-- [~] House map: isometric view of 3 floors and garden from `data/house.json`. Doors and pixel-art detail still to do.
+- [~] House map: 3D dollhouse of 3 floors and garden with walls, doors, windows, stairs, furniture and free camera (turn, tilt, pan, zoom). Cutaway option and pixel-art style still to do.
 - [ ] Objects: bed, fridge, cooker, toilet, shower, sofa, TV, table
 - [ ] One adult who walks (pathfinding) and uses objects
 - [ ] Needs that drop over time; picks actions to fix them

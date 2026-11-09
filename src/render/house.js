@@ -1,80 +1,55 @@
-// Draws one floor of the house as an isometric (diamond-grid) view, from data/house.json.
-// The projection maths is exported on its own so it can be tested without a browser.
-const COLOURS = {
-  room: '#efe6d2',
-  outside: '#a9d18e',
-  wall: '#4a4036',
-  label: '#2b2620',
-  shadow: 'rgba(43, 38, 32, 0.25)',
-  background: '#f7f4ee',
-};
-const PAD = 16;     // pixels of margin around the drawing
-const DEPTH = 6;    // pixels the shadow sits below each room
+// Draws the 3D house scene onto a 2D canvas.
+// Every visible face of every box is projected, sorted back-to-front, then filled.
+import { project, facesViewer, shade } from './camera.js';
 
-// Grid cell (x, y) -> screen pixels relative to the grid origin.
-// tile = width of one grid cell on screen.
-export function isoPoint(x, y, tile) {
-  return { x: (x - y) * (tile / 2), y: (x + y) * (tile / 4) };
-}
+const BACKGROUND = '#f7f4ee';
+const EDGE = 'rgba(40, 30, 20, 0.28)';
 
-function roomCorners(room) {
+// The five faces of a box that can ever face the viewer (the underside is never seen).
+function boxFaces(b) {
+  const { x0, y0, z0, x1, y1, z1 } = b;
   return [
-    [room.x, room.y],
-    [room.x + room.w, room.y],
-    [room.x + room.w, room.y + room.h],
-    [room.x, room.y + room.h],
+    { n: [0, 0, 1], corners: [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]] },
+    { n: [0, -1, 0], corners: [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]] },
+    { n: [0, 1, 0], corners: [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]] },
+    { n: [-1, 0, 0], corners: [[x0, y0, z0], [x0, y1, z0], [x0, y1, z1], [x0, y0, z1]] },
+    { n: [1, 0, 0], corners: [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]] },
   ];
 }
 
-export function drawFloor(ctx, floor, tile) {
-  const { width: W, height: H, rooms } = floor;
+// Multiply a #rrggbb colour by a brightness factor.
+function shadeColour(hex, factor) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (shift) => Math.round(((n >> shift) & 255) * factor);
+  return `rgb(${ch(16)}, ${ch(8)}, ${ch(0)})`;
+}
 
-  // Size the canvas to fit the whole diamond, then shift so nothing is cut off.
-  ctx.canvas.width = Math.ceil(((W + H) * tile) / 2 + PAD * 2);
-  ctx.canvas.height = Math.ceil(((W + H) * tile) / 4 + PAD * 2);
-  const originX = (H * tile) / 2 + PAD;
-  const originY = PAD;
-  const toScreen = (x, y) => {
-    const p = isoPoint(x, y, tile);
-    return { x: p.x + originX, y: p.y + originY };
-  };
-  const polygon = (room, dy = 0) => {
-    ctx.beginPath();
-    roomCorners(room).forEach(([x, y], i) => {
-      const p = toScreen(x, y);
-      if (i === 0) ctx.moveTo(p.x, p.y + dy);
-      else ctx.lineTo(p.x, p.y + dy);
-    });
-    ctx.closePath();
-  };
+// Draw the whole scene. width and height are in CSS pixels.
+export function drawScene(ctx, boxes, cam, width, height) {
+  ctx.fillStyle = BACKGROUND;
+  ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = COLOURS.background;
-  ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-  // Shadows first, so every room's shadow sits underneath all the room tops.
-  ctx.fillStyle = COLOURS.shadow;
-  for (const room of rooms) {
-    polygon(room, DEPTH);
-    ctx.fill();
+  const faces = [];
+  for (const b of boxes) {
+    for (const face of boxFaces(b)) {
+      if (!facesViewer(cam, face.n)) continue;
+      const pts = face.corners.map(([x, y, z]) => project(cam, width, height, x, y, z));
+      const depth = pts.reduce((sum, p) => sum + p.depth, 0) / pts.length;
+      faces.push({ pts, depth, fill: shadeColour(b.colour, shade(cam, face.n)) });
+    }
   }
 
-  // Room tops.
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = COLOURS.wall;
-  for (const room of rooms) {
-    ctx.fillStyle = room.outside ? COLOURS.outside : COLOURS.room;
-    polygon(room);
+  // Far faces first, so near faces paint over them.
+  faces.sort((a, b) => b.depth - a.depth);
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = EDGE;
+  for (const f of faces) {
+    ctx.beginPath();
+    f.pts.forEach((p, i) => (i === 0 ? ctx.moveTo(p.sx, p.sy) : ctx.lineTo(p.sx, p.sy)));
+    ctx.closePath();
+    ctx.fillStyle = f.fill;
     ctx.fill();
     ctx.stroke();
-  }
-
-  // Room names at the centre of each room.
-  ctx.fillStyle = COLOURS.label;
-  ctx.font = `${Math.max(10, Math.round(tile * 0.3))}px system-ui, sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  for (const room of rooms) {
-    const c = toScreen(room.x + room.w / 2, room.y + room.h / 2);
-    ctx.fillText(room.name, c.x, c.y, tile * Math.min(room.w, room.h) * 0.8);
   }
 }
