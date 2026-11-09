@@ -24,7 +24,7 @@ simulator/
 │   │   └── rng.js          seeded random numbers (mulberry32)
 │   ├── render/
 │   │   ├── scene.js        house data -> list of solid boxes; cutaway rule
-│   │   ├── camera.js       orbit, zoom, pan maths; projection; face visibility; shading
+│   │   ├── camera.js       fixed isometric tilt, 90-degree turns, zoom, pan maths; projection; face visibility; shading
 │   │   ├── house.js        draws the boxes (sorted faces, pixel-art colours and outlines)
 │   │   ├── raster.js       pixel-exact polygon fill and 1-pixel lines (no anti-aliasing)
 │   │   └── palette.js      the fixed pixel-art palette (10 levels per channel); snaps every pixel to its nearest colour
@@ -45,6 +45,7 @@ Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.j
 
 ## The house view
 - `scene.js` builds solid boxes for the chosen floors. Walls are built from room edges, with doorways cut out. Outside walls are brick and get windows. Furniture comes straight from `data/house.json`.
+- The camera has a fixed isometric tilt. The turn buttons move it in 90-degree steps (the four views are 90 degrees apart, starting at 45 degrees). Drag pans, pinch and wheel zoom.
 - `applyCutaway` runs every frame. Walls nearer the camera than the middle of the house drop to a low ledge, and their doors and windows are removed.
 - Floors are drawn as one box per grid tile, alternate tiles a shade darker. Windows and doors are one tile wide. Furniture footprints are whole tiles (`data/house.json`).
 - `house.js` projects each visible face, sorts far to near, adds a warm tint, then fills and outlines it pixel by pixel with `raster.js`. Nothing is anti-aliased, so edges are hard.

@@ -35,8 +35,6 @@ const VIEWS = {
 const CAMERA_BUTTONS = [
   ['left', '↺ Turn'],
   ['right', 'Turn ↻'],
-  ['higher', 'Look down'],
-  ['lower', 'Level'],
   ['in', '＋ Zoom'],
   ['out', '− Zoom'],
   ['reset', 'Reset view'],

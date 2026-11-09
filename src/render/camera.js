@@ -2,8 +2,10 @@
 // Units: 1 unit = one grid square of the house. z is height above the ground.
 
 export const TARGET = { x: 6, y: 5, z: 1.2 }; // middle of the house
-export const PITCH_MIN = 0.15; // nearly side-on
-export const PITCH_MAX = 1.4;  // nearly straight down
+// Fixed isometric tilt (about 35 degrees, the classic isometric angle). The house is
+// turned in 90-degree steps, so sprites only need drawing in four directions.
+export const ISO_PITCH = Math.atan(1 / Math.SQRT2);
+export const QUARTER_TURN = Math.PI / 2;
 const UNITS_ACROSS_AT_ZOOM_1 = 16;
 
 function normalise([x, y, z]) {
@@ -13,7 +15,7 @@ function normalise([x, y, z]) {
 const LIGHT = normalise([-0.4, 0.45, 0.8]);
 
 export function createCamera() {
-  return { yaw: 0.7, pitch: 0.75, zoomMul: 1, panX: 0, panY: 0 };
+  return { yaw: Math.PI / 4, pitch: ISO_PITCH, zoomMul: 1, panX: 0, panY: 0 };
 }
 
 // Turn a direction (or a point relative to TARGET) by the camera's yaw.

@@ -1,9 +1,15 @@
 // Camera controls for the house view.
-//   One finger or left-drag: turn the house around.
-//   Two fingers or right-drag (or shift-drag): move the view sideways.
+//   One finger or left-drag: move the view sideways.
 //   Pinch or mouse wheel: zoom.
+//   The turn buttons turn the house in 90-degree steps (the camera tilt is fixed).
 // The on-screen buttons call nudge().
-import { createCamera, PITCH_MIN, PITCH_MAX } from '../render/camera.js';
+import { createCamera, QUARTER_TURN } from '../render/camera.js';
+
+// The four isometric views sit 90 degrees apart, starting from the 45-degree default.
+function turn(cam, direction) {
+  const base = Math.round((cam.yaw - Math.PI / 4) / QUARTER_TURN);
+  cam.yaw = (base + direction) * QUARTER_TURN + Math.PI / 4;
+}
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 4;
@@ -32,13 +38,8 @@ export function attachCameraControls(canvas, cam) {
     p.y = e.clientY;
 
     if (pointers.size === 1) {
-      if (p.pan) {
-        cam.panX += dx;
-        cam.panY += dy;
-      } else {
-        cam.yaw += dx * 0.008;
-        cam.pitch = clamp(cam.pitch + dy * 0.005, PITCH_MIN, PITCH_MAX);
-      }
+      cam.panX += dx;
+      cam.panY += dy;
     } else if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       const dist = Math.hypot(a.x - b.x, a.y - b.y);
@@ -68,10 +69,8 @@ export function attachCameraControls(canvas, cam) {
 // Button actions: turn, tilt, zoom, reset.
 export function nudge(cam, action) {
   switch (action) {
-    case 'left': cam.yaw -= 0.35; break;
-    case 'right': cam.yaw += 0.35; break;
-    case 'higher': cam.pitch = clamp(cam.pitch + 0.15, PITCH_MIN, PITCH_MAX); break;
-    case 'lower': cam.pitch = clamp(cam.pitch - 0.15, PITCH_MIN, PITCH_MAX); break;
+    case 'left': turn(cam, -1); break;
+    case 'right': turn(cam, 1); break;
     case 'in': cam.zoomMul = clamp(cam.zoomMul * 1.25, MIN_ZOOM, MAX_ZOOM); break;
     case 'out': cam.zoomMul = clamp(cam.zoomMul / 1.25, MIN_ZOOM, MAX_ZOOM); break;
     case 'reset': Object.assign(cam, createCamera()); break;

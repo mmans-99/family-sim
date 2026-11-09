@@ -6,6 +6,8 @@
 Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
 
 ## Last session (2026-11-09)
+- Trial camera: fixed isometric tilt, the house turns in 90-degree steps, one-finger drag pans. Look-down and level buttons removed. Tests: 30 passing.
+- Found free pixel-art packs. Chose the Cryovex free isometric interior pack (commercial use and editing allowed, credit appreciated, no redistribution). The build sandbox can't reach itch.io (403), so the user must download the zip and attach it. Not in the repo yet.
 - Step 1 of the hand-drawn plan is done: `src/render/raster.js` draws every face and outline pixel by pixel with no anti-aliasing, so edges are hard. Tests: 30 passing. The shapes are still plain blocks; sprites are step 3.
 - Restyled the house view to a cosy Kairosoft-style look (warm cream backdrop, dark brown outlines, wood-tile floors, warm window light, two lamps). Snapped all furniture, doors, windows and stairs to whole grid tiles, and made key pieces chunkier. Files: `data/house.json`, `src/render/scene.js`, `src/render/house.js`, `src/render/palette.js`. Tests: 26 passing.
 - This is a close approximation, not a copy of hand-drawn sprites. Sprites are still the open option.
@@ -24,7 +26,7 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. Hand-drawn sprites, step 3 of the approved plan: sofa, bed and table, each drawn in four angles, replacing the blocks. Check each on a screenshot.
+1. Get the Cryovex free pack zip from the user (itch.io link: https://cryovex.itch.io/pixel-isometric-modern-interior). Then load its sprites for the sofa, bed and table, placed on the 90-degree grid, and check each on a screenshot. The pack gives one angle per sprite, so the 90-degree camera is what makes it work.
 2. Get feedback on the house view on the phone (cutaway, camera, text size).
 3. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
 
