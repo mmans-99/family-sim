@@ -21,8 +21,10 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-09 — Personalities are fully random at the start (rolled from the seed). — User choice.
 - 2026-11-09 — Money uses realistic starting levels for a family who bought the house within the last couple of years (see FAMILY.md). — User choice. Sources for the figures are listed in FAMILY.md.
 
+- 2026-11-09 — House view looks crisp, not blurry: every pixel is snapped to a fixed 8-level-per-channel palette, and each art pixel is a whole number of screen pixels. Backdrop is navy and outlines dark violet, to match the reference style the user shared. — The blurry look came from anti-aliased edges mixing in-between colours. Procedural 3D can't match hand-drawn art exactly; see OPEN for sprites.
+
 ## OPEN
 - Bill figures not yet covered: broadband, phone, car or transport, food and general spending. Need checked sources before they go in `data/`.
 - Whether to add a car (affects bills and commuting).
 - Always-on option. Not possible on GitHub Pages alone (it only serves files). If wanted later: a free cloud service or the Chromebox. Catch-up mode covers the main need for now.
-- Hand-drawn pixel sprites instead of pixel-styled 3D shapes. Later, if the current look isn't enough.
+- Hand-drawn pixel sprites instead of pixel-styled 3D shapes. The user's reference image (a hand-drawn isometric shop in pixel art) is closer to this. Later, if the current look isn't enough.

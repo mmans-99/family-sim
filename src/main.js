@@ -1,11 +1,15 @@
 // Entry point: clock, 3D house view and camera controls, wired together.
 import { createClock, advance, setSpeed, readClock, SPEEDS } from './sim/clock.js';
 import { buildScene, applyCutaway } from './render/scene.js';
-import { drawScene } from './render/house.js';
+import { drawScene, snapFrame } from './render/house.js';
 import { createCamera } from './render/camera.js';
+import { BACKGROUND } from './render/palette.js';
 import { attachCameraControls, nudge } from './ui/camera-controls.js';
 
-const PIXEL = 3; // one art pixel = this many screen pixels
+// One art pixel is a whole number of screen pixels, so every pixel is the same size.
+// The art grid is about 190 art pixels across, whatever the screen width.
+const ART_PIXELS_ACROSS = 190;
+const MIN_PIXEL = 3;
 
 const clock = createClock();
 const cam = createCamera();
@@ -112,18 +116,22 @@ function renderClock() {
 function drawFrame() {
   const w = canvas.clientWidth;
   const h = canvas.clientHeight;
-  const lw = Math.ceil(w / PIXEL);
-  const lh = Math.ceil(h / PIXEL);
+  const pixel = Math.max(MIN_PIXEL, Math.round(w / ART_PIXELS_ACROSS));
+  const lw = Math.floor(w / pixel);
+  const lh = Math.floor(h / pixel);
   if (lowres.width !== lw || lowres.height !== lh) {
     lowres.width = lw;
     lowres.height = lh;
   }
   // Pan is in screen pixels, so scale it down to art pixels.
-  const artCam = { ...cam, panX: cam.panX / PIXEL, panY: cam.panY / PIXEL };
+  const artCam = { ...cam, panX: cam.panX / pixel, panY: cam.panY / pixel };
   drawScene(lowCtx, applyCutaway(scene, cam, cutaway), artCam, lw, lh);
+  snapFrame(lowCtx, lw, lh); // remove blurry in-between colours before scaling up
 
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(lowres, 0, 0, w, h);
+  ctx.fillStyle = `rgb(${BACKGROUND.join(', ')})`;
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(lowres, 0, 0, lw * pixel, lh * pixel);
 }
 
 function frame(now) {

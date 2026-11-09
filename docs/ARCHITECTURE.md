@@ -25,7 +25,8 @@ simulator/
 │   ├── render/
 │   │   ├── scene.js        house data -> list of solid boxes; cutaway rule
 │   │   ├── camera.js       orbit, zoom, pan maths; projection; face visibility; shading
-│   │   └── house.js        draws the boxes (sorted faces, pixel-art colours and outlines)
+│   │   ├── house.js        draws the boxes (sorted faces, pixel-art colours and outlines)
+│   │   └── palette.js      the fixed pixel-art palette; snaps every pixel to its nearest colour
 │   └── ui/
 │       └── camera-controls.js   drag, two-finger, pinch, wheel; button actions
 └── tests/
@@ -43,7 +44,7 @@ Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.j
 - `scene.js` builds solid boxes for the chosen floors. Walls are built from room edges, with doorways cut out. Outside walls are brick and get windows. Furniture comes straight from `data/house.json`.
 - `applyCutaway` runs every frame. Walls nearer the camera than the middle of the house drop to a low ledge, and their doors and windows are removed.
 - `house.js` projects each visible face, sorts far to near, and fills it with a snapped colour and a dark outline.
-- `main.js` draws into a small canvas (one art pixel = 3 screen pixels), then scales it up with hard edges. Pan is scaled to match.
+- `main.js` draws into a small canvas, then snaps every pixel to the palette (`snapFrame` in `house.js`, using `palette.js`) to remove blurry in-between colours, then scales it up with hard edges. One art pixel is a whole number of screen pixels (min 3), sized so the art grid is about 190 pixels across. Pan is scaled to match.
 
 ## Save format (planned)
 One JSON object: `{ version, seed, time, world, people[], log[] }`.
