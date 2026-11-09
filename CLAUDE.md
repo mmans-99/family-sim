@@ -11,23 +11,31 @@ source of truth — not chat history.
    - `docs/ROADMAP.md` — phases and checklists
    - `docs/ARCHITECTURE.md` — code layout, tick loop, save format
    - `docs/SIMULATION.md` — how people, needs, emotions, time, life, economy work
-   - `docs/FAMILY.md` — the starting family
+   - `docs/FAMILY.md` — the starting family, home, mortgage and bills
 4. Confirm with the user what this session is for before writing code.
 
-## End of every session (non-negotiable)
-1. Update `docs/STATUS.md`: current phase, what was done, what's next, known bugs.
+## After every change (non-negotiable)
+Every time code, data or a decision changes, before replying to the user:
+1. Update `docs/STATUS.md`: what was just done, what's next, known issues.
 2. Add any new decision to `docs/DECISIONS.md` (dated, with the reason).
 3. Tick finished items in `docs/ROADMAP.md`.
-4. If the design changed, update `SIMULATION.md` / `ARCHITECTURE.md` to match.
-5. Commit with a clear message.
+4. If the design or code layout changed, update `docs/ARCHITECTURE.md`
+   and `docs/SIMULATION.md` to match.
+5. If family, home, money or bill facts changed, update `docs/FAMILY.md`.
+6. Commit and push to GitHub, with a clear message.
+7. Copy the changed docs to the Project so the claude.ai copy matches.
+
+Do not leave a change without its docs updated, even a small one.
 
 ## Rules
 - No code is written until the user approves the step.
 - The simulation never depends on the renderer. `src/sim/` must run with no
   screen at all (so it can fast-forward, catch up, or run on a server).
 - Same seed + same inputs = same result (seeded random only, never Math.random()).
-- Content (actions, jobs, text lines, house layout) lives in `data/`, not code.
+- Content (actions, jobs, text lines, house layout, furniture) lives in `data/`, not code.
 - Small steps. Every phase ends with something the user can open and watch.
 - Phone-first: everything must work on a phone screen.
 - No paid AI services or subscriptions are required to run it.
 - Explain steps and terms fully when giving setup instructions.
+- Camera and view controls are for looking only. The player never changes
+  what the family does.
