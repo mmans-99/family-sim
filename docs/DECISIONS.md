@@ -29,6 +29,7 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-09 — Art source for the hand-drawn look: the free Pixel Isometric Modern Interior pack by Cryovex (free version). Licence: commercial use and editing allowed, credit appreciated, no redistribution. User chose it. Not yet downloaded, because the build sandbox cannot reach itch.io.
 
 ## OPEN
+- Cryovex pack licence: the page says the asset may not be redistributed, even if modified. The house is on a public GitHub Pages site, so the pack's image files cannot go in the repo as they are. Options: get written permission from Cryovex, use our own art, or find a pack that allows redistribution (CC0 or CC BY). Decide before any pack art is committed.
 - Bill figures not yet covered: broadband, phone, car or transport, food and general spending. Need checked sources before they go in `data/`.
 - Whether to add a car (affects bills and commuting).
 - Always-on option. Not possible on GitHub Pages alone (it only serves files). If wanted later: a free cloud service or the Chromebox. Catch-up mode covers the main need for now.
