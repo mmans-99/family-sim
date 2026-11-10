@@ -6,7 +6,8 @@
 Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
 
 ## Last session (2026-11-10)
-- The house view is now a flat front view, with no tilt and no turn buttons (only zoom, pan, cutaway and the view buttons). The house draws as plain blocks for now, with the cutaway on. Tests: 30 passing. A screenshot was checked, and the user has not yet seen it on a phone.
+- The house view is now straight down, like a plan (the pack is top-down art). Only zoom, pan and the floor buttons remain: Ground, First, Garden. The cutaway is off by default. Tests: 31 passing. A screenshot was checked; the user has not yet seen it on a phone.
+- Correction: I had called the pack front/side-view. It isn't; the furniture shows its tops and the floors are flat top-down tiles. The flat front view was wrong and has been replaced.
 - Mapped 17 furniture sprites from the Sierrassets sheet (`src/render/pack.js`): sofa, armchair, two beds, dining and coffee tables, bedside table, base and wall units, TV and TV unit, wardrobe, bookcase, fridge, washing machine, plant, chair. Turned sprites on again. Tests: 30 passing.
 - The user uploaded the Sierrassets "Furniture pack" to replace Cryovex. The pack is flat front/side-view art, not isometric, so the camera changed to a flat view (decision recorded in DECISIONS.md).
 - Committed the pack's two sheets in `assets/furniture-pack/`: `furniture.png` (628×356) and `floors-walls.png` (135×155). The user confirmed they may be distributed. The git-ignore rule for this folder was removed. The Cryovex folder (`assets/cryovex/`) is still git-ignored.
@@ -36,7 +37,7 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. Check the flat view with the user (screenshot or phone). Then go on to the sprites.
+1. Check the straight-down view with the user (screenshot or phone).
 2. Map the rest of the furniture (toilet, bath, basin, shower, hob, sink, cot, dresser, kitchen cabinets, desks, beds). Floors and walls come from `floors-walls.png`.
 3. Record the exact Sierrassets licence wording in DECISIONS.md (ask the user for the source page text).
 4. Get feedback on the house view on the phone (cutaway, camera, text size).

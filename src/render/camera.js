@@ -1,11 +1,11 @@
-// Camera for the house view: a flat front view (side-on, like the furniture pack's art).
-// No tilt and no turn: the viewer looks straight at the front of the house. Zoom and pan only.
+// Camera for the house view: straight down, like a plan. The furniture pack is top-down art.
+// No turn and no tilt. Zoom and pan only.
 // Pure maths, no DOM. Units: 1 unit = one grid square of the house. z is height above the ground.
 
-export const TARGET = { x: 6, y: 5, z: 1.2 }; // middle of the house
+export const TARGET = { x: 6, y: 3, z: 1.2 }; // middle of the ground floor (the house is 6 deep)
 export const UNITS_ACROSS_AT_ZOOM_1 = 16;
-const FLAT_YAW = 0;   // looking along +y, from the front of the house
-const FLAT_PITCH = 0; // level: no looking down
+const PLAN_YAW = 0;            // no turn: +y points up the screen
+const PLAN_PITCH = Math.PI / 2; // looking straight down
 
 function normalise([x, y, z]) {
   const len = Math.hypot(x, y, z);
@@ -14,7 +14,7 @@ function normalise([x, y, z]) {
 const LIGHT = normalise([-0.4, 0.45, 0.8]);
 
 export function createCamera() {
-  return { yaw: FLAT_YAW, pitch: FLAT_PITCH, zoomMul: 1, panX: 0, panY: 0 };
+  return { yaw: PLAN_YAW, pitch: PLAN_PITCH, zoomMul: 1, panX: 0, panY: 0 };
 }
 
 // Turn a direction (or a point relative to TARGET) by the camera's yaw.
@@ -48,7 +48,8 @@ export function project(cam, width, height, x, y, z) {
 // The viewer sits towards -y and above, looking down at the pitch angle.
 export function facesViewer(cam, n) {
   const [, ny, nz] = rotateDir(cam, n);
-  return -ny * Math.cos(cam.pitch) + nz * Math.sin(cam.pitch) > 0;
+  // A face seen edge-on (exactly 0) is not drawn. The small margin stops rounding error from counting it.
+  return -ny * Math.cos(cam.pitch) + nz * Math.sin(cam.pitch) > 1e-9;
 }
 
 // Brightness of a face: 0.6 in shadow up to 1.0 facing the light.

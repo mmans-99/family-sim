@@ -47,20 +47,25 @@ test('the middle of the house lands in the middle of the screen', () => {
   assert.equal(p.sy, 150);
 });
 
-test('in the flat front view, the front of a box faces the viewer and its back does not', () => {
+test('looking straight down, the top of a box faces the viewer and its sides do not', () => {
   const cam = createCamera();
-  assert.equal(facesViewer(cam, [0, -1, 0]), true);
-  assert.equal(facesViewer(cam, [0, 1, 0]), false);
-  // The top is level with the eye, so it is edge-on and never shows.
-  assert.equal(facesViewer(cam, [0, 0, 1]), false);
+  assert.equal(facesViewer(cam, [0, 0, 1]), true);
+  assert.equal(facesViewer(cam, [0, -1, 0]), false);
+  assert.equal(facesViewer(cam, [0, 0, -1]), false);
 });
 
-test('with no turn, points further along +y have a bigger depth', () => {
+test('looking straight down, higher things have a smaller depth (drawn last, on top)', () => {
   const cam = createCamera();
-  cam.yaw = 0;
+  const floor = project(cam, 400, 300, 6, 5, 0);
+  const roof = project(cam, 400, 300, 6, 5, 2.6);
+  assert.ok(roof.depth < floor.depth);
+});
+
+test('looking straight down, a point further along +y is higher up the screen', () => {
+  const cam = createCamera();
   const near = project(cam, 400, 300, 6, 1, 0);
   const far = project(cam, 400, 300, 6, 9, 0);
-  assert.ok(far.depth > near.depth);
+  assert.ok(far.sy < near.sy);
 });
 
 import { applyCutaway, CUT_HEIGHT } from '../src/render/scene.js';

@@ -24,7 +24,7 @@ simulator/
 │   │   └── rng.js          seeded random numbers (mulberry32)
 │   ├── render/
 │   │   ├── scene.js        house data -> list of solid boxes; cutaway rule
-│   │   ├── camera.js       flat front view (no tilt, no turns), zoom, pan maths; projection; face visibility; shading
+│   │   ├── camera.js       straight-down plan camera (no turn, no tilt), zoom, pan maths; projection; face visibility; shading
 │   │   ├── house.js        draws the boxes (sorted faces, pixel-art colours and outlines)
 │   │   ├── raster.js       pixel-exact polygon fill, 1-pixel lines, sprite blitting (no anti-aliasing)
 │   │   ├── pack.js         furniture sprites: sheet positions, item-to-sprite map, loader (sheet in assets/furniture-pack/)
@@ -46,9 +46,9 @@ Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.j
 
 ## The house view
 - `scene.js` builds solid boxes for the chosen floors. Walls are built from room edges, with doorways cut out. Outside walls are brick and get windows. Furniture comes straight from `data/house.json`.
-- The camera is a flat front view: level, looking straight at the front of the house, no turns. Drag pans, pinch and wheel zoom. Walls, floors and furniture are drawn as flat front faces, and sprites stand on the front edge of their footprint.
+- The camera looks straight down, like a plan. There are no turns and no tilt. Drag pans, pinch and wheel zoom. Only top faces are drawn. Furniture sprites are centred on their footprint, as seen from above. One floor is shown at a time (ground, first, garden), since floors would sit on top of each other from above.
 - Furniture uses sprites from the Sierrassets furniture sheet (`assets/furniture-pack/furniture.png`, loaded by `pack.js`). About 16 sprite pixels make one grid unit. Items not in `NAME_TO_SPRITE` (and the 'sofa back', mattresses and headboards that the sprites already show) stay plain blocks. Floors and walls are still plain blocks.
-- `applyCutaway` runs every frame. Walls nearer the camera than the middle of the house drop to a low ledge, and their doors and windows are removed.
+- `applyCutaway` runs every frame when it is on. It is off by default, because from above there are no near walls to lower. The toggle is still there.
 - Floors are drawn as one box per grid tile, alternate tiles a shade darker. Windows and doors are one tile wide. Furniture footprints are whole tiles (`data/house.json`).
 - `house.js` projects each visible face, sorts far to near, adds a warm tint, then fills and outlines it pixel by pixel with `raster.js`. Nothing is anti-aliased, so edges are hard.
 - `main.js` draws into a small canvas, then snaps every pixel to the palette (`snapFrame` in `house.js`, using `palette.js`) to remove blurry in-between colours, then scales it up with hard edges. One art pixel is a whole number of screen pixels (min 3), sized so the art grid is about 190 pixels across. Pan is scaled to match.

@@ -67,10 +67,11 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null) {
   for (const b of boxes) {
     if (pack && PACK_HIDDEN.has(b.name)) continue;
     if (pack && b.name && NAME_TO_SPRITE[b.name] && pack.sprites[NAME_TO_SPRITE[b.name]]) {
-      // A furniture piece: a sprite standing on the front edge of its footprint, centred side to side.
+      // A furniture piece: the sprite is centred on the middle of its footprint, seen from above.
       const sprite = pack.sprites[NAME_TO_SPRITE[b.name]];
-      const p = project(cam, width, height, (b.x0 + b.x1) / 2, b.y0, b.z0);
-      items.push({ depth: p.depth, draw: () => blitSprite(buf, sprite, p.sx, p.sy, scale) });
+      const p = project(cam, width, height, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, b.z1);
+      const half = (sprite.height * scale) / 2; // blitSprite anchors at the bottom edge, so shift down by half
+      items.push({ depth: p.depth, draw: () => blitSprite(buf, sprite, p.sx, p.sy + half, scale) });
       continue;
     }
     for (const face of boxFaces(b)) {

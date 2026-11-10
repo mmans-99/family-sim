@@ -27,9 +27,9 @@ const lowCtx = lowres.getContext('2d');
 
 const SPEED_LABELS = { 0: 'Pause', 1: '1x', 2: '2x', 4: '4x' };
 // "lift" pulls a floor up so the house can be seen in layers ("exploded" view).
+// Looking straight down, floors would sit on top of each other, so each view shows one floor.
 const VIEWS = {
-  all: { label: 'All floors', floors: ['ground', 'first', 'garden'], lift: { first: 1.2 } },
-  ground: { label: 'Ground floor', floors: ['ground', 'garden'], lift: {} },
+  ground: { label: 'Ground floor', floors: ['ground'], lift: {} },
   first: { label: 'First floor', floors: ['first'], lift: {} },
   garden: { label: 'Garden', floors: ['garden'], lift: {} },
 };
@@ -42,7 +42,7 @@ const CAMERA_BUTTONS = [
 let house = null;
 let pack = null; // sprites, if the pack is present
 let scene = [];
-let cutaway = true;
+let cutaway = false; // from above there are no near walls to lower, so this starts off
 let lastMinute = -1;
 let lastTime = performance.now();
 
@@ -152,7 +152,7 @@ async function start() {
   attachCameraControls(canvas, cam);
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
-  showView('all');
+  showView('ground');
   requestAnimationFrame((now) => {
     lastTime = now;
     requestAnimationFrame(frame);
