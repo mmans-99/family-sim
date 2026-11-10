@@ -27,7 +27,7 @@ simulator/
 │   │   ├── camera.js       fixed isometric tilt, 90-degree turns, zoom, pan maths; projection; face visibility; shading
 │   │   ├── house.js        draws the boxes (sorted faces, pixel-art colours and outlines)
 │   │   ├── raster.js       pixel-exact polygon fill, 1-pixel lines, sprite blitting (no anti-aliasing)
-│   │   ├── pack.js         sprite pack: sheet positions, item-to-sprite map, floor tiles, loader (images not in repo)
+│   │   ├── pack.js         sprite pack: sheet positions, item-to-sprite map, floor tiles, loader (images not in repo; currently still points at the old Cryovex folder, to be moved to assets/furniture-pack/)
 │   │   └── palette.js      the fixed pixel-art palette (10 levels per channel); snaps every pixel to its nearest colour
 │   └── ui/
 │       └── camera-controls.js   drag, two-finger, pinch, wheel; button actions

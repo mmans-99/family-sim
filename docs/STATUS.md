@@ -5,7 +5,13 @@
 ## Current phase
 Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
 
-## Last session (2026-11-09)
+## Last session (2026-11-10)
+- The user uploaded the Sierrassets "Furniture pack" to replace Cryovex. The pack is flat front/side-view art, not isometric, so the camera changes to a flat view (decision recorded in DECISIONS.md).
+- Staged the pack's two sheets locally: `assets/furniture-pack/furniture.png` (628×356) and `assets/furniture-pack/floors-walls.png` (135×155). The folder is git-ignored and nothing is committed.
+- The code still uses the old Cryovex path (`src/render/pack.js`) and the isometric camera. Nothing is wired to the new pack yet.
+- The zip has no licence text. The user says the source page allows use. Recorded as OPEN until the wording is checked.
+
+## Previous session (2026-11-09)
 - Wired the Cryovex pack into the renderer (`src/render/pack.js`, `blitSprite` in `raster.js`, pack-aware `drawScene`). Images stay in `assets/cryovex/`, which git ignores. Camera tilt set to 30 degrees for the 2:1 tiles. Tests: 30 passing.
 - Known problems from the last screenshot: floor tiles are not visible (needs checking), the wardrobe sprite is too big for its footprint, walls are still blocks, and sprites don't turn with the 90-degree camera yet (they only show the default angle).
 - Received the Cryovex free pack (4 sheets: furniture, floor, wall, decoration). Found the licence forbids redistribution, so nothing from it is committed. Built a local prototype outside the repo to test the look.
@@ -29,10 +35,11 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. Fix the known problems above: floor tiles, sprite sizes, then walls.
-2. Once the user makes the repo private, commit the pack images (the licence forbids public redistribution). Note: GitHub Pages won't publish a private repo on a free account.
-2. Get feedback on the house view on the phone (cutaway, camera, text size).
-3. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
+1. Switch the camera to a flat front/side view (no tilt, no turns; zoom and pan stay). Show the user a screenshot before going further.
+2. Map the furniture sprites on `assets/furniture-pack/furniture.png` (identify each piece's rectangle), then wire them into `src/render/pack.js` and `house.js`. Floors and walls come from `floors-walls.png`.
+3. Record the exact Sierrassets licence wording in DECISIONS.md. Until then, keep the pack images out of git.
+4. Get feedback on the house view on the phone (cutaway, camera, text size).
+5. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
 
 ## Known issues
 - A GitHub Pages build (run #1, from 18:26 on 9 Nov) is still listed as queued. It's harmless: a later build succeeded.
