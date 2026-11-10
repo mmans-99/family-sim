@@ -1,12 +1,11 @@
-// Free camera: orbit (yaw and pitch), zoom and pan. Pure maths, no DOM.
-// Units: 1 unit = one grid square of the house. z is height above the ground.
+// Camera for the house view: a flat front view (side-on, like the furniture pack's art).
+// No tilt and no turn: the viewer looks straight at the front of the house. Zoom and pan only.
+// Pure maths, no DOM. Units: 1 unit = one grid square of the house. z is height above the ground.
 
 export const TARGET = { x: 6, y: 5, z: 1.2 }; // middle of the house
-// Fixed isometric tilt: 30 degrees, which gives the 2:1 tile shape pixel-art sprites use.
-// The house is turned in 90-degree steps, so sprites only need drawing in four directions.
-export const ISO_PITCH = Math.asin(0.5);
-export const QUARTER_TURN = Math.PI / 2;
 export const UNITS_ACROSS_AT_ZOOM_1 = 16;
+const FLAT_YAW = 0;   // looking along +y, from the front of the house
+const FLAT_PITCH = 0; // level: no looking down
 
 function normalise([x, y, z]) {
   const len = Math.hypot(x, y, z);
@@ -15,7 +14,7 @@ function normalise([x, y, z]) {
 const LIGHT = normalise([-0.4, 0.45, 0.8]);
 
 export function createCamera() {
-  return { yaw: Math.PI / 4, pitch: ISO_PITCH, zoomMul: 1, panX: 0, panY: 0 };
+  return { yaw: FLAT_YAW, pitch: FLAT_PITCH, zoomMul: 1, panX: 0, panY: 0 };
 }
 
 // Turn a direction (or a point relative to TARGET) by the camera's yaw.

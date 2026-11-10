@@ -47,10 +47,12 @@ test('the middle of the house lands in the middle of the screen', () => {
   assert.equal(p.sy, 150);
 });
 
-test('the top of a box faces the viewer and its underside does not', () => {
+test('in the flat front view, the front of a box faces the viewer and its back does not', () => {
   const cam = createCamera();
-  assert.equal(facesViewer(cam, [0, 0, 1]), true);
-  assert.equal(facesViewer(cam, [0, 0, -1]), false);
+  assert.equal(facesViewer(cam, [0, -1, 0]), true);
+  assert.equal(facesViewer(cam, [0, 1, 0]), false);
+  // The top is level with the eye, so it is edge-on and never shows.
+  assert.equal(facesViewer(cam, [0, 0, 1]), false);
 });
 
 test('with no turn, points further along +y have a bigger depth', () => {

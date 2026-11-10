@@ -2,7 +2,6 @@
 import { createClock, advance, setSpeed, readClock, SPEEDS } from './sim/clock.js';
 import { buildScene, applyCutaway } from './render/scene.js';
 import { drawScene, snapFrame } from './render/house.js';
-import { loadPack } from './render/pack.js';
 import { createCamera } from './render/camera.js';
 import { BACKGROUND } from './render/palette.js';
 import { attachCameraControls, nudge } from './ui/camera-controls.js';
@@ -34,8 +33,6 @@ const VIEWS = {
   garden: { label: 'Garden', floors: ['garden'], lift: {} },
 };
 const CAMERA_BUTTONS = [
-  ['left', '↺ Turn'],
-  ['right', 'Turn ↻'],
   ['in', '＋ Zoom'],
   ['out', '− Zoom'],
   ['reset', 'Reset view'],
@@ -149,7 +146,9 @@ function frame(now) {
 async function start() {
   const res = await fetch('data/house.json');
   house = await res.json();
-  pack = await loadPack();
+  // The Cryovex sprites are isometric and no longer used. The new furniture pack is not mapped
+  // yet, so the house is drawn with plain blocks for now. (See STATUS.md.)
+  pack = null;
   buildControls();
   attachCameraControls(canvas, cam);
   resizeCanvas();

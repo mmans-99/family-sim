@@ -1,15 +1,9 @@
-// Camera controls for the house view.
+// Camera controls for the house view. The view is flat and front-on, so there are
+// no turns: only pan and zoom.
 //   One finger or left-drag: move the view sideways.
 //   Pinch or mouse wheel: zoom.
-//   The turn buttons turn the house in 90-degree steps (the camera tilt is fixed).
 // The on-screen buttons call nudge().
-import { createCamera, QUARTER_TURN } from '../render/camera.js';
-
-// The four isometric views sit 90 degrees apart, starting from the 45-degree default.
-function turn(cam, direction) {
-  const base = Math.round((cam.yaw - Math.PI / 4) / QUARTER_TURN);
-  cam.yaw = (base + direction) * QUARTER_TURN + Math.PI / 4;
-}
+import { createCamera } from '../render/camera.js';
 
 const MIN_ZOOM = 0.4;
 const MAX_ZOOM = 4;
@@ -66,11 +60,9 @@ export function attachCameraControls(canvas, cam) {
   }, { passive: false });
 }
 
-// Button actions: turn, tilt, zoom, reset.
+// Button actions: zoom in and out, reset the view.
 export function nudge(cam, action) {
   switch (action) {
-    case 'left': turn(cam, -1); break;
-    case 'right': turn(cam, 1); break;
     case 'in': cam.zoomMul = clamp(cam.zoomMul * 1.25, MIN_ZOOM, MAX_ZOOM); break;
     case 'out': cam.zoomMul = clamp(cam.zoomMul / 1.25, MIN_ZOOM, MAX_ZOOM); break;
     case 'reset': Object.assign(cam, createCamera()); break;

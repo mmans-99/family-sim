@@ -3,11 +3,11 @@
 import { project, facesViewer, shade, UNITS_ACROSS_AT_ZOOM_1 } from './camera.js';
 import { OUTLINE, BACKGROUND, nearestColour } from './palette.js';
 import { fillPolygon, outlinePolygon, blitSprite } from './raster.js';
-import { NAME_TO_SPRITE, PACK_HIDDEN, FLOOR_ANCHOR } from './pack.js';
+import { NAME_TO_SPRITE, PACK_HIDDEN } from './pack.js';
 
-// Sprites are drawn for a tile 16 pixels across. This many screen pixels is one grid unit at that size.
+// Sprites are drawn at their real pixel size. Scale is set so one sprite pixel is one art pixel at zoom 1.
+// (Placeholder until the furniture pack's sizes are measured.)
 const PACK_UNIT_PX = 11.3;
-const FLOOR_TILE_SIZE = 16;
 
 // The five faces of a box that can ever face the viewer (the underside is never seen).
 function boxFaces(b) {
@@ -66,17 +66,11 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null) {
 
   const items = []; // far things first, so near things paint over them
   for (const b of boxes) {
-    if (pack && b.tile && pack.tiles[b.tile]) {
-      // A floor tile: a sprite on the top of its grid square. Floors sit under everything.
-      const p = project(cam, width, height, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, b.z1);
-      items.push({ depth: p.depth + 1000, draw: () => blitSprite(buf, pack.tiles[b.tile], p.sx, p.sy + (FLOOR_TILE_SIZE - FLOOR_ANCHOR.y), scale) });
-      continue;
-    }
     if (pack && PACK_HIDDEN.has(b.name)) continue;
     if (pack && b.name && NAME_TO_SPRITE[b.name] && pack.sprites[NAME_TO_SPRITE[b.name]]) {
-      // A furniture piece: a sprite standing on the middle of its footprint.
+      // A furniture piece: a sprite standing on the front edge of its footprint, centred side to side.
       const sprite = pack.sprites[NAME_TO_SPRITE[b.name]];
-      const p = project(cam, width, height, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, b.z0);
+      const p = project(cam, width, height, (b.x0 + b.x1) / 2, b.y0, b.z0);
       items.push({ depth: p.depth, draw: () => blitSprite(buf, sprite, p.sx, p.sy, scale) });
       continue;
     }
