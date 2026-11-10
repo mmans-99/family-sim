@@ -5,9 +5,8 @@ import { OUTLINE, BACKGROUND, nearestColour } from './palette.js';
 import { fillPolygon, outlinePolygon, blitSprite } from './raster.js';
 import { NAME_TO_SPRITE, PACK_HIDDEN } from './pack.js';
 
-// Sprites are drawn at their real pixel size. Scale is set so one sprite pixel is one art pixel at zoom 1.
-// (Placeholder until the furniture pack's sizes are measured.)
-const PACK_UNIT_PX = 11.3;
+// The furniture pack draws one house grid unit as about 16 sprite pixels.
+const PACK_UNIT_PX = 16;
 
 // The five faces of a box that can ever face the viewer (the underside is never seen).
 function boxFaces(b) {

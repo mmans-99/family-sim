@@ -7,10 +7,9 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 
 ## Last session (2026-11-10)
 - The house view is now a flat front view, with no tilt and no turn buttons (only zoom, pan, cutaway and the view buttons). The house draws as plain blocks for now, with the cutaway on. Tests: 30 passing. A screenshot was checked, and the user has not yet seen it on a phone.
-- Sprites are switched off (`main.js` sets `pack = null`), because the old Cryovex sprites are isometric and no longer used.
+- Mapped 17 furniture sprites from the Sierrassets sheet (`src/render/pack.js`): sofa, armchair, two beds, dining and coffee tables, bedside table, base and wall units, TV and TV unit, wardrobe, bookcase, fridge, washing machine, plant, chair. Turned sprites on again. Tests: 30 passing.
 - The user uploaded the Sierrassets "Furniture pack" to replace Cryovex. The pack is flat front/side-view art, not isometric, so the camera changed to a flat view (decision recorded in DECISIONS.md).
 - Committed the pack's two sheets in `assets/furniture-pack/`: `furniture.png` (628×356) and `floors-walls.png` (135×155). The user confirmed they may be distributed. The git-ignore rule for this folder was removed. The Cryovex folder (`assets/cryovex/`) is still git-ignored.
-- The code still uses the old Cryovex path (`src/render/pack.js`) and the isometric camera. Nothing is wired to the new pack yet.
 - The zip has no licence text. The user says the source page allows use. Recorded as OPEN until the wording is checked.
 
 ## Previous session (2026-11-09)
@@ -38,12 +37,14 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 
 ## Next step
 1. Check the flat view with the user (screenshot or phone). Then go on to the sprites.
-2. Map the furniture sprites on `assets/furniture-pack/furniture.png` (identify each piece's rectangle), then replace the Cryovex rectangles in `src/render/pack.js` and turn the pack back on. Floors and walls come from `floors-walls.png`. Also measure the sprite sizes so the scale is right.
+2. Map the rest of the furniture (toilet, bath, basin, shower, hob, sink, cot, dresser, kitchen cabinets, desks, beds). Floors and walls come from `floors-walls.png`.
 3. Record the exact Sierrassets licence wording in DECISIONS.md (ask the user for the source page text).
 4. Get feedback on the house view on the phone (cutaway, camera, text size).
 5. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
 
 ## Known issues
+- Sprites are placed by hand from a rectangle list in `pack.js`. Some are smaller than their footprint (the sofa is 2 grid units wide, its footprint 3). Sprites are scaled with nearest-neighbour, so the pixels are uneven at some zooms.
+- The TV unit sits against the front wall of the lounge in `data/house.json`, so it covers part of the sofa. Check the data layout.
 - A GitHub Pages build (run #1, from 18:26 on 9 Nov) is still listed as queued. It's harmless: a later build succeeded.
 - Rooms have no name labels in the 3D view yet.
 - No roof. Walls are plain. The look is rendered from 3D shapes, so it's close to, not the same as, the hand-drawn reference. Colours are a first pass and may need tuning on a phone.

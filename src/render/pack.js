@@ -1,47 +1,57 @@
-// Pixel-art sprites from a sprite pack (Cryovex, free version).
-// The image files are NOT in the repo (licence: no redistribution). They live in
-// assets/cryovex/ on the machine that runs the game. If they are missing, the house
+// Pixel-art furniture sprites from the Sierrassets "Furniture pack" (flat front/side view).
+// The sheet is committed in assets/furniture-pack/. If it cannot be loaded, the house
 // is drawn with plain blocks instead, so the game still works.
 
-export const PACK_FOLDER = 'assets/cryovex/';
+export const PACK_FOLDER = 'assets/furniture-pack/';
 
 // Where each sprite sits on the furniture sheet: [x, y, width, height] in sheet pixels.
+// Found by finding the separate shapes on furniture.png (see STATUS.md). One house grid
+// unit is about 16 sprite pixels across.
 export const SPRITE_RECTS = {
-  bed_double: [242, 664, 66, 56],
-  bed_blue: [54, 670, 66, 50],
-  grey_sofa: [2, 566, 66, 42],
-  brown_chair: [2, 160, 34, 35],
-  table_dark: [50, 391, 46, 41],
-  table_brown: [2, 392, 46, 41],
-  table_light: [38, 528, 34, 34],
-  wardrobe: [310, 240, 58, 82],
+  sofa_red: [255, 51, 32, 16],
+  armchair_red: [19, 38, 12, 10],
+  bed_white: [204, 35, 32, 32],
+  bed_blue: [170, 36, 32, 31],
+  table_wood_long: [306, 70, 32, 14],
+  table_low: [374, 85, 32, 16],
+  cabinet_small: [34, 51, 16, 16],
+  units_wood: [34, 18, 32, 15],
+  cabinet_tall_small: [68, 34, 16, 16],
+  tv_unit: [85, 68, 32, 16],
+  tv_flat: [119, 68, 32, 16],
+  wardrobe: [102, 35, 16, 32],
+  bookcase: [136, 35, 32, 32],
+  fridge_white: [340, 87, 16, 31],
+  washer: [323, 0, 16, 16],
+  plant: [123, 21, 8, 12],
+  chair_wood: [2, 35, 11, 15],
 };
 
 // House item names -> sprite. Anything not listed stays a plain block.
 export const NAME_TO_SPRITE = {
-  'sofa': 'grey_sofa',
-  'armchair': 'brown_chair',
-  'bed frame': 'bed_double',
+  'sofa': 'sofa_red',
+  'armchair': 'armchair_red',
+  'bed frame': 'bed_white',
   "Oliver's bed": 'bed_blue',
-  'cot': 'bed_blue',
-  'dining table': 'table_dark',
-  'base units': 'table_brown',
-  'wall units': 'table_brown',
-  'TV unit': 'table_brown',
-  'coffee table': 'table_light',
-  'bedside table': 'table_light',
-  'bookcase': 'wardrobe',
+  'dining table': 'table_wood_long',
+  'coffee table': 'table_low',
+  'bedside table': 'cabinet_small',
+  'base units': 'units_wood',
+  'wall units': 'cabinet_tall_small',
+  'TV unit': 'tv_unit',
+  'TV': 'tv_flat',
   'wardrobe': 'wardrobe',
+  'bookcase': 'bookcase',
+  'fridge': 'fridge_white',
+  'washing machine': 'washer',
+  'plant': 'plant',
+  'chair': 'chair_wood',
 };
 
 // Items hidden when the pack is used (they are parts of a sprite already drawn).
-export const PACK_HIDDEN = new Set(['mattress', 'headboard', 'cot mattress']);
+export const PACK_HIDDEN = new Set(['mattress', 'headboard', 'cot mattress', 'sofa back']);
 
-// Floor tile colours: cell number on the floor sheet (cells are 16 pixels wide).
-export const FLOOR_CELLS = { wood: 0, black: 1, white: 2, dark: 3, grey: 4, beige: 5, blue: 7 };
-export const FLOOR_ANCHOR = { x: 8, y: 10 }; // the middle of a tile's top surface
-
-// Which floor tile each room uses. Rooms not listed keep plain blocks (e.g. the garden).
+// Which floor colour each room uses (for when floors get sprites again). Rooms not listed keep plain blocks.
 export const ROOM_TILE = {
   lounge: 'wood', hall: 'wood', kitchen: 'beige', loo: 'white', utility: 'grey',
   master: 'wood', landing: 'wood', bathroom: 'white', oliver: 'wood', ruby: 'wood',
@@ -57,16 +67,14 @@ export function crop(src, [x, y, w, h]) {
   return { width: w, height: h, data };
 }
 
-// Build a pack from two loaded images. Returns cached sprites by name.
-export function makePack(furniture, floor) {
+// Build the pack from the loaded furniture sheet. Returns cached sprites by name.
+export function makePack(furniture) {
   const sprites = {};
   for (const [name, rect] of Object.entries(SPRITE_RECTS)) sprites[name] = crop(furniture, rect);
-  const tiles = {};
-  for (const [name, cell] of Object.entries(FLOOR_CELLS)) tiles[name] = crop(floor, [16 * cell, 0, 16, 16]);
-  return { sprites, tiles };
+  return { sprites };
 }
 
-// Load the pack in a browser. Resolves to null if the images are not there.
+// Load the pack in a browser. Resolves to null if the image is not there.
 export async function loadPack(folder = PACK_FOLDER) {
   const load = (file) => new Promise((resolve, reject) => {
     const img = new Image();
@@ -84,8 +92,8 @@ export async function loadPack(folder = PACK_FOLDER) {
     return { width: d.width, height: d.height, data: d.data };
   };
   try {
-    const [furniture, floor] = await Promise.all([load('furniture_free.png'), load('floor_free.png')]);
-    return makePack(toPixels(furniture), toPixels(floor));
+    const furniture = await load('furniture.png');
+    return makePack(toPixels(furniture));
   } catch {
     return null;
   }
