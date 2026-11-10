@@ -7,7 +7,7 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 
 ## Last session (2026-11-10)
 - The user uploaded the Sierrassets "Furniture pack" to replace Cryovex. The pack is flat front/side-view art, not isometric, so the camera changes to a flat view (decision recorded in DECISIONS.md).
-- Staged the pack's two sheets locally: `assets/furniture-pack/furniture.png` (628×356) and `assets/furniture-pack/floors-walls.png` (135×155). The folder is git-ignored and nothing is committed.
+- Committed the pack's two sheets in `assets/furniture-pack/`: `furniture.png` (628×356) and `floors-walls.png` (135×155). The user confirmed they may be distributed. The git-ignore rule for this folder was removed. The Cryovex folder (`assets/cryovex/`) is still git-ignored.
 - The code still uses the old Cryovex path (`src/render/pack.js`) and the isometric camera. Nothing is wired to the new pack yet.
 - The zip has no licence text. The user says the source page allows use. Recorded as OPEN until the wording is checked.
 
@@ -37,7 +37,7 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 ## Next step
 1. Switch the camera to a flat front/side view (no tilt, no turns; zoom and pan stay). Show the user a screenshot before going further.
 2. Map the furniture sprites on `assets/furniture-pack/furniture.png` (identify each piece's rectangle), then wire them into `src/render/pack.js` and `house.js`. Floors and walls come from `floors-walls.png`.
-3. Record the exact Sierrassets licence wording in DECISIONS.md. Until then, keep the pack images out of git.
+3. Record the exact Sierrassets licence wording in DECISIONS.md (ask the user for the source page text).
 4. Get feedback on the house view on the phone (cutaway, camera, text size).
 5. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
 

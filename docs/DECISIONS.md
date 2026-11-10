@@ -30,11 +30,12 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-09 — Camera tilt changed to 30 degrees (2:1 tiles), to match the sprite pack. — The pack's floor tiles are 16 by 8 pixels.
 - 2026-11-09 — Pack images are kept in `assets/cryovex/`, which git ignores, so they never reach the public repo. The game falls back to blocks without them. — Cryovex licence forbids redistribution. Revisit when the repo is private.
 
-- 2026-11-10 — Art source changed from the Cryovex pack to the Sierrassets "Furniture pack" (flat front/side-view furniture sheet, floor and walls sheet, about 500 furniture slices). The user chose it and said its source page allows use. — The Cryovex pack is isometric, so it does not fit a flat view. The zip itself has no licence text, so redistribution is not confirmed; the images stay git-ignored in `assets/furniture-pack/`.
+- 2026-11-10 — Art source changed from the Cryovex pack to the Sierrassets "Furniture pack" (flat front/side-view furniture sheet, floor and walls sheet, about 500 furniture slices). The user chose it and said its source page allows use. — The Cryovex pack is isometric, so it does not fit a flat view. The zip itself has no licence text, so redistribution rests on the user's statement; see the next entry.
 - 2026-11-10 — Camera changed to a flat front/side view: no tilt, no 90-degree turns, zoom and pan only. The house is seen straight on, cut away as before. — The user chose the flat view because the new pack is drawn flat. Supersedes the 30-degree tilt and the turn buttons.
 
 ## OPEN
-- Sierrassets pack licence: the user says the source page allows use. The zip has no licence text, so the exact terms (especially redistribution) are not recorded yet. Record the wording before any pack art is committed. Until then, the images stay git-ignored.
+- 2026-11-10 — The user confirmed the Sierrassets pack images may be committed and distributed, and asked for them to go in the repo. Their git-ignore rule was removed; the two sheets are committed in `assets/furniture-pack/`. — User choice. The zip has no licence text, so this rests on the user's statement; the exact source wording is not yet recorded.
+- Sierrassets pack licence wording: still to record. The user's statement is the only record so far. Ask the user for the exact text from the source page, and file it here. — Keeps the record checkable.
 - Cryovex pack licence (superseded: Cryovex is no longer used): the page says the asset may not be redistributed, even if modified. The house is on a public GitHub Pages site, so the pack's image files cannot go in the repo as they are. Options: get written permission from Cryovex, use our own art, or find a pack that allows redistribution (CC0 or CC BY). Decide before any pack art is committed.
 - Bill figures not yet covered: broadband, phone, car or transport, food and general spending. Need checked sources before they go in `data/`.
 - Whether to add a car (affects bills and commuting).
