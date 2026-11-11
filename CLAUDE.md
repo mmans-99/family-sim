@@ -35,6 +35,7 @@ Every time code, data or a decision changes, before replying to the user:
 Do not leave a change without its docs updated, even a small one.
 
 ## Rules
+- Work on `main` and push to `main`. Do not create branches (or PRs) unless the user asks for one by name.
 - No code is written until the user approves the step.
 - The simulation never depends on the renderer. `src/sim/` must run with no
   screen at all (so it can fast-forward, catch up, or run on a server).

@@ -29,7 +29,7 @@ Build these before Phase 2: everything after rests on them. Step numbers match L
 - [ ] L5 Beliefs: people act on what they think, not the true values
 
 ## Landscape view (UI step, before L2)
-Design agreed 2026-11-11: `docs/HOUSE_VIEW.md` section 10. Built 2026-11-11 after the user approved it (branch `landscape-view`).
+Design agreed 2026-11-11: `docs/HOUSE_VIEW.md` section 10. Built 2026-11-11 after the user approved it (merged to `main`).
 - [x] Full-screen landscape layout: menus float over the house; side panel holds needs, log, Household
 - [x] Follow camera: glides with a person, looks ahead, stops at the world's edge; tap a face to follow
 - [x] Snap zoom levels: Close, Room, Whole house

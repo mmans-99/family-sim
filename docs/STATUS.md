@@ -19,7 +19,7 @@ Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, u
   the clock box; the zoom label and the button both said "Whole house".
 - **Not done:** edge scenery (10.5); a home-screen icon; the minimap glide is checked by reasoning, not by a
   screenshot mid-glide; the auto-hide and the drag/pinch/wheel controls are untested on a real phone.
-- **Not committed to main:** branch `landscape-view`. The sandbox cannot reach the user's phone or Pages.
+- **Merged to `main` and pushed** (commit `4ff4716`). Rule added: no new branches (CLAUDE.md, DECISIONS). The sandbox cannot reach the user's phone or Pages.
 
 ## Earlier (2026-11-11, evening) — landscape view design agreed (docs only)
 - The user asked for the house full screen in landscape, with the menus in the background, and an
