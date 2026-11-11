@@ -64,6 +64,8 @@ Planned, not built yet: `schedule.js`, `offsite.js`, `economy.js`, `weather.js`,
   (`person.why`). Set it to `false` before the finished full-screen view.
 - Drawing-only effects: an action's `steam` flag (`data/actions.json`) makes `people.js` pass a
   steam frame for that person; `house.js` draws the puff after the people. The sim never reads it.
+- Blur: an action's `blur` flag (toilet, bath) makes `house.js` blur the figure's own rectangle
+  (3x3 average, `blurBox`) right after drawing it.
 
 ## The house view
 (Step-by-step method, rules and checks: `docs/HOUSE_VIEW.md`.)

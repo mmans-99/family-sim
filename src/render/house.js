@@ -130,6 +130,30 @@ function paintStructure(buf, b, r) {
 
 // Snap every pixel of a w x h canvas to the palette. Only used when there are no sprites:
 // the sprites have their own hand-picked colours, which must not be changed.
+// Blur a rectangle of the buffer: each pixel becomes the average of the 3x3 pixels around it.
+// Reads from a copy, so the result does not depend on the order pixels are visited in.
+function blurBox(buf, x0, y0, x1, y1) {
+  const src = new Uint8ClampedArray(buf.data);
+  for (let y = Math.max(0, y0); y < Math.min(buf.height, y1); y++) {
+    for (let x = Math.max(0, x0); x < Math.min(buf.width, x1); x++) {
+      let r = 0; let g = 0; let b = 0; let n = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const px = x + dx;
+          const py = y + dy;
+          if (px < 0 || py < 0 || px >= buf.width || py >= buf.height) continue;
+          const i = (py * buf.width + px) * 4;
+          r += src[i]; g += src[i + 1]; b += src[i + 2]; n++;
+        }
+      }
+      const i = (y * buf.width + x) * 4;
+      buf.data[i] = Math.round(r / n);
+      buf.data[i + 1] = Math.round(g / n);
+      buf.data[i + 2] = Math.round(b / n);
+    }
+  }
+}
+
 // Steam: a few pale dotted puffs that rise and drift, one step per animation frame. The
 // dots are alternate pixels, so it reads as a soft blur rather than a solid shape.
 const STEAM = [226, 234, 240];
@@ -211,7 +235,15 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null, people = 
     const row = Math.round(project(cam, width, height, person.x, person.row).sy);
     const sprite = pack?.sprites[person.sprite] ?? pack?.sprites[person.fallback];
     const draw = sprite
-      ? () => blitSprite(buf, sprite, at.sx, at.sy)
+      ? () => {
+        blitSprite(buf, sprite, at.sx, at.sy);
+        // Toilet and bath: the whole figure is blurred, as if behind frosted glass.
+        if (person.blur) {
+          const x0 = Math.round(at.sx - sprite.width / 2);
+          const y0 = Math.round(at.sy) - sprite.height;
+          blurBox(buf, x0, y0, x0 + sprite.width, Math.round(at.sy));
+        }
+      }
       : () => fillRect(buf, Math.round(at.sx) - 4, Math.round(at.sy) - 16, Math.round(at.sx) + 4, Math.round(at.sy), [66, 156, 150], OUTLINE);
     standing.push({ row: row + 0.5, z: 0, draw }); // after furniture on the same row
   }
