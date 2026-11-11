@@ -5,7 +5,19 @@
 ## Current phase
 Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. Next is the landscape full-screen view (design agreed, waiting for approval to build), then L2 (stock engine and household money).
 
-## Latest (2026-11-11, night) — landscape view built (branch `landscape-view`)
+## Latest (2026-11-11, late night) — plans written for the next two steps (docs only)
+- The user approved plans for edge scenery and L2 money, and asked for them to be written so another
+  model can code them. **No code written.**
+- Edge scenery brief: `docs/HOUSE_VIEW.md` 10.5 (first floor moves to the right; neighbour on the left;
+  new extras pieces, `scenery` list in `house.json`, scene/draw/minimap changes, tests, screenshots).
+- L2 brief: `docs/LIFE_SYSTEMS.md` 3a (sourcing list, `tax.json`, `stocks.json`, `flows.json`,
+  `stocks.js`, `household.js`, calendar hook, save v3, panel, tests).
+- Choices recorded in DECISIONS and FAMILY: Band C, no car, no Child Benefit, £75k with 5% pension,
+  £2,500 / £8,000 starting money.
+- The `landscape-view` branch still exists on GitHub (its work is on `main`); the sandbox could not
+  delete it. The user can delete it on GitHub.
+
+## Earlier (2026-11-11, night) — landscape view built (branch `landscape-view`)
 - The user approved the two open choices (auto-hide after 5 s; portrait kept with a hint) and the build.
 - Built HOUSE_VIEW section 10 except edge scenery (10.5): follow camera with look-ahead and glide, edge clamp,
   zoom levels Close / Room (default) / Whole house, minimap with people dots and view box (tap to glide there),
@@ -207,9 +219,9 @@ The user asked for the project to be read and the house view fixed. The view was
 
 ## Next step
 1. User checks the landscape view on a real phone (sideways and upright), and the Full screen button.
-2. Build edge scenery (`docs/HOUSE_VIEW.md` section 10.5), then screenshot it.
+2. Build edge scenery from the brief in `docs/HOUSE_VIEW.md` 10.5, then screenshot it.
 3. User checks the calendar on the phone (the date range on the clock and the Household section).
-4. L2 (stock engine and household money: accounts, bills, mortgage as ledgers), `docs/LIFE_SYSTEMS.md` section 3. Show the user the plan and wait for approval before coding.
+4. L2 from the approved brief in `docs/LIFE_SYSTEMS.md` 3a: source the figures first (Step 0), then code. The plan is approved; still confirm with the user that the session is for L2 (CLAUDE.md).
 5. Source the council tax months and school term dates (needed before L6/L7).
 6. Phase 2: Tom, Oliver and Ruby (L6 to L8).
 7. Record the exact Sierrassets licence wording in DECISIONS.md.

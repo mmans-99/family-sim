@@ -37,6 +37,13 @@ Assumed bought in spring 2024 for **£265,000**, a typical Birmingham semi.
 
 Not yet checked: broadband, mobile phones, car or transport, food, and general spending. Those need sourcing before they go in `data/`.
 
-## Open questions
-- Which council tax band does the house sit in? (Band C is likely for a 3-bed semi, but this needs checking.)
-- Is there a car? (affects bills and commuting)
+## Choices made for L2 (2026-11-11, user approved; details in `docs/LIFE_SYSTEMS.md` 3a)
+- Council tax: **Band C** (2026/27 Birmingham figure and instalment months still to source).
+- **No car.** Tom works from home.
+- **Child Benefit not claimed** (the High Income Child Benefit Charge would take most of it back at £75k). Tuning.
+- Tom: **£75,000** gross, **5% workplace pension** (taken before tax), **no student loan**. Take-home pay is worked out from the 2026/27 tax and NI rules in `data/tax.json` (to source).
+- Starting money (tuning): **£2,500** joint current account, **£8,000** savings, overdraft limit **£1,500**.
+- Mortgage first payment assumed 1 May 2024 (tuning), so 22 payments were made before the game starts on 1 March 2026; the balance is worked out by the code, not typed in.
+
+## Still to source before L2 is coded
+2026/27 income tax and NI rates; Birmingham Band C total and instalments; broadband; two mobile phones; weekly food and everyday spending (ONS Family Spending); an easy-access savings rate.

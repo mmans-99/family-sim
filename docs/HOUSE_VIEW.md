@@ -279,7 +279,7 @@ Follow "After every change" in `CLAUDE.md`: update STATUS, DECISIONS, ROADMAP an
 ARCHITECTURE as needed, update this file if the method changed, commit, push, and copy
 the changed docs to the Project.
 
-## 10. Landscape full-screen view and follow camera (built 2026-11-11, except 10.5)
+## 10. Landscape full-screen view and follow camera (built 2026-11-11, except 10.5 — brief ready)
 
 Designed with the user on 2026-11-11 and approved to build. The two open choices were approved
 at the proposed defaults (DECISIONS). Built as described below, except edge scenery (10.5),
@@ -354,17 +354,113 @@ Plus, minus, pinch and the mouse wheel step between levels.
 - Tap the minimap: the camera glides there and following turns off.
 - Drawn by `src/render/minimap.js` on its own small canvas.
 
-### 10.5 Edge scenery (drawn only)
-So the house does not float on blank space:
-- **Front (top of the screen):** a front garden strip, pavement, kerb and part of the road.
-- **Sides:** the other half of the semi-detached house as a plain roof and wall shape on the
-  attached side; a fence on the other side.
-- **Back:** the garden's back fence with grass beyond.
-New pieces (road, kerb, pavement edge, roof, side fence) are drawn by `tools/make_extras.py` into
-the extras sheet, in the pack's colours, like the shed and tree (section 1). Scenery goes in
-`data/house.json` as its own entries so content stays in data. Nobody walks there; the walking map
-ignores it; the simulation does not know it exists. A visible town is Phase 3, when people leave
-the house for work and school; `VISION.md` changes then, not now.
+### 10.5 Edge scenery (drawn only) — build brief, approved 2026-11-11, NOT built yet
+So the house does not float on blank space. Decisions (DECISIONS 2026-11-11): the first floor
+moves to the **right** of the ground floor (option 1); the neighbour's half of the semi is
+attached on the **left** (lounge side, x < 0); our free side is the right (kitchen side).
+Nobody walks on scenery; the walking map ignores it; `src/sim/` does not change. A visible town
+is Phase 3, when people leave the house for work and school; `VISION.md` changes then, not now.
+
+Read sections 1 to 9 of this file first. Do the steps in this order and stop after each check.
+
+**Step 1. Draw the new pieces** in `tools/make_extras.py` (same method as the shed and tree:
+pixel by pixel, the pack's colours, dark grey (56, 56, 56) outlines for ground-level things).
+Repeating tiles are 16 x 16 unless said otherwise:
+
+| Name | Size | What it looks like |
+|---|---|---|
+| `road` | 16 x 16 | dark grey asphalt with a few lighter specks, repeats with no seams |
+| `road_line` | 16 x 16 | the road tile with a white dashed centre line along the bottom 2 pixels (one dash, 8 px long) |
+| `kerb` | 16 x 4 | light grey stone strip with a darker bottom edge (the drop to the road) |
+| `pavement` | 16 x 16 | pale grey slabs, two 8 x 16 slabs with a joint line |
+| `roof` | 16 x 16 | the neighbour's roof from above: rows of slate tiles (dark blue-grey), 4-px rows |
+| `roof_ridge` | 16 x 16 | the roof tile with a ridge line (the top of the roof) |
+| `front_wall` | 16 x 6 | low brick garden wall seen from above: red-brown with a cap line |
+| `hedge` | 16 x 16 | dark green leafy edge, for the far side of grass |
+
+Run `python3 tools/make_extras.py` from the repo root, paste the printed rectangles into
+`EXTRA_RECTS` in `src/render/pack.js`, and look at the sheet enlarged (x6, Read tool) before
+going on. Grass and paving tiles already exist (`grass`, `paving`).
+
+**Step 2. Data.** Add a top-level `"scenery"` list to `data/house.json`. Each entry:
+`{ "kind": "<tile name>", "floor": "ground", "x": .., "y": .., "w": .., "h": .. }` in the
+**ground floor's own coordinates** (y = 0 is the front wall, the front-wall face covers
+y -1.125 to -0.125). Entries are drawn in list order. Starting layout (squares):
+
+| kind | x | y | w | h | Notes |
+|---|---|---|---|---|---|
+| `road` | -3.125 | -6.875 | 30.25 | 1 | far half of the road |
+| `road_line` | -3.125 | -5.875 | 30.25 | 1 | near half, with the centre line at its top edge |
+| `kerb` | -3.125 | -4.875 | 30.25 | 0.25 | |
+| `pavement` | -3.125 | -4.625 | 30.25 | 1.5 | |
+| `grass` | -3.125 | -3.125 | 16.25 | 2 | front gardens (ours and the neighbour's) |
+| `paving` | 6 | -3.125 | 1 | 2 | path from the pavement to our front door (x 6-7) |
+| `front_wall` | -3.125 | -3.125 | 9.125 | 0.375 | wall along the pavement, left of the path |
+| `front_wall` | 7 | -3.125 | 6.125 | 0.375 | wall right of the path |
+| `roof` | -3.125 | -1.125 | 3 | 7.125 | neighbour's house (roof only) |
+| `roof_ridge` | -3.125 | 2.5 | 3 | 1 | ridge across the middle |
+| `grass` | -3.125 | 6 | 3 | 4.125 | neighbour's back garden |
+| `paving` | 12.125 | -1.125 | 1 | 7.125 | our side path, right of the house |
+| `grass` | 12.125 | 6 | 1 | 4.125 | strip beside our right fence |
+| `hedge` | -3.125 | 10.125 | 16.25 | 1 | beyond the back fence |
+
+Check the numbers against the drawing, not just the table: adjust in whole or quarter
+squares if a piece overlaps the house walls or leaves a gap. The road, kerb and pavement span
+the whole world width (to x 27.125) so the top edge of the world is one straight street.
+
+**Step 3. Placement.** In `src/main.js`, `WORLD.place` becomes `{ first: { x: 14.5, y: 0 } }`:
+the first floor is drawn to the right of the ground floor, at the same height, on the plain
+backdrop. Its own front-wall face stays. Floor labels stay ([text, floor id]); check that
+"First floor" sits on the backdrop above its face, not on the pavement. Set `MARGIN` to
+`{ top: 0, side: 0, bottom: 0.4 }`: the road is now the top edge of the world, so the camera
+should stop there with no blank band. When Sarah climbs the stairs the camera now glides
+sideways (from x 5 to about x 19.5); that is expected.
+
+**Step 4. Scene.** In `src/render/scene.js`, `buildScene(house, floorIds, place)` adds one
+box per scenery entry whose `floor` is in `floorIds`: `kind: 'scenery'`, `tile: entry.kind`,
+`z0 = -0.3`, `z1 = -0.29` (flat, under everything), shifted by that floor's `place` like
+every other box, stamped with `b.floor`. `sceneBounds` needs no change (it already takes
+every box), so the camera's edge clamp now includes the street.
+
+**Step 5. Drawing.** In `src/render/house.js` `drawScene`, draw scenery boxes **first**,
+straight after the background fill and before the floor slabs: `paintTiled(buf, tile, r.x0,
+r.y0, r.x1, r.y1, r.x0, r.y0)` with `tile = pack.tiles[b.tile]`. Repeating tiles are loaded
+into `pack.tiles` from the extras sheet by the `EXTRA_TILES` list in `pack.js`: add every new
+name from Step 1 to that list (`grass` and `paving` are already there). Without the pack, fill the box with
+a plain colour from a small table (`road` dark grey, `pavement` light grey, `grass` green,
+`roof` slate) so the block fallback still works. Do not sort scenery among standing things.
+
+**Step 6. Minimap.** In `src/render/minimap.js`, draw `scenery` boxes before the slabs, in
+the same plain colours as the fallback (one table, exported from `house.js` or a new
+`src/render/scenery.js`, used by both). The minimap is now wider than tall; `resizeCanvas`
+already sets its height from the world's shape.
+
+**Step 7. This file.** Update section 5 (the layout is now side by side; rule 2 below is
+replaced), section 8 (files), and change this heading to "as built".
+
+**Tests** (in `tests/render.test.js`; replace "in the whole-house layout the first floor does
+not touch the ground floor" with the second one below):
+- Every scenery entry has a positive size and a `kind` that exists in `EXTRA_RECTS` (or is
+  `grass` / `paving`).
+- With `place = { first: { x: 14.5, y: 0 } }`, the first floor's bounds do not overlap the
+  ground floor's or any scenery box, and there is at least 1 square between the ground floor's
+  right edge (side path included) and the first floor's left edge.
+- No scenery box overlaps any room on the ground floor or garden (allow the wall half-thickness).
+- The walking map (`src/sim/housemap.js`) has no square inside any scenery box.
+- `sceneBounds` of the whole world reaches the road's top edge (y -6.875).
+- `npm test`: all old tests still pass (people, camera, follow, minimap maths).
+
+**Screenshots** (section 6 and 10.8 method, Playwright, 844 x 390 and 390 x 844, scale 3):
+Close, Room and "Show all"; `?view=ground`, `?view=first`, `?view=garden`; Sarah on the stairs
+(`?minutes=` at a time she climbs) to see the sideways glide end on the landing; the minimap;
+dragging to the top-left corner to check the clamp stops at the road and the neighbour's roof.
+Look at every shot. Things to check: no gap or overlap between the house walls and scenery;
+the front path meets the front door; the road line runs straight; the floor labels are readable.
+
+### Layout rule change (replaces section 5 rule 2 once built)
+Phones are now used sideways (section 10), so floors go **side by side**, left to right, with
+at least a square between them. New floors (loft, extension) go further right. Scenery is laid
+out around the ground floor only.
 
 ### 10.6 Portrait (default, OPEN)
 Portrait keeps working (phone-first rule): the house fills the top of the screen and the side panel

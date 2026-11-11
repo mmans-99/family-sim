@@ -276,6 +276,152 @@ Migrating needs into stocks is optional and comes later (step 3c) if it helps co
 The panel gets a **Household** line: account balance, savings, days to next mortgage. The log
 shows "Paid the mortgage (£1,340)" and "Tom was paid".
 
+### 3a. L2 build brief (approved 2026-11-11, NOT built yet)
+This is the exact plan for step L2. The user approved it on 2026-11-11 with these choices
+(DECISIONS 2026-11-11): council tax **Band C**, **no car**, **Child Benefit not claimed**,
+starting balances **£2,500** joint account and **£8,000** savings (tuning), Tom on **£75,000**
+with a **5% workplace pension** and **no student loan**. Where this brief and the general text
+above differ, this brief wins.
+
+Terms: a *stock* is a number that rises and falls (a balance); a *flow* moves it (pay in, a
+bill out); a *ledger* is the list of changes with reasons. Money is in pounds, kept to the
+penny (round with `Math.round(x * 100) / 100` after each change).
+
+#### Step 0. Source the figures (web search, before any code)
+Write each figure, its date and its link into `docs/FAMILY.md` (Household bills table, or a new
+"Income" table), then into the data file's `"source"` field. Do not guess any of these:
+1. 2026/27 Income Tax (England): personal allowance, basic rate band and rate, higher rate
+   band and rate, and the £100k allowance taper (not reached at £75k, but put it in the data).
+   Expected (verify): £12,570 allowance; 20% to £50,270; 40% above.
+2. 2026/27 employee National Insurance (Class 1): primary threshold, upper earnings limit,
+   main and upper rates. Expected (verify): 8% from £12,570 to £50,270, 2% above.
+3. Birmingham council tax 2026/27 **Band C** total (all precepts), and how the default
+   instalments run (expected: 10 monthly payments, April to January; verify).
+4. Typical UK broadband bill and typical mobile phone bill per month (two adult phones). Use
+   Ofcom or a comparison site with a date.
+5. Weekly household food and non-alcoholic drink spend, and weekly "everyday" spending
+   (household goods, personal care, recreation, clothing) for a couple with two children:
+   ONS *Family spending in the UK*, latest edition. Say which table and which year.
+6. A typical easy-access savings rate (Bank of England or Moneyfacts), dated.
+If a figure cannot be found, label it `"tuning": true` with a short reason, and tell the user.
+
+#### Step 1. Data files
+`data/tax.json` — the 2026/27 rules from Step 0:
+```json
+{ "about": "...", "source": "...", "year": "2026/27",
+  "incomeTax": { "allowance": 12570, "taperFrom": 100000, "bands": [ { "upTo": 50270, "rate": 0.2 }, { "upTo": null, "rate": 0.4 } ] },
+  "ni": { "from": 12570, "upper": 50270, "main": 0.08, "above": 0.02 } }
+```
+(Bands are on income above the allowance where the source says so: follow the source's
+method and test it against a published worked example.)
+
+`data/stocks.json`:
+```json
+{ "about": "...", "stocks": [
+  { "id": "acct.joint", "kind": "money", "value": 2500, "min": 0, "floor": "spill", "spillTo": "debt.overdraft", "ledgerKeep": 60, "tuning": true },
+  { "id": "acct.savings", "kind": "money", "value": 8000, "min": 0, "floor": "hard", "ledgerKeep": 60, "tuning": true },
+  { "id": "debt.overdraft", "kind": "money", "value": 0, "min": 0, "max": 1500, "ceiling": "hard", "ledgerKeep": 60, "tuning": true },
+  { "id": "debt.mortgage", "kind": "money", "value": null, "min": 0, "floor": "hard", "ledgerKeep": 60 }
+],
+  "mortgage": { "loan": 238500, "rate": 0.046, "termMonths": 300, "firstPayment": { "year": 2024, "month": 5, "day": 1 }, "fixedUntil": { "year": 2029, "month": 4, "day": 30 }, "source": "docs/FAMILY.md (assumption, not a quote); first payment date is tuning" },
+  "salary": { "who": "tom", "gross": 75000, "pension": 0.05, "pensionMethod": "netPay", "studentLoan": false, "tuning": "user choice 2026-11-11" } }
+```
+- `debt.mortgage` starts at `null`: the code works out the balance on the game's start date
+  from the loan (see Step 3). Never type the balance in.
+- Debts are positive numbers (what is owed). The overdraft fills when the joint account would
+  go below £0. If the overdraft is full, the rest is **not paid**: `change` returns the part
+  that was applied and the log says "Could not pay <bill> in full (£X short)".
+- No transfers between accounts in L2 (who moves money is behaviour, from L5/L8 on).
+
+`data/flows.json` — every flow has `id`, `stock`, `amount` (negative = money out), `reason`
+(the log text), and either `rule` (a calendar rule id) or `every`:
+| id | stock | when | amount |
+|---|---|---|---|
+| `pay.tom` | `acct.joint` | rule `payday` (28th, 09:00) | `"net"`: worked out from `tax.json` and `salary` ÷ 12 |
+| `mortgage` | `acct.joint` | rule `mortgage` (1st, 06:00) | `"mortgage"`: the fixed repayment (about £1,339) |
+| `counciltax` | `acct.joint` | new rule `councilTax` (1st, 07:00, months 4–1) | Band C yearly ÷ 10 |
+| `water` | `acct.joint` | new rule `water` (15th, 07:00) | 587 ÷ 12 |
+| `energy` | `acct.joint` | new rule `energy` (10th, 07:00) | 1723 ÷ 12 (flat in L2) |
+| `broadband` | `acct.joint` | new rule `bills20` (20th, 07:00) | from Step 0 |
+| `phones` | `acct.joint` | rule `bills20` | from Step 0 |
+| `savings.interest` | `acct.savings` | new rule `interest` (last calendar day, 23:00) | `"interest"`: balance × rate ÷ 12 |
+| `food` | `acct.joint` | `every: "calendarWeek"`, 10:00 | weekly figure from Step 0 |
+| `everyday` | `acct.joint` | `every: "calendarWeek"`, 10:00 | weekly figure from Step 0 |
+Add the new rules to `data/calendar.json` (all `"tuning": true` for the day and hour except
+where a source gives the date). `calendar.js` already lets a monthly rule list `months`.
+"Last calendar day" needs a small addition: `day: "last"` in `matches()` in `src/sim/calendar.js`; add a test.
+
+#### Step 2. `src/sim/stocks.js` (pure, no DOM, no random numbers)
+```js
+export function addStock(world, def)                  // copies the def into world.stocks[id]; ledger [], ledgerTotals {}
+export function read(world, id)                       // value
+export function change(world, id, amount, reason, ref) // the ONLY way to change a stock. Returns the amount applied.
+export function ledger(world, id)                     // newest last
+```
+`change`: add `amount`; if the result is below `min` and `floor` is `"spill"`, keep it at `min`
+and put the shortfall into `spillTo` (as a positive debt) via `change` on that stock; if
+`"hard"`, stop at `min` (and at `max` when `ceiling` is `"hard"`). Write one ledger entry
+`{ t: world.time, amount: applied, reason, ref }` per stock touched. When the ledger is longer
+than `ledgerKeep`, drop the oldest and add its amount to `ledgerTotals[reason]`.
+Lags (`target`, `halfLifeHours`) and `stepStocks` are **not** needed for L2; leave them for L4.
+
+#### Step 3. `src/sim/household.js` (pure)
+```js
+export function netMonthlyPay(tax, salary)       // gross − pension (net-pay: before tax) − income tax − NI, ÷ 12
+export function monthlyRepayment(loan, rate, n)  // P·r / (1 − (1+r)^−n), r = rate / 12
+export function balanceOn(mortgage, date)        // balance after every payment due on or before `date`
+export function payMortgage(world, date)         // interest = balance·r; capital = payment − interest
+export function setupMoney(world, data)          // stocks from stocks.json, debt.mortgage = balanceOn(start)
+export function runFlow(world, flow, date)       // works out the amount ("net", "mortgage", "interest", or a number) and calls change()
+export function runWeeklyFlows(world, span)      // every "calendarWeek" flow: amount × days in span ÷ 7
+```
+- `payMortgage`: `change(acct.joint, −payment, "Mortgage")` and
+  `change(debt.mortgage, −capital, "Capital repaid")`. Interest is in the ledger entry's `ref`.
+- **Weekly flows:** once per game day at 10:00, for the calendar days that game day covers
+  (13 or 14 days: `calendarSpan(gameDay)` in `src/sim/calendar.js` gives the first and last calendar-day index; `dateAt` turns an index into a date). Log one line, e.g. "Food shop and
+  spending for 27 Mar – 8 Apr (£X)".
+- **Hook into the calendar:** `fireDue(world)` in `src/sim/world.js` fires each due rule today
+  (it only writes a House log line and counts it in `world.calendar.fired`). Keep the count, and call `runFlowsForRule(world, ruleId, date)` instead: run every flow
+  with that `rule`, log "Paid the mortgage (£1,339.10)", "Tom was paid (£X)", etc. Rules with no
+  flow (Christmas, the energy cap) keep their current log line. The energy cap line becomes
+  "Energy price cap reviewed (prices change from L11)".
+- Call `setupMoney` in `createWorld`. Money uses **no** random numbers, so Sarah's same-seed day
+  must not change.
+
+#### Step 4. Save format version 3
+Add `stocks` (each stock's value, ledger and ledgerTotals) and `loans.mortgage` (rate,
+fixedUntil, payment) to `toSave`/`fromSave` in `src/sim/save.js`. Flow definitions come from
+`data/` and are not saved. Version 1 and 2 saves still load: they get money from `setupMoney`
+for the save's current date (mortgage balance for that date). Catch-up runs bills and pay
+through the same calendar path, so a long absence pays every bill on its date.
+
+#### Step 5. Panel (watch only)
+In `src/ui/panel.js`, the Household block shows, above the House log lines:
+"Joint account £X · Savings £Y · Mortgage left £Z", "Overdraft £W" only when above £0, and
+"Next: <label> on <date>" (the next queued calendar event with a flow). Money formatted with
+`toLocaleString('en-GB', { style: 'currency', currency: 'GBP' })`.
+
+#### Step 6. Tests (`tests/stocks.test.js`, `tests/household.test.js`)
+- `change`: spills below £0 into the overdraft; a full overdraft returns a partial amount;
+  a hard floor stops; ledger keeps `ledgerKeep` entries and rolls the rest into totals.
+- `netMonthlyPay` matches a published 2026/27 worked example (cite it in the test) and the
+  £75,000 / 5% case to the penny against a hand sum written in the comment.
+- `monthlyRepayment(238500, 0.046, 300)` ≈ £1,339 (±£1); the balance after 12 payments matches
+  a standard schedule within £1; `balanceOn` at 1 Mar 2026 equals 22 payments made
+  (May 2024 to Feb 2026).
+- `day: "last"` matches 28/29 Feb, 30 Apr, 31 Dec.
+- One game year (28 game days) headless from 1 Mar 2026: count of each bill (12 mortgages,
+  12 pays, 10 council tax, …) and the joint account's final value equal to a hand sum written in
+  the comment.
+- Save round trip with money; a version 2 save loads and gets money.
+- Old tests unchanged: Sarah's same-seed day, calendar counts.
+
+#### Step 7. Check and docs
+Open the page (`?fresh=1`, then `?minutes=` to reach 1 Apr 06:00 and a 28th 09:00) and look at
+the panel at phone size, sideways and upright. Then CLAUDE.md "After every change": STATUS,
+DECISIONS, ROADMAP (tick L2), ARCHITECTURE (files, save v3), SIMULATION (as built), FAMILY
+(sourced figures), this section's heading to "as built". Commit and push to `main` (no branches).
+
 ### 3b. Coupling and lags (`data/couplings.json`)
 Couplings are rules that change **rates or targets** when a stock crosses a level:
 ```json

@@ -23,7 +23,7 @@ Each phase ends with something you can open and watch.
 Build these before Phase 2: everything after rests on them. Step numbers match LIFE_SYSTEMS.md section 16.
 - [x] L0 Save/load, saveable random state, one random stream per system (`src/sim/save.js`, `src/save/store.js`, `subRng` in `src/sim/rng.js`)
 - [x] L1 Calendar and two clocks (each game day ≈ 13 calendar days; dated bills, paydays, holidays). `src/sim/calendar.js`, `data/calendar.json`; date range on the clock; Household log
-- [ ] L2 Stock engine + household money: accounts, bills, mortgage as ledgers
+- [ ] L2 Stock engine + household money: accounts, bills, mortgage as ledgers. Build brief ready: `docs/LIFE_SYSTEMS.md` 3a
 - [ ] L3 Replay harness: run many seeds for years with no screen and report the lives
 - [ ] L4 Couplings and lags: stress, sleep debt; low needs interrupt actions
 - [ ] L5 Beliefs: people act on what they think, not the true values
@@ -34,7 +34,7 @@ Design agreed 2026-11-11: `docs/HOUSE_VIEW.md` section 10. Built 2026-11-11 afte
 - [x] Follow camera: glides with a person, looks ahead, stops at the world's edge; tap a face to follow
 - [x] Snap zoom levels: Close, Room, Whole house
 - [x] Minimap with people dots and the view box; tap to move the camera
-- [ ] Edge scenery: front garden, pavement, road, the other half of the semi, fences (drawing only)
+- [ ] Edge scenery: front garden, pavement, road, the other half of the semi, fences (drawing only). Build brief ready: `docs/HOUSE_VIEW.md` 10.5
 - [x] Portrait still works; full-screen button; web app manifest for "Add to Home Screen" (no icon file yet)
 - [x] Auto-hide of buttons after 5 s (default approved)
 

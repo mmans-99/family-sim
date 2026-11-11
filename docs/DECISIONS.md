@@ -67,7 +67,6 @@ Newest at the bottom. Format: date — decision — why.
 - Sierrassets pack licence wording: still to record. The user's statement is the only record so far. Ask the user for the exact text from the source page, and file it here. — Keeps the record checkable.
 - Cryovex pack licence (superseded: Cryovex is no longer used): the page says the asset may not be redistributed, even if modified. The house is on a public GitHub Pages site, so the pack's image files cannot go in the repo as they are. Options: get written permission from Cryovex, use our own art, or find a pack that allows redistribution (CC0 or CC BY). Decide before any pack art is committed.
 - Bill figures not yet covered: broadband, phone, car or transport, food and general spending. Need checked sources before they go in `data/`.
-- Whether to add a car (affects bills and commuting).
 - Always-on option. Not possible on GitHub Pages alone (it only serves files). If wanted later: a free cloud service or the Chromebox. Catch-up mode covers the main need for now.
 - Hand-drawn pixel sprites, four angles each, replacing the block shapes one item at a time. Plan: sofa, bed and table first. Approved 2026-11-09. (Partly superseded: the pack covers most furniture; our own extras sheet covers the rest.)
 
@@ -99,3 +98,10 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-11: The web app manifest uses `orientation: any`, not `landscape` as section 10.1 planned. — A landscape lock would stop the portrait layout the user approved. The sideways lock is requested only from the Full screen button.
 - 2026-11-11: Work goes straight to `main` and is pushed there. No new branches or pull requests unless the user asks. The user asked for this after a `landscape-view` branch was made without asking; it was merged to `main` the same day. — Keeps one line of history and the live site matching the repo.
 - 2026-11-11: Edge scenery (section 10.5) is NOT built yet. It needs new pieces drawn in `tools/make_extras.py` and a visual check. — Kept out of this step to keep it reviewable; to do next.
+- 2026-11-11: Next two steps planned and approved by the user, to be coded by a later session (possibly another model) from the briefs: edge scenery (`docs/HOUSE_VIEW.md` 10.5) first, then L2 money (`docs/LIFE_SYSTEMS.md` 3a). No code written for either yet. — The user asked for the plan in the docs for a different model to follow.
+- 2026-11-11: Edge scenery layout: the first floor is drawn to the right of the ground floor (`place: { first: { x: 14.5, y: 0 } }`), so the street can run along the top. — Option 1 of 3; landscape screens are wide. Trade-off: "Show all" is smaller upright.
+- 2026-11-11: The neighbour's half of the semi is attached on the left (lounge side). — Claude's suggestion, accepted with "go with your suggestions".
+- 2026-11-11: Council tax Band C. — Usual band for a Birmingham 3-bed semi; exact figure still to source.
+- 2026-11-11: No car. — Tom works from home; can be added later with its bills.
+- 2026-11-11: Child Benefit is not claimed. — At £75k the High Income Child Benefit Charge takes back most of it; many families in that position opt out. Tuning; can change.
+- 2026-11-11: Money starts at £2,500 in the joint account and £8,000 in savings (tuning). Tom earns £75,000 with a 5% workplace pension (net-pay arrangement) and no student loan. Overdraft limit £1,500 (tuning). — User approved the suggested defaults.
