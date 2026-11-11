@@ -31,6 +31,7 @@ export function whyText(person, world) {
       ? 'a household chore, no need involved'
       : `lowest need: ${needName(w.need)} (${w.needs[w.need]})`;
     parts.push(main, `score ${w.score}`);
+    if (w.fit !== undefined && w.fit !== 1) parts.push(`personality ×${w.fit}`);
     parts.push(`${w.squares} squares away`, w.habit);
     if (w.next.length) parts.push(`next best: ${w.next.map((n) => `${n.label} ${n.score}`).join(', ')}`);
   } else {
@@ -60,8 +61,11 @@ export function renderPanel(el, world, roomName) {
     const lines = world.log.filter((e) => e.who === p.name).slice(-5).reverse()
       .map((e) => `<li><span class="t">${clockText(e.time)}</span> ${esc(e.text)}</li>`).join('');
     const why = SHOW_WHY ? `<div class="why">${esc(whyText(p, world))}</div>` : '';
+    const traits = Object.entries(p.personality ?? {})
+      .map(([t, v]) => `${t[0].toUpperCase()}${t.slice(1)} ${v}`).join(' · ');
     return `<div class="person"><div class="who"><b>${esc(p.name)}</b> (${esc(p.role)}, ${p.age})`
       + ` · ${esc(doingText(p))} · ${esc(roomName(world, p))}</div>`
+      + `<div class="traits">${esc(traits)}</div>`
       + `<div class="needs">${bars}</div>${why}<ol class="log">${lines}</ol></div>`;
   }).join('');
 }

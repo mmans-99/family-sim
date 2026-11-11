@@ -1,10 +1,11 @@
 {
-  "about": "Who lives in the house and is simulated. Only Sarah for now; the rest of the family (docs/FAMILY.md) join in Phase 2.",
+  "about": "Who lives in the house and is simulated. Only Sarah for now; the rest of the family (docs/FAMILY.md) join in Phase 2. personality = \"random\" rolls five traits from 0 to 10 from the seed (5 is neutral), or give the numbers: outgoing, tidy, active, kind, anxious. Traits used so far: tidy and active (see actions.json likes). outgoing, kind and anxious wait for Phase 2 (other people) and the emotions work.",
   "people": [
     {
       "id": "sarah", "name": "Sarah", "role": "Mum", "age": 34, "sprite": "sarah",
       "start": { "floor": "first", "x": 3, "y": 1 },
-      "needs": { "hunger": 40, "energy": 85, "bladder": 30, "hygiene": 50, "fun": 70, "comfort": 70 }
+      "needs": { "hunger": 40, "energy": 85, "bladder": 30, "hygiene": 50, "fun": 70, "comfort": 70 },
+      "personality": "random"
     }
   ]
 }

@@ -6,7 +6,7 @@
 // the best few, weighted by score, with the seeded random numbers. They walk to the
 // furniture (shortest route, stairs included), use it for its minutes, and the action's
 // gains are added a little each minute.
-import { createRng } from './rng.js';
+import { createRng, subRng } from './rng.js';
 import { buildMap, keyOf, parseKey } from './housemap.js';
 
 export const WALK_SQUARES_PER_MINUTE = 8; // about 1.3 squares a real second at 1x: easy to follow
@@ -14,8 +14,26 @@ const TOP_CHOICES = 3;    // pick among this many best-scoring actions
 const MIN_SCORE = 1;      // below this an action is not worth getting up for
 const TRAVEL_COST = 0.15; // score lost per square walked
 const LOG_LENGTH = 50;
+const MIN_FIT = 0.2;      // a personality can make an action less wanted, but never impossible
+
+export const TRAITS = ['outgoing', 'tidy', 'active', 'kind', 'anxious'];
 
 const clamp = (v) => Math.max(0, Math.min(100, v));
+
+// Five traits, each 0 to 10, rolled from the seed (5 is neutral).
+export function rollPersonality(rng) {
+  return Object.fromEntries(TRAITS.map((t) => [t, Math.floor(rng() * 11)]));
+}
+
+// How much a personality fits an action: 1 is neutral. Each liked trait adds or takes away
+// `weight` for each step away from 5 (out of 5).
+export function traitFit(personality, likes = {}) {
+  let fit = 1;
+  for (const [trait, weight] of Object.entries(likes)) {
+    fit += weight * ((personality?.[trait] ?? 5) - 5) / 5;
+  }
+  return Math.max(MIN_FIT, fit);
+}
 
 export function hourOf(time) {
   return Math.floor((time % 1440) / 60);
@@ -29,6 +47,7 @@ export function inHours(hour, [from, to]) {
 export function createWorld({ house, actions, needs, people, seed = 1, time = 7 * 60 }) {
   const map = buildMap(house);
   const world = {
+    seed,
     time,
     rng: createRng(seed),
     house, map,
@@ -39,6 +58,9 @@ export function createWorld({ house, actions, needs, people, seed = 1, time = 7 
       id: p.id, name: p.name, role: p.role, age: p.age, sprite: p.sprite,
       at: keyOf(p.start.floor, p.start.x, p.start.y),
       needs: { ...p.needs },
+      personality: p.personality === 'random' || !p.personality
+        ? rollPersonality(subRng(seed, `personality:${p.id}`))
+        : { ...p.personality },
       activity: null,
       lastDone: {}, // action id -> game minute it was last started
     })),
@@ -76,6 +98,7 @@ export function scoreAction(person, action, hour) {
     const urgency = ((100 - now) / 100) ** 2;    // low needs matter much more
     score += useful * urgency;
   }
+  score *= traitFit(person.personality, action.likes);
   if (action.hours && !inHours(hour, action.hours)) score *= action.offHours ?? 0;
   return score;
 }
@@ -118,7 +141,7 @@ function decide(world, person) {
     }
     if (!best) continue;
     const score = base - best.d * TRAVEL_COST;
-    if (score >= MIN_SCORE) options.push({ action, ...best, score });
+    if (score >= MIN_SCORE) options.push({ action, ...best, score, fit: traitFit(person.personality, action.likes) });
   }
 
   options.sort((a, b) => b.score - a.score || a.action.id.localeCompare(b.action.id));
@@ -132,11 +155,23 @@ function decide(world, person) {
       if (roll < 0) { pick = o; break; }
     }
     const path = map.pathTo(prev, person.at, pick.sq);
-    person.activity = {
-      action: pick.action, item: pick.item, path, pos: 0,
-      phase: path.length > 1 ? 'walk' : 'do',
-      minutesLeft: pick.action.minutes,
-    };
+    const chosen = { action: pick.action, item: pick.item };
+    if (pick.action.prelude) {
+      // Something has to be done first (running the bath). It is done at the same furniture.
+      const first = world.actions.find((a) => a.id === pick.action.prelude);
+      person.activity = {
+        action: first, item: pick.item, path, pos: 0,
+        phase: path.length > 1 ? 'walk' : 'do',
+        minutesLeft: first.minutes, next: chosen,
+      };
+      person.lastDone[first.id] = world.time;
+    } else {
+      person.activity = {
+        action: pick.action, item: pick.item, path, pos: 0,
+        phase: path.length > 1 ? 'walk' : 'do',
+        minutesLeft: pick.action.minutes,
+      };
+    }
     const last = person.lastDone[pick.action.id];
     const why = {
       chosen: pick.action.label,
@@ -146,6 +181,7 @@ function decide(world, person) {
       score: Math.round(pick.score * 10) / 10,
       squares: pick.d,
       habit: last === undefined ? 'never done' : `last done ${world.time - last} min ago`,
+      fit: Math.round(pick.fit * 100) / 100,
       next: top.filter((o) => o !== pick).slice(0, 2)
         .map((o) => ({ label: o.action.label, score: Math.round(o.score * 10) / 10 })),
     };
@@ -204,7 +240,17 @@ function stepPerson(world, person) {
     person.needs[need] = clamp(person.needs[need] + gain / a.action.minutes);
   }
   a.minutesLeft -= 1;
-  if (a.minutesLeft <= 0) person.activity = null;
+  if (a.minutesLeft <= 0) {
+    if (a.next) {
+      // The prelude is done: go straight on to the real action, at the same furniture.
+      person.activity = {
+        action: a.next.action, item: a.next.item, path: [person.at], pos: 0,
+        phase: 'do', minutesLeft: a.next.action.minutes,
+      };
+    } else {
+      person.activity = null;
+    }
+  }
 }
 
 // Move the whole world on by one game minute.
