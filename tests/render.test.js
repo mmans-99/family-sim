@@ -216,7 +216,7 @@ test('steam is drawn only while someone is in an action marked steam (the bath)'
   assert.ok(seenBath, 'Sarah has a bath within a day');
 });
 
-test('toilet and bath are blurred over the whole figure; other actions are not', async () => {
+test('toilet and bath are covered by the frosted cover; other actions are not', async () => {
   const { createWorld, step } = await import('../src/sim/world.js');
   const { peopleToDraw } = await import('../src/render/people.js');
   const load = (f) => JSON.parse(readFileSync(new URL(`../data/${f}`, import.meta.url), 'utf8'));
@@ -229,7 +229,8 @@ test('toilet and bath are blurred over the whole figure; other actions are not',
     if (a?.phase === 'do') {
       seen.add(a.action.id);
       const expected = a.action.id === 'toilet' || a.action.id === 'bath';
-      assert.equal(out.blur, expected, `${a.action.id} blur`);
+      assert.equal(out.hide !== null, expected, `${a.action.id} cover`);
+      assert.equal(out.cover !== null, expected, `${a.action.id} footprint`);
     }
   }
   assert.ok(seen.has('toilet') && seen.has('bath'), 'the day has a toilet visit and a bath');

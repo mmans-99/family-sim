@@ -33,8 +33,8 @@ Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `d
   snapshot of all needs. Shown in the panel while `SHOW_WHY` is on (`src/ui/panel.js`).
 - **Steam:** actions marked `"steam": true` in `data/actions.json` (the bath) draw a dithered
   steam puff over the person while they are in them. Drawing only, no effect on the sim.
-- **Blur:** actions marked `"blur": true` (the toilet and the bath) blur the whole figure while
-  it is in use, as if behind frosted glass. Drawing only.
+- **Frosted cover:** actions marked `"hide": true` (the toilet and the bath) cover the whole
+  furniture and the figure in it with shuffling pale tiles while in use. Drawing only.
 
 ## 1. Needs (0–100, drop over time)
 Hunger, Energy, Bladder, Hygiene, Fun, Social, Comfort.

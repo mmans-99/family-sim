@@ -130,26 +130,31 @@ function paintStructure(buf, b, r) {
 
 // Snap every pixel of a w x h canvas to the palette. Only used when there are no sprites:
 // the sprites have their own hand-picked colours, which must not be changed.
-// Blur a rectangle of the buffer: each pixel becomes the average of the 3x3 pixels around it.
-// Reads from a copy, so the result does not depend on the order pixels are visited in.
-function blurBox(buf, x0, y0, x1, y1) {
-  const src = new Uint8ClampedArray(buf.data);
-  for (let y = Math.max(0, y0); y < Math.min(buf.height, y1); y++) {
-    for (let x = Math.max(0, x0); x < Math.min(buf.width, x1); x++) {
-      let r = 0; let g = 0; let b = 0; let n = 0;
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const px = x + dx;
-          const py = y + dy;
-          if (px < 0 || py < 0 || px >= buf.width || py >= buf.height) continue;
-          const i = (py * buf.width + px) * 4;
-          r += src[i]; g += src[i + 1]; b += src[i + 2]; n++;
-        }
-      }
+// Frosted cover: a grid of pale tiles in the greys and whites of the frosted-glass reference,
+// shuffled every animation frame so it shimmers rather than sitting still. Every tile is opaque,
+// so nothing underneath (the furniture or the figure) shows through.
+const FROST = [
+  [255, 255, 255], [246, 247, 249], [238, 240, 242], [226, 230, 235], [212, 217, 224], [200, 206, 214],
+];
+const FROST_CELL = 4; // art pixels per tile
+function paintFrost(buf, x0, y0, x1, y1, tick) {
+  const left = Math.max(0, Math.floor(x0));
+  const top = Math.max(0, Math.floor(y0));
+  const right = Math.min(buf.width, Math.ceil(x1));
+  const bottom = Math.min(buf.height, Math.ceil(y1));
+  for (let y = top; y < bottom; y++) {
+    for (let x = left; x < right; x++) {
+      const cx = Math.floor((x - left) / FROST_CELL);
+      const cy = Math.floor((y - top) / FROST_CELL);
+      // A simple hash of the tile position and the frame: a different shade each frame.
+      const h = ((cx * 73856093) ^ (cy * 19349663) ^ (tick * 83492791)) >>> 0;
+      let shade = FROST[h % FROST.length];
+      if (((x + y + tick) & 3) === 0 && (h >> 8) % 3 === 0) shade = FROST[(h % FROST.length + 1) % FROST.length]; // dotted accent
       const i = (y * buf.width + x) * 4;
-      buf.data[i] = Math.round(r / n);
-      buf.data[i + 1] = Math.round(g / n);
-      buf.data[i + 2] = Math.round(b / n);
+      buf.data[i] = shade[0];
+      buf.data[i + 1] = shade[1];
+      buf.data[i + 2] = shade[2];
+      buf.data[i + 3] = 255;
     }
   }
 }
@@ -237,12 +242,6 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null, people = 
     const draw = sprite
       ? () => {
         blitSprite(buf, sprite, at.sx, at.sy);
-        // Toilet and bath: the whole figure is blurred, as if behind frosted glass.
-        if (person.blur) {
-          const x0 = Math.round(at.sx - sprite.width / 2);
-          const y0 = Math.round(at.sy) - sprite.height;
-          blurBox(buf, x0, y0, x0 + sprite.width, Math.round(at.sy));
-        }
       }
       : () => fillRect(buf, Math.round(at.sx) - 4, Math.round(at.sy) - 16, Math.round(at.sx) + 4, Math.round(at.sy), [66, 156, 150], OUTLINE);
     standing.push({ row: row + 0.5, z: 0, draw }); // after furniture on the same row
@@ -254,6 +253,22 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null, people = 
     if (person.steam === null || person.steam === undefined) continue;
     const at = project(cam, width, height, person.x, person.y);
     paintSteam(buf, Math.round(at.sx), Math.round(at.sy), person.steam);
+  }
+  for (const person of people) {
+    if (person.hide === null || person.hide === undefined || !person.cover) continue;
+    // Cover the whole furniture footprint and everything the figure could show, from the
+    // sprite's own size, so nothing of the person is left visible.
+    const sprite = pack?.sprites[person.sprite] ?? pack?.sprites[person.fallback];
+    const sw = sprite ? sprite.width : 16;
+    const sh = sprite ? sprite.height : 32;
+    const at = project(cam, width, height, person.x, person.y);
+    const a = project(cam, width, height, person.cover.x, person.cover.y);
+    const b = project(cam, width, height, person.cover.x + person.cover.w, person.cover.y + person.cover.d);
+    const x0 = Math.min(a.sx, b.sx, at.sx - sw / 2) - 1;
+    const x1 = Math.max(a.sx, b.sx, at.sx + sw / 2) + 1;
+    const y0 = Math.min(a.sy, b.sy, at.sy - sh) - 1;
+    const y1 = Math.max(a.sy, b.sy, at.sy) + 1;
+    paintFrost(buf, x0, y0, x1, y1, person.hide);
   }
   ctx.putImageData(buf, 0, 0);
 }

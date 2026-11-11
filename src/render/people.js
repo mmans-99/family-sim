@@ -103,8 +103,12 @@ export function peopleToDraw(world, floors, place = {}, frac = 0, now = 0) {
       x: spot.x + (shift.x ?? 0), y: spot.y + (shift.y ?? 0), row: spot.row + (shift.y ?? 0),
       // Steam (from actions marked "steam" in the data): the animation frame to draw, else null.
       steam: a?.phase === 'do' && a.action.steam ? tick : null,
-      // Privacy blur over the whole figure (toilet, bath), from actions marked "blur" in the data.
-      blur: a?.phase === 'do' && a.action.blur === true,
+      // Frosted cover over the whole toilet or bath and the figure in it (actions marked "hide"):
+      // the animation frame to draw, else null; and the furniture footprint it must cover.
+      hide: a?.phase === 'do' && a.action.hide ? tick : null,
+      cover: a?.phase === 'do' && a.action.hide && a.item
+        ? { x: a.item.x + (place[a.item.floor]?.x ?? 0), y: a.item.y + (place[a.item.floor]?.y ?? 0), w: a.item.w, d: a.item.d }
+        : null,
     });
   }
   return out;

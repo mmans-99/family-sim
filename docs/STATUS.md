@@ -12,8 +12,10 @@ Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has n
 - **Bath steam.** Actions marked `steam` (the bath) draw a dithered puff over her while she is
   in them. First pass: it is subtle, and it still touches the wall edge above the bath; tune
   on the phone.
-- **Blur over the figure.** Toilet and bath blur the whole character while in use (`blur` flag
-  in `data/actions.json`). Checked in a browser: bath clearly blurred; toilet blurred (crop cut it short).
+- **Frosted cover instead of blur.** The toilet and bath are covered in shuffling pale tiles
+  (from the reference the user sent) while in use, so the figure is not visible (`hide` flag in
+  `data/actions.json`). Checked in a browser: bath fully covered; toilet covered (crop cut short).
+  The cover reaches up over the wall above the bath; tune on the phone.
 - **Not done yet, as asked:** the bath's tap and filling steps; personality parameters (Mum
   first, then everyone). Tests: 54 passing.
 
