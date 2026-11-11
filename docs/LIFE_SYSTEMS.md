@@ -9,7 +9,7 @@ file's section 1 (rules) and the section for the step you are building. Read
 `docs/SIMULATION.md` section 0 to see what is already built.
 
 **Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
-(calendar), with the mapping approved by the user on 2026-11-11 and the refinements listed in
+(calendar). L2 is built (money, 2026-11-11; see 3a "as built"), with the mapping approved by the user on 2026-11-11 and the refinements listed in
 the section 2 note below. Each later step must be approved by the user before its code is written
 (CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 

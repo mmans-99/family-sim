@@ -13,7 +13,7 @@ Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, u
 - **Tests:** 112 passing (was 89). New: `tests/stocks.test.js` (spill, overdraft limit, floors and ceilings, overdraft repaid first, ledger roll-up), `tests/household.test.js` (tax at the band edges and the taper, NI, take-home, mortgage schedule, start balances, next event, one game year as a hand sum £22,993.16, save with money, a version 2 save gets money), `day: "last"` in `tests/calendar.test.js`.
 - **Checked:** the panel at phone portrait (`?fresh=1&minutes=3440`): the Household block and every figure traced by hand. Landscape: the family panel is cut off at the right in headless Chrome, but the committed version does the same (see Known issues).
 - **Decisions to confirm:** 23 repayments at the start, not 22 (DECISIONS 2026-11-11). The pension is on the whole salary, not the qualifying band.
-- Working copy: `/home/claude/family-sim`, to be committed and pushed to `main`.
+- Committed and pushed to `main` (commit 93b34c5). The Project copies of the docs are updated to match.
 
 ## Latest (2026-11-11, edge scenery built)
 - **Edge scenery built** (HOUSE_VIEW 10.5): the street, pavement, kerb, road centre line, the neighbour's
