@@ -38,7 +38,7 @@ Break any one of these and the view looks wrong.
    front faces the viewer.
 4. **Draw in this order** (`drawScene` in `house.js`): floor squares, then flat things
    (rugs, paths), then walls and furniture sorted by the screen row of their bottom
-   edge, top of screen first. Lower things overlap what is behind them.
+   edge, top of screen first (so a floor placed higher on the drawing is drawn first). Lower things overlap what is behind them.
 5. **A sprite stands on the bottom edge of its squares, centred side to side.** Tall
    sprites (fridge, wardrobe) stick up above their square. That is intended.
 6. **Things on top of other things use `z`** in `house.json` (TV on its unit, lamp on a
@@ -46,7 +46,8 @@ Break any one of these and the view looks wrong.
    below it.
 7. **Do not palette-snap the frame when sprites are loaded.** `snapFrame` is only for
    the plain-block fallback; it would change the pack's colours.
-8. **One floor per view.** Seen from above, floors cover each other.
+8. **Floors never overlap on the drawing.** Seen from above, the first floor would cover
+   the ground floor, so a view that shows both places them apart (section 5).
 
 ## 3. How to find a sprite on the sheet (the step that went wrong before)
 
@@ -82,7 +83,47 @@ and the pixel just outside it is transparent.
    empty. The stairs are one square wide at x = 5, y = 1 to 4, on purpose.
 5. To change a room's floor, edit `ROOM_TILE` in `pack.js`.
 
-## 5. How to check the result (always look, never assume)
+## 5. Views: the whole house on one screen
+
+The page opens on **Whole house**: every floor on one screen, so people can be followed
+without changing view. The other buttons show one floor, bigger.
+
+How it works (all in `VIEWS` in `src/main.js`, drawn by the same `drawScene`):
+
+- A view is `{ label, floors, place, labels }`. `floors` lists floor ids from
+  `house.json`. `place` moves a whole floor on the drawing, in grid squares.
+- In the whole-house view the first floor has `place: { first: { x: 0, y: -8.5 } }`:
+  it is drawn 8.5 squares up the screen, above the ground floor. The ground floor and
+  garden are not moved; the garden already joins the back of the house at y = 6.
+- `buildScene(house, floors, place)` in `scene.js` shifts every box of a placed floor and
+  stamps each box with `b.floor`. Nothing else knows about the shift. `house.json` and
+  the simulation always use the floor's own coordinates.
+- `sceneBounds(boxes)` gives the rectangle that holds the view. `main.js` adds `MARGIN`
+  (2.2 squares on top, for tall sprites and the floor name) and then:
+  - shapes the canvas to the view, capped at the screen height left after the buttons;
+  - picks the biggest whole device-pixel size at which the whole view fits both ways;
+  - centres the view (`cam.cx`, `cam.cy`).
+- `labels` are floor names written above a floor's back wall, as normal page text over
+  the canvas, so they stay readable.
+
+Rules when expanding it:
+
+1. **Leave at least 2 squares between a floor and the one above it on the drawing.**
+   Tall sprites stick up 1 square and the name needs the rest. A test checks this.
+2. **To add a floor** (loft, cellar, extension): add it to `floors` in `house.json` with
+   its own id, add its id to the `all` view's `floors`, give it a `place` so it does not
+   overlap, add a label, and add a button entry if it should have its own view. Phones
+   are tall and narrow, so stack new floors up or down the screen, not sideways.
+3. **To draw a person or anything else that moves**, use the same shift: its screen
+   position is its own floor coordinates plus `view.place[floorId]` (zero if the floor is
+   not placed), passed through `project()`. If the view does not include that floor, do
+   not draw it. Never store shifted coordinates in the simulation.
+4. **Someone on the stairs** changes floor at the top step. Draw them on whichever floor
+   the simulation says they are on; both floors show the stairs at x = 5, y = 1 to 4.
+5. Tapping a person later should work in every view, so turn a tap back into grid squares
+   by undoing `project()` and then subtracting the floor's `place`.
+
+## 6. How to check the result (always look, never assume)
 
 Run the tests, then look at real screenshots of all three floors and a phone size.
 
@@ -95,7 +136,8 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
   --virtual-time-budget=5000 --screenshot=/tmp/ground.png "http://localhost:8123/index.html?view=ground"
 ```
 
-- Use `?view=ground`, `?view=first` and `?view=garden` to open each floor.
+- With no `?view=` the page opens on the whole house. Use `?view=ground`, `?view=first`
+  and `?view=garden` to open each floor. Check the whole house and every single floor.
 - For a phone, add `--force-device-scale-factor=3 --window-size=390,800`. Without the
   scale factor the house looks tiny, which is not what a real phone shows.
 - The preview server often stops between commands. If curl prints `000`, start it again
@@ -104,7 +146,7 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
   sprite covering another by accident, doorways are gaps, sprites face the viewer.
 - The sandbox cannot open the live site (github.io). Only the user can check that.
 
-## 6. Mistakes made, so they are not made again
+## 7. Mistakes made, so they are not made again
 
 | Mistake | What to do instead |
 |---|---|
@@ -119,19 +161,19 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 | A docs script failed halfway and one doc was left stale | After any script, run `git status` and re-read what changed |
 | Described the pack's licence from the zip alone | The zip has no licence text; its readme says "Thanks for buying". Ask the user for the seller's wording |
 
-## 7. Where things are
+## 8. Where things are
 
 | File | Job |
 |---|---|
 | `data/house.json` | Rooms, doors, fences, furniture. The only place layout lives |
-| `src/render/scene.js` | House data -> boxes (`kind`: slab, wall, window, door, fence, furniture) |
+| `src/render/scene.js` | House data -> boxes (`kind`: slab, wall, window, door, fence, furniture); `place` shifts a floor; `sceneBounds` |
 | `src/render/camera.js` | `project()`: grid position -> art pixels. `UNIT_PX`, `TARGET` |
 | `src/render/pack.js` | `SPRITE_RECTS`, `NAME_TO_SPRITE`, `FLOOR_TILES`, `ROOM_TILE`, loader |
 | `src/render/house.js` | `drawScene()`: the drawing order in section 2 |
 | `src/render/raster.js` | `blitSprite()`: copies a sprite, skipping transparent pixels |
-| `src/main.js` | Views, zoom as pixel size, pan, the frame loop |
+| `src/main.js` | `VIEWS` (which floors, where placed), fitting a view to the screen, zoom as pixel size, pan, floor names, the frame loop |
 
-## 8. After any change
+## 9. After any change
 
 Follow "After every change" in `CLAUDE.md`: update STATUS, DECISIONS, ROADMAP and
 ARCHITECTURE as needed, update this file if the method changed, commit, push, and copy

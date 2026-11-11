@@ -167,12 +167,30 @@ function addFloor(boxes, house, floor, lift) {
   }
 }
 
-// Build every solid box for the chosen floors.
-// lift adds extra height to a floor, e.g. { first: 1.2 } for an exploded view.
-export function buildScene(house, floorIds, lift = {}) {
+// Build every box for the chosen floors.
+// place moves a whole floor on the drawing, in grid squares, so several floors can be laid
+// out side by side on one screen: { first: { x: 0, y: -8.5 } } puts the first floor above
+// the ground floor. Each box remembers which floor it belongs to (b.floor).
+export function buildScene(house, floorIds, place = {}) {
   const boxes = [];
   for (const floor of house.floors) {
-    if (floorIds.includes(floor.id)) addFloor(boxes, house, floor, lift[floor.id] ?? 0);
+    if (!floorIds.includes(floor.id)) continue;
+    const start = boxes.length;
+    addFloor(boxes, house, floor, 0);
+    const { x = 0, y = 0 } = place[floor.id] ?? {};
+    for (const b of boxes.slice(start)) {
+      b.floor = floor.id;
+      b.x0 += x; b.x1 += x; b.y0 += y; b.y1 += y;
+      if (b.mid) b.mid = { x: b.mid.x + x, y: b.mid.y + y };
+    }
   }
   return boxes;
+}
+
+// The grid rectangle that holds every box: used to fit a view on the screen.
+export function sceneBounds(boxes) {
+  return {
+    x0: Math.min(...boxes.map((b) => b.x0)), y0: Math.min(...boxes.map((b) => b.y0)),
+    x1: Math.max(...boxes.map((b) => b.x1)), y1: Math.max(...boxes.map((b) => b.y1)),
+  };
 }

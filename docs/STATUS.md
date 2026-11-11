@@ -14,8 +14,9 @@ The user asked for the project to be read and the house view fixed. The view was
 - **Layout** (`data/house.json`): rearranged for this view. Stairs are one square wide at x = 5, so the hall is walkable. Lounge and master doors moved to y 5-6; front and back doors to x 6-7. The second WC door (from the kitchen) is gone. Kitchen is now counter, cooker, sink, fridge along the back wall. Beds are 2x2 and 1x2. The landing has a floor. Walls are 0.25 thick (4 pixels).
 - **Removed:** the cutaway button and code (no near walls from above), the "All floors" view, the old 3D projection, face shading.
 - The page can open on a floor: `index.html?view=first` (or `ground`, `garden`).
+- **Whole house view (default):** first floor, ground floor and garden all on one screen, so people can be followed without changing view. The first floor is drawn above the ground floor (`place` in `VIEWS`, `main.js`). Single-floor buttons remain. Every view is fitted to the screen and the canvas takes the view's shape. Floor names are written on the drawing. Method and expansion rules: `docs/HOUSE_VIEW.md` section 5.
 - Wrote `docs/HOUSE_VIEW.md`: the method, the rules, how to pick sprites and check the result, and the mistakes made. `CLAUDE.md` now tells every session to read it before touching the house view.
-- Tests: 31 passing, including a check that furniture stays in its room and no two pieces share a square.
+- Tests: 34 passing, including a check that furniture stays in its room and no two pieces share a square.
 - Checked in screenshots at desktop size and at phone size (390 wide, 3x pixels). Not yet checked by the user on a real phone.
 
 ## Earlier (2026-11-10) — superseded where it differs from the above
@@ -50,7 +51,7 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks the new view on the phone (all three floors).
+1. User checks the new view on the phone (whole house and each floor).
 2. Art still as blocks: stairs, garden shed and tree, rugs, fence, walls. The pack has wall tiles and rugs that could replace them.
 3. Phase 1 continued: the first adult walks between rooms (the layout is now walkable), with needs and simple actions. Then the status panel (watch only).
 4. Record the exact Sierrassets licence wording in DECISIONS.md.
@@ -61,7 +62,8 @@ The user asked for the project to be read and the house view fixed. The view was
 - Ruby's room can only be reached through Oliver's room. Layout question for the user.
 - No pets or people sprites are used yet. The zip has a pets sheet; it is not in the repo.
 - The pack's readme says "Thanks for buying", so it is a paid pack. Its sheets are in the public repo on the user's instruction (see DECISIONS).
-- Rooms have no name labels.
+- Rooms have no name labels (floors do, in the whole-house view).
+- On a phone the whole-house canvas is tall, so the zoom buttons under it need a small scroll.
 - A GitHub Pages build (run #1, 9 Nov) is still listed as queued. Harmless.
 
 ## Notes for next session

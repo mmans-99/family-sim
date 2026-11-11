@@ -1,15 +1,17 @@
-// Entry point: clock, 3D house view and camera controls, wired together.
+// Entry point: clock, house view and camera controls, wired together.
 import { createClock, advance, setSpeed, readClock, SPEEDS } from './sim/clock.js';
-import { buildScene } from './render/scene.js';
+import { buildScene, sceneBounds } from './render/scene.js';
 import { drawScene, snapFrame } from './render/house.js';
 import { loadPack } from './render/pack.js';
-import { createCamera, UNIT_PX, TARGET } from './render/camera.js';
-import { BACKGROUND } from './render/palette.js';
+import { createCamera, project, UNIT_PX } from './render/camera.js';
+import { BACKGROUND, OUTLINE } from './render/palette.js';
 import { attachCameraControls, nudge } from './ui/camera-controls.js';
 
-// One art pixel is a whole number of device pixels, so every art pixel is the same size and
-// the sprites stay sharp. At zoom 1 the screen is about this many grid squares wide.
-const SQUARES_ACROSS = 12.5; // the house is 12 squares wide
+// Empty grid squares kept around a view. The top needs more: tall sprites on a back wall
+// (fridge, wardrobe) stick up a square above their floor, and floor names sit above that.
+const MARGIN = { top: 2.2, side: 0.4, bottom: 0.4 };
+const LABEL_RISE = 1.25; // floor names are written this many squares above the floor's back wall
+const CONTROLS_HEIGHT = 230; // CSS pixels of the screen kept for the buttons around the canvas
 
 const clock = createClock();
 const cam = createCamera();
@@ -25,11 +27,21 @@ const lowres = document.createElement('canvas');
 const lowCtx = lowres.getContext('2d');
 
 const SPEED_LABELS = { 0: 'Pause', 1: '1x', 2: '2x', 4: '4x' };
-// Looking straight down, floors would sit on top of each other, so each view shows one floor.
+// Each view lists its floors and where each one is placed on the drawing, in grid squares.
+// Looking straight down, the first floor would cover the ground floor, so the "Whole house"
+// view moves it up the screen instead: both storeys and the garden are visible at once and
+// nobody is ever off screen. The garden already joins the back of the ground floor (y = 6).
+// `labels` names floors on the drawing: [text, floor id].
 const VIEWS = {
-  ground: { label: 'Ground floor', floors: ['ground'], middleY: 3 },
-  first: { label: 'First floor', floors: ['first'], middleY: 3 },
-  garden: { label: 'Garden', floors: ['garden'], middleY: 8 },
+  all: {
+    label: 'Whole house',
+    floors: ['first', 'ground', 'garden'],
+    place: { first: { x: 0, y: -8.5 } },
+    labels: [['First floor', 'first'], ['Ground floor and garden', 'ground']],
+  },
+  ground: { label: 'Ground floor', floors: ['ground'] },
+  first: { label: 'First floor', floors: ['first'] },
+  garden: { label: 'Garden', floors: ['garden'] },
 };
 const CAMERA_BUTTONS = [
   ['in', '＋ Zoom'],
@@ -40,16 +52,21 @@ const CAMERA_BUTTONS = [
 let house = null;
 let pack = null; // sprites, if the pack is present
 let scene = [];
-let viewShift = 0; // art pixels to move up, so the chosen floor sits in the middle
+let view = null;   // the entry of VIEWS on screen
+let bounds = null; // grid rectangle the view must fit, margins included
 let lastMinute = -1;
 let lastTime = performance.now();
 
 function showView(id) {
-  scene = buildScene(house, VIEWS[id].floors);
-  viewShift = (VIEWS[id].middleY - TARGET.y) * UNIT_PX;
+  view = VIEWS[id];
+  scene = buildScene(house, view.floors, view.place);
+  const b = sceneBounds(scene);
+  bounds = { x0: b.x0 - MARGIN.side, x1: b.x1 + MARGIN.side, y0: b.y0 - MARGIN.top, y1: b.y1 + MARGIN.bottom };
+  Object.assign(cam, createCamera()); // a new view starts centred and fitted
   for (const btn of viewBar.children) {
     btn.setAttribute('aria-pressed', String(btn.dataset.view === id));
   }
+  resizeCanvas();
 }
 
 function buildControls() {
@@ -75,9 +92,14 @@ function buildControls() {
   }
 }
 
+// The canvas takes the shape of the view (tall for the whole house, wide for one floor),
+// but never more height than the screen has left after the buttons.
 function resizeCanvas() {
+  if (!bounds) return;
   const cssW = canvas.clientWidth;
-  const cssH = Math.max(300, Math.round(cssW * 0.8));
+  const shape = (bounds.y1 - bounds.y0) / (bounds.x1 - bounds.x0);
+  const room = Math.max(260, window.innerHeight - CONTROLS_HEIGHT);
+  const cssH = Math.round(Math.min(cssW * shape, room));
   const dpr = window.devicePixelRatio || 1;
   canvas.style.height = `${cssH}px`;
   canvas.width = Math.round(cssW * dpr);
@@ -104,16 +126,26 @@ function drawFrame() {
   const w = canvas.width;
   const h = canvas.height;
   const dpr = w / canvas.clientWidth;
-  const base = w / (SQUARES_ACROSS * UNIT_PX); // device pixels per art pixel at zoom 1
-  const pixel = Math.max(1, Math.floor(base * cam.zoomMul)); // zooming makes art pixels bigger
+  // At zoom 1 the whole view fits: the biggest whole pixel size that fits both ways.
+  const cols = (bounds.x1 - bounds.x0) * UNIT_PX;
+  const rows = (bounds.y1 - bounds.y0) * UNIT_PX;
+  const fit = Math.max(1, Math.floor(Math.min(w / cols, h / rows)));
+  const pixel = Math.max(1, Math.round(fit * cam.zoomMul)); // zooming makes art pixels bigger
   const lw = Math.ceil(w / pixel);
   const lh = Math.ceil(h / pixel);
   if (lowres.width !== lw || lowres.height !== lh) {
     lowres.width = lw;
     lowres.height = lh;
   }
-  // Pan is in CSS pixels, so turn it into whole art pixels.
-  const artCam = { ...cam, panX: Math.round((cam.panX * dpr) / pixel), panY: Math.round((cam.panY * dpr) / pixel) - viewShift };
+  // The middle of the view goes in the middle of the screen. Pan is in CSS pixels, so turn it
+  // into whole art pixels.
+  const artCam = {
+    ...cam,
+    cx: (bounds.x0 + bounds.x1) / 2,
+    cy: (bounds.y0 + bounds.y1) / 2,
+    panX: Math.round((cam.panX * dpr) / pixel),
+    panY: Math.round((cam.panY * dpr) / pixel),
+  };
   drawScene(lowCtx, scene, artCam, lw, lh, pack);
   if (!pack) snapFrame(lowCtx, lw, lh); // plain blocks only: keep to the fixed palette
 
@@ -122,6 +154,19 @@ function drawFrame() {
   ctx.fillStyle = `rgb(${BACKGROUND.join(', ')})`;
   ctx.fillRect(0, 0, w, h);
   ctx.drawImage(lowres, 0, 0, lw * pixel, lh * pixel);
+
+  // Floor names, written above each floor's back wall.
+  ctx.fillStyle = `rgb(${OUTLINE.join(', ')})`;
+  ctx.font = `600 ${Math.round(13 * dpr)}px system-ui, sans-serif`;
+  ctx.textBaseline = 'bottom';
+  for (const [text, floorId] of view.labels ?? []) {
+    const floor = house.floors.find((f) => f.id === floorId);
+    const at = view.place?.[floorId] ?? { x: 0, y: 0 };
+    const x = Math.min(...floor.rooms.map((r) => r.x)) + at.x;
+    const y = Math.min(...floor.rooms.map((r) => r.y)) + at.y - LABEL_RISE;
+    const p = project(artCam, lw, lh, x, y);
+    ctx.fillText(text, p.sx * pixel, p.sy * pixel);
+  }
 }
 
 function frame(now) {
@@ -142,11 +187,10 @@ async function start() {
   pack = await loadPack(); // floor and furniture sprites, if the sheets are present
   buildControls();
   attachCameraControls(canvas, cam);
-  resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
-  // The page can be opened on a chosen floor, e.g. index.html?view=first
+  // The page opens on the whole house. It can be opened on one floor: index.html?view=first
   const asked = new URLSearchParams(window.location.search).get('view');
-  showView(asked in VIEWS ? asked : 'ground');
+  showView(asked in VIEWS ? asked : 'all');
   requestAnimationFrame((now) => {
     lastTime = now;
     requestAnimationFrame(frame);

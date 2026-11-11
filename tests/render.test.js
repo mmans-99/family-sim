@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { cutOpenings, buildScene, COLOURS } from '../src/render/scene.js';
+import { cutOpenings, buildScene, sceneBounds, COLOURS } from '../src/render/scene.js';
 import { createCamera, project, TARGET, UNIT_PX } from '../src/render/camera.js';
 import { boxRect } from '../src/render/house.js';
 import { NAME_TO_SPRITE, SPRITE_RECTS, ROOM_TILE, FLOOR_TILES } from '../src/render/pack.js';
@@ -95,4 +95,27 @@ test('furniture stays inside its room and no two standing pieces share a square'
       }
     }
   }
+});
+
+test('placing a floor moves all of its boxes and nothing else', () => {
+  const plain = sceneBounds(buildScene(house, ['first']));
+  const moved = buildScene(house, ['first', 'ground'], { first: { x: 0, y: -8.5 } });
+  const first = sceneBounds(moved.filter((b) => b.floor === 'first'));
+  const ground = sceneBounds(moved.filter((b) => b.floor === 'ground'));
+  assert.equal(first.y0, plain.y0 - 8.5);
+  assert.equal(first.x0, plain.x0);
+  assert.deepEqual(ground, sceneBounds(buildScene(house, ['ground'])));
+});
+
+test('in the whole-house layout the first floor does not touch the ground floor', () => {
+  const boxes = buildScene(house, ['first', 'ground', 'garden'], { first: { x: 0, y: -8.5 } });
+  const first = sceneBounds(boxes.filter((b) => b.floor === 'first'));
+  const ground = sceneBounds(boxes.filter((b) => b.floor === 'ground'));
+  assert.ok(first.y1 + 2 <= ground.y0, 'leave two squares for tall sprites and the floor name');
+});
+
+test('a camera centre moves the middle of the screen', () => {
+  const p = project({ panX: 0, panY: 0, cx: 1, cy: -4 }, 400, 300, 1, -4);
+  assert.equal(p.sx, 200);
+  assert.equal(p.sy, 150);
 });

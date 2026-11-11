@@ -46,11 +46,12 @@ Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.j
 
 ## The house view
 (Step-by-step method, rules and checks: `docs/HOUSE_VIEW.md`.)
-- The view is straight down. The back wall of the house (y = 0) is at the top of the screen, and y grows down the screen. One floor is shown at a time (Ground, First, Garden).
+- The view is straight down. The back wall of the house (y = 0) is at the top of the screen, and y grows down the screen. The default view shows the whole house on one screen, with the first floor placed above the ground floor and garden; buttons show one floor at a time.
 - `scene.js` builds boxes for the chosen floor: one per floor square, walls from room edges with doorways cut out, windows on outside walls, and furniture straight from `data/house.json`.
 - `camera.js` turns a grid position into art pixels. One grid square is always 16 art pixels (`UNIT_PX`), the size the sprite pack is drawn at, so sprites are never stretched.
 - `house.js` draws in this order: floor squares (four 8x8 pack tiles each, or a plain colour), flat items (rugs, paths), then walls and furniture sorted from the top of the screen down, so lower things overlap those behind. Doors are not drawn; a doorway is a gap in the wall.
 - A furniture item whose name is in `NAME_TO_SPRITE` (`pack.js`) is drawn as a sprite, standing on the bottom edge of its squares and centred. Its `z` in the data lifts it up the screen (a TV on its unit). Other items are outlined blocks.
+- A view (`VIEWS` in `main.js`) lists its floors and where each is placed on the drawing. `buildScene` shifts a placed floor's boxes; the house data and the simulation keep each floor's own coordinates. `main.js` fits the view's bounds to the screen.
 - `main.js` draws into a small canvas and scales it up with hard edges. One art pixel is a whole number of device pixels. Zooming changes that number, so the art stays sharp at every zoom. Pan is turned into whole art pixels.
 - The sheets are `assets/furniture-pack/furniture.png` and `floors-walls.png`. If they fail to load, everything is drawn as plain blocks and snapped to the palette.
 
