@@ -10,7 +10,7 @@ file's section 1 (rules) and the section for the step you are building. Read
 
 **Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
 (calendar). L2 is built (money, 2026-11-11; see 3a "as built"), with the mapping approved by the user on 2026-11-11 and the refinements listed in
-the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). Each later step must be approved by the user before its code is written
+the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). L4 (stress, sleep debt, couplings, interruptions) has a detailed brief in 4d, not built yet. Each later step must be approved by the user before its code is written
 (CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 
 ---
@@ -505,6 +505,380 @@ People never read the true world values. Each person has `person.beliefs`:
 
 Tests: after the account drops, Sarah's belief stays at the old value until she checks; an
 anxious and a calm Sarah given the same old belief drift in opposite directions.
+
+### 4d. L4 build brief: stress, sleep debt, couplings, interruptions (written 2026-11-11; not built, waiting for the user's approval)
+
+This is the exact plan for step L4. It is written so another model can build it without the
+chat history. It builds sections **3b** (couplings and lags) and **4b** (stress, mood and the
+interruption rule). Where this brief and those sections differ, **this brief wins**. Section 4a
+(obligations) and 4c (beliefs) are **not** part of L4.
+
+**Words used here.**
+- *Stress*: a number from 0 (calm) to 100 (overwhelmed) per person, kept as a stock
+  `stress.<id>`. It does not jump: it drifts towards a *target* (see lag).
+- *Target*: where a lagged stock is heading. Stress's target is the person's *base* (from the
+  anxious trait) plus the *pushes* from couplings that hold right now.
+- *Lag / half-life*: each game hour the value closes part of the gap to its target. The
+  half-life is the time it takes to close half the gap (48 game hours for stress).
+- *Coupling*: a rule in `data/couplings.json`: "if this stock or need is past a level, then push
+  that target, or make that need drop faster". Checked once per game hour.
+- *Push*: one coupling's contribution to a target, kept by name, so the why trace and the
+  ledger can say what is causing the stress.
+- *Sleep debt*: hours of sleep owed, `sleepdebt.<id>`, from 0 to 24. Settled once a game day.
+- *Mood factor*: stressed people enjoy things less: fun actions score × `1 − stress / 200`.
+- *Stress penalty*: when stress is high, chores score less (things slide).
+- *Interruption*: a need under 10 stops what a person is doing, so they can deal with it.
+
+#### What exists now (checked 2026-11-11, so the brief matches the code)
+- `src/sim/stocks.js` has `addStock`, `read`, `ledger`, `change`. A stock already copies `min`,
+  `max`, `floor`, `ceiling`, `ledgerKeep`. There is **no** `target`, `halfLifeHours` or
+  `stepStocks` yet. `change()` rounds to 0.01 (`cents`) and writes one ledger entry
+  `{ t, amount, reason, ref }`.
+- `step(world)` in `src/sim/world.js`: `time += 1`; at 00:00 `queueDay`; `fireDue`; weekly flows;
+  then `stepPerson` for each person. `stepPerson` drops needs by `perHour / 60` (× `sleepFactor`
+  while the action has `sleep: true`), decides if free, walks or does. Actions are never
+  interrupted. `decide()` scores with `scoreAction(person, action, hour)` (exported, used by
+  `tests/save.test.js`), keeps the best 3, picks with `world.rng`, else potters.
+- `createWorld({ house, actions, needs, people, calendar, money, seed, time })`. `money` is
+  optional: tests that leave it out get no money. L4 copies this pattern (below).
+- `src/sim/save.js`: version 3; `stocks: clone(world.stocks)` saves **every** stock with all its
+  fields; `fromSave` for version ≥ 3 **replaces** `world.stocks` with the saved ones.
+- `src/main.js` line ~325 loads the data files with `fetch` in a list; `src/ui/panel.js`
+  `renderPanel` draws need bars per person and `whyText`; `src/render/people.js` `mood(needs)`
+  picks the face (any need < 25 uneasy, energy < 30 tired, average ≥ 80 happy, else content).
+- The replay harness (15a) exists: `node tools/replay.js`. Probes in `tools/replay/probes.js`,
+  invariants in `tools/replay/checks.js`, settings in `data/replay.json`.
+- **Measured in the current game (5 seeds, one game year each, 2026-11-11):**
+  - Sarah's needs never fall below about **24** (lowest seen: bladder 23.9, hunger 39, energy 50,
+    hygiene 47, fun 65, comfort 66). No need is ever under 20.
+  - She sleeps **exactly 8 hours** every night (sleep is a fixed 480-minute action, started
+    between 22:00 and 00:15) and naps 0.5 to 1.3 hours most afternoons.
+  - About 1,700 actions started per game year. One game year headless ≈ 0.4–0.5 s.
+- **What this means (say it in STATUS, do not hide it):** with today's world, the interruption
+  rule will **never** fire (no need goes under 10), sleep debt will stay at **0** (sleep is never
+  cut short), and stress will settle at each person's **base** plus a small, occasional push when
+  bladder dips under 25. That is correct. These mechanisms come alive when something presses on
+  the day: obligations (L6), the children waking at night and needing care (L7), money trouble
+  (L9/L11). L4 builds and proves the machinery with tests that force the conditions; the replay
+  harness reports which parts never fired, as warnings.
+
+#### Rules for this step
+1. Everything in LIFE_SYSTEMS section 1 (no DOM in `src/sim/`, seeded random only, plain JSON
+   state, numbers in `data/` with a source or `"tuning": true`, the why trace grows).
+2. **No new random numbers.** Stress, lags, couplings and sleep debt use none. The only random
+   draws stay the brain's (`world.rng`). Sarah's same-seed day **will** change (the mood factor
+   changes scores, so different options win). That is expected. Two runs of the same seed must
+   still be identical.
+3. **Opt-in data, like money.** `createWorld` takes two new optional inputs, `wellbeing` and
+   `couplings`. Without them the world behaves exactly as now: no stress stocks, no couplings, no
+   mood factor, no interruptions. This keeps every existing test unchanged and passing (they
+   build worlds without the new files). The game (`main.js`), the save loader and the replay
+   harness pass both files.
+4. **Hourly, not per minute.** Couplings and lags run once per game hour (at hh:00), not every
+   minute (rule 5 in section 1; catch-up must stay fast on a phone).
+5. **Every stress change goes through `change()`** and so has a ledger entry with its causes.
+6. **Do not add a fix for the vicious circle** (stress → less fun → fun need falls → more stress).
+   It is meant to be there (WORLD_PRINCIPLES).
+7. Work on `main`; ask before changing anything outside the files listed here.
+
+#### Step 1. Data files
+
+`data/wellbeing.json` (new):
+```json
+{
+  "about": "Stress, sleep debt, mood and interruptions (LIFE_SYSTEMS 4d). All numbers are tuning unless a source is given.",
+  "tuning": true,
+  "stress": {
+    "id": "stress.{p}", "min": 0, "max": 100, "floor": "hard", "ceiling": "hard", "ledgerKeep": 60,
+    "halfLifeHours": 48,
+    "base": 20, "anxiousPerPoint": 3,
+    "bands": [ { "below": 30, "label": "calm" }, { "below": 60, "label": "tense" }, { "below": 101, "label": "stressed" } ]
+  },
+  "sleepDebt": {
+    "id": "sleepdebt.{p}", "min": 0, "max": 24, "floor": "hard", "ceiling": "hard", "ledgerKeep": 60,
+    "needHours": 8, "needSource": "NHS: most adults need 7 to 9 hours a night (look up the page, cite it here with the date)",
+    "checkHour": 18, "maxRepayPerDay": 2
+  },
+  "mood": { "factorPer": 200, "kinds": ["fun"] },
+  "stressPenalty": { "from": 50, "perPoint": 0.1, "kinds": ["chore"] },
+  "interrupt": { "below": 10, "retryMinutes": 30, "logPrefix": "Stopped" }
+}
+```
+- `{p}` is replaced by each person's id (`stress.sarah`, `sleepdebt.sarah`).
+- **Base stress** = `base + anxiousPerPoint × (anxious − 5)`, clamped to 0..100. Anxious 0 → 5,
+  5 → 20, 10 → 35. The stock starts at its base, with its target at its base (no drift at the start).
+- `checkHour` 18: sleep is settled at 18:00, after the afternoon nap and before bed, so each
+  check counts one night and one day's naps.
+- `maxRepayPerDay` 2: lost sleep is paid back slowly; a long sleep repays at most 2 hours a day.
+
+`data/couplings.json` (new): the rules from 3b, in this exact shape:
+```json
+{
+  "about": "Couplings (LIFE_SYSTEMS 3b, 4d): if a stock or need is past a level, push a target or change how fast a need drops. Checked once per game hour. who: each (every person) or adults (age 18 and over). {p} is the person's id. All numbers are tuning.",
+  "tuning": true,
+  "rules": [
+    { "id": "lowNeeds",   "who": "each",   "if": { "need": "any", "below": 25 },
+      "then": [ { "target": "stress.{p}", "add": 5, "perMatch": true } ] },
+    { "id": "sleepDebt",  "who": "each",   "if": { "stock": "sleepdebt.{p}", "above": 6 },
+      "then": [ { "target": "stress.{p}", "add": 15 }, { "need": "fun", "rateTimes": 1.4 }, { "need": "energy", "rateTimes": 1.2 } ] },
+    { "id": "lowBalance", "who": "adults", "if": { "stock": "acct.joint", "below": 200 },
+      "then": [ { "target": "stress.{p}", "add": 20 } ] },
+    { "id": "overdrawn",  "who": "adults", "if": { "stock": "debt.overdraft", "above": 0 },
+      "then": [ { "target": "stress.{p}", "add": 15 } ] },
+    { "id": "highStress", "who": "each",   "if": { "stock": "stress.{p}", "above": 60 },
+      "then": [ { "need": "comfort", "rateTimes": 1.2 } ] }
+  ]
+}
+```
+- A `need` condition counts *matches*: `"any"` matches each of the person's needs below the
+  level (so two low needs = 2 matches); a named need (`"need": "hunger"`) matches 0 or 1. With
+  `"perMatch": true` the `add` is multiplied by the matches. A `stock` condition is 1 match or 0.
+- `below` means strictly less than; `above` strictly more than.
+- If a rule names a stock that does not exist (a world without money), the rule is skipped and
+  not counted. No error.
+
+`data/actions.json` (edit, no behaviour change on its own): add a `kind` to these actions:
+`"kind": "fun"` on `tv`, `read`, `books`, `garden`; `"kind": "chore"` on `laundry`, `dishes`.
+Add `"countsAsSleep": true` to `nap`. Update the file's `about` to explain both fields.
+Do **not** put `sleep: true` on the nap (that would change how needs drop during it).
+
+`data/people.json`: no change. "Adult" means `age >= 18` (Sarah is 34). Update the `about` to
+say the anxious trait now sets base stress.
+
+#### Step 2. Lags in `src/sim/stocks.js`
+```js
+export function setTarget(world, id, target, pushes = {})  // clamps target to min..max; stores stock.target and stock.pushes (plain object, reason -> amount)
+export function stepStocks(world, hours = 1)                // every stock with halfLifeHours: move towards target
+```
+- `addStock` also copies `halfLifeHours` (default `null`), `target` (default `null`), `pushes`
+  (default `{}`) and `base` (default `null`).
+- `stepStocks`: for each stock with a `halfLifeHours` and a non-null `target`:
+  `gap = target − value`; `move = cents(gap × (1 − 0.5 ** (hours / halfLifeHours)))`;
+  if `move !== 0`, `change(world, id, move, 'Drift', { target, before: value, pushes: { ...pushes } })`.
+  A move never passes the target (the formula cannot overshoot; keep it that way). When the gap
+  is so small that the move rounds to 0, nothing is written: that is the resting state.
+- Iterate stocks in key order (`Object.keys(world.stocks).sort()`) so the ledger order is fixed.
+- Ledger load: at most 24 Drift entries per game day per stress stock, well under `ledgerKeep` 60.
+
+#### Step 3. `src/sim/wellbeing.js` (new, pure)
+```js
+export function setupWellbeing(world, wellbeing, couplings)  // stocks per person, world.wellbeing, world.couplings
+export function baseStress(person, cfg)                     // base + anxiousPerPoint × (anxious − 5), clamped 0..100
+export function applyCouplings(world)                       // once per game hour: targets, rate multipliers, fired counts
+export function settleSleep(world, person)                  // once per game day at checkHour: sleep debt
+export function moodFactor(stress, action, cfg)             // 1 − stress / factorPer for kinds in cfg.mood.kinds, else 1
+export function stressPenalty(stress, action, cfg)          // perPoint × max(0, stress − from) for kinds in cfg.stressPenalty.kinds, else 0
+export function stressLabel(stress, cfg)                    // "calm" / "tense" / "stressed" from the bands
+```
+- `setupWellbeing`: stores `world.wellbeing = clone(wellbeing)` and
+  `world.couplings = { rules: clone(couplings.rules), fired: {} }`. For each person: `addStock` for
+  `stress.<id>` (value = target = base = `baseStress`) and `sleepdebt.<id>` (value 0, no lag); set
+  `person.rateTimes = {}`, `person.sleptMinutes = 0`, `person.sleepWindowStart = world.time`,
+  `person.noInterruptBefore = 0`. All plain JSON.
+- `applyCouplings`, for each person: start with `pushes = {}` and `rateTimes = {}`. For each rule
+  whose `who` includes the person, work out the matches (skip the rule if its stock is missing).
+  If matches > 0: count `world.couplings.fired[rule.id] += 1` (once per rule per hour, however
+  many people it holds for: count it once per person, so two adults count 2), and for each `then`:
+  - `target`: `pushes[rule.id] = (pushes[rule.id] ?? 0) + add × (perMatch ? matches : 1)`;
+  - `need`: `rateTimes[need] = (rateTimes[need] ?? 1) × rateTimes`.
+  Then `setTarget(world, 'stress.<id>', base + Σ pushes, pushes)` and `person.rateTimes = rateTimes`.
+  Rules run in file order; people in `world.people` order.
+- `settleSleep(world, person)`: if `world.time − person.sleepWindowStart < 1440` (the first, partial
+  window after a new game or a loaded old save), just reset and return. Otherwise
+  `owed = needHours − sleptMinutes / 60`; if `owed < 0`, `owed = max(owed, −maxRepayPerDay)`;
+  `change(world, 'sleepdebt.<id>', owed, 'Sleep', { slept: sleptMinutes })` (the stock's floor and
+  ceiling clamp it). Then `sleptMinutes = 0`, `sleepWindowStart = world.time`.
+  With today's game: 8 h sleep + a nap → owed ≤ 0 → the debt stays 0. That is expected.
+
+#### Step 4. Hook into `step()` and the brain (`src/sim/world.js`)
+`step(world)` becomes (new lines marked):
+```js
+world.time += 1;
+if (world.time % MINUTES_PER_DAY === 0) queueDay(world, false);
+fireDue(world);
+weekly flows…
+if (world.couplings && world.time % 60 === 0) {                 // new
+  applyCouplings(world);                                        // new
+  stepStocks(world, 1);                                         // new
+  if (hourOf(world.time) === world.wellbeing.sleepDebt.checkHour) {
+    for (const p of world.people) settleSleep(world, p);        // new
+  }
+}
+for (const person of world.people) stepPerson(world, person);
+```
+In `stepPerson`:
+1. **Need rates:** multiply each need's drop by `person.rateTimes?.[need] ?? 1`.
+2. **Sleep minutes:** while the activity is in phase `do` and its action has `sleep: true` or
+   `countsAsSleep: true`, add 1 to `person.sleptMinutes`.
+3. **Interruption** (only when `world.wellbeing` exists), checked **before** the walk/do code and
+   after the needs drop:
+   - Skip if there is no activity, if the action (or the activity's `next`) has `sleep: true`, or if
+     `world.time < person.noInterruptBefore`.
+   - Find the lowest need under `interrupt.below` (10) that the current action does **not** gain
+     (`!(action.gain[need] > 0)`, and the same for `activity.next?.action`). If none, carry on.
+   - Ask the brain for an option that fills it: refactor `decide(world, person)` into
+     `decide(world, person, onlyFor = null)`. With `onlyFor` set, keep only options whose action
+     has `gain[onlyFor] > 0`, and **do not potter** if none qualify: return `false` without drawing
+     any random number. Otherwise it behaves exactly as now and returns `true`.
+   - If an option was found: before it replaces the activity, log
+     `${interrupt.logPrefix} ${oldLabel.toLowerCase()}: ${needLabel.toLowerCase()} too low (${Math.round(value)})`
+     (e.g. "Stopped reading in the armchair: bladder too low (8)") as a line by that person,
+     and add `interrupted: { action: oldId, need, value: Math.round(value) }` to the new `person.why`.
+     The new activity starts as any decision does (walk next minute).
+   - If none was found: `person.noInterruptBefore = world.time + retryMinutes` and carry on.
+   - The gains already given by the stopped action stay (they are added a minute at a time).
+4. **Scoring:** in `decide`, read `stress = world.stocks['stress.<id>']?.value ?? 0` and pass it
+   on. Change `scoreAction(person, action, hour, stress = 0, cfg = null)`: after the personality
+   fit and the off-hours factor, `score *= moodFactor(stress, action, cfg)` and then
+   `score -= stressPenalty(stress, action, cfg)` (only if `cfg` is given). With `cfg` null the
+   score is exactly as now, so `tests/save.test.js` keeps passing unchanged.
+5. **Why trace:** add `stress` (rounded), `mood` (the factor, 2 decimals, only when not 1) and
+   `penalty` (only when above 0) to `why`; `interrupted` as above.
+
+`createWorld({ …, wellbeing = null, couplings = null })`: after `setupMoney`, if both are given,
+call `setupWellbeing(world, wellbeing, couplings)`. If only one is given, throw a clear error.
+
+#### Step 5. Save format version 4 (`src/sim/save.js`)
+- `SAVE_VERSION = 4`; `READABLE_VERSIONS = [1, 2, 3, 4]`.
+- `toSave` adds per person `rateTimes`, `sleptMinutes`, `sleepWindowStart`, `noInterruptBefore`, and
+  top-level `couplings: { fired }` (the rules come from data, not the save). Stocks are already
+  saved whole, so `stress.*` and `sleepdebt.*` (with `target`, `pushes`, `base`) come for free.
+- `fromSave(save, data)` takes `wellbeing` and `couplings` in `data` too and passes them to
+  `createWorld`. **Careful:** for version 3 the loader replaces `world.stocks` with the saved money
+  stocks, which would throw away the new stress stocks. For versions below 4, merge instead:
+  `world.stocks = { ...world.stocks, ...clone(save.stocks) }` (the new stocks from `setupWellbeing`
+  stay, at base stress and zero debt); people keep the defaults from `setupWellbeing`
+  (`sleepWindowStart` = the save's time, so the first sleep check is skipped).
+- For version 4: restore everything saved, as for the other fields.
+
+#### Step 6. Panel, face and page (watch only)
+- `src/main.js`: add `'wellbeing.json'` and `'couplings.json'` to the list it fetches, and pass
+  them in `data` (they flow into `createWorld` and `fromSave`).
+- `src/ui/panel.js`, under each person's need bars: one line
+  `Stress 23 (calm) · Sleep debt 0.0 h`, with a small bar for stress coloured like the need bars
+  but reversed (green under 30, amber under 60, red from 60). Only when the stock exists.
+  `whyText` adds `mood ×0.88` when `why.mood` is set, `stress penalty −1.5` when `why.penalty` is set,
+  and starts with `Stopped <action> (<need> <value>) · ` when `why.interrupted` is set.
+- `src/render/people.js`: `mood(needs, stress = 0)` returns `'uneasy'` when `stress >= 60`, before
+  the other rules; the caller passes `world.stocks['stress.<id>']?.value ?? 0`. **This is a visual
+  change:** follow HOUSE_VIEW's screenshot steps (every floor, phone size, landscape and portrait)
+  even though, with today's numbers, stress never reaches 60 (a test covers the rule).
+
+#### Step 7. Replay harness (`tools/replay/`, `data/replay.json`)
+- `tools/replay/load.js`: also load `wellbeing.json` and `couplings.json` (inside `data`).
+- `data/replay.json`: remove the `notYet` line for L4; add
+  `"wellbeing": { "high": 60, "warnInterruptsPerDay": 6 }` (tuning).
+- New probe **wellbeing** (`since: 'L4'`) in `probes.js`, added to `DEFAULT_PROBES` after `needs`:
+  - `minute`: for each person, read `stress.<id>` and `sleepdebt.<id>`; keep sum, count, min, max,
+    and minutes with stress ≥ `high`. Count interruption lines: the person's new log lines (same
+    way as the log probe) starting with `world.wellbeing.interrupt.logPrefix`.
+  - `day` (at 23:59): read new ledger entries of both stocks exactly as the money probe does (last
+    `t` seen), keep their sum for reconciling, and run `checkLedgerComplete` on them; for each new
+    `Drift` entry run the new `checkLagNoOvershoot` (below).
+  - `year` / `end`: per person `stress { start, end, min, mean, max, minutesHigh }`,
+    `sleepDebt { mean, max, daysAbove4 }` (end-of-day values), `interruptions`, and the coupling
+    counts: the difference in `world.couplings.fired` (per rule; every rule listed, 0 when it never
+    held).
+- New invariants in `checks.js` (add the ids to `INVARIANTS`):
+  - `stressInRange`: every stress value seen is within 0..100; `sleepDebtInRange`: within 0..24.
+  - `wellbeingReconciles`: for each stress and sleep-debt stock, `end − start` equals the captured
+    ledger sum to 0.01 (reuse the shape of `checkReconciles`).
+  - `lagNoOvershoot({ stock, t, before, amount, target })`: the move has the sign of
+    `target − before` and `|amount| ≤ |target − before| + 0.005`.
+- New warnings in `runMany` (all expected with today's game, so say "expected until …"):
+  - no interruptions in any seed → *"No interruptions: no need fell under 10 (expected until obligations and children exist, L6/L7)."*
+  - every seed's sleep-debt max is 0 → *"Sleep debt stayed at 0: sleep is never cut short yet (expected until L6/L7)."*
+  - each coupling rule that never held in any seed → one line *"Coupling never held: lowBalance, overdrawn, sleepDebt, highStress (expected until money trouble and broken sleep exist)."*
+  - any seed with more than `warnInterruptsPerDay` interruptions per game day on average →
+    *"Seed N: X interruptions a day: check for actions stopping and starting in a loop."* (this one
+    would be a bug, not expected).
+- `across` gains `stressMeanRange: [lowest seed mean, highest seed mean]` (Sarah only for now).
+- `summary.js`: one new line after "Seeds:":
+  `Stress (Sarah): seed means 6.1–34.8; highest 36.2; sleep debt max 0.0 h; interruptions 0`
+  (figures here are an example of the layout, not expected values).
+
+#### Step 8. Tests
+Keep each new file under about 5 seconds. Build worlds **with** `wellbeing` and `couplings` (load
+them like the other data files). Tests may set needs or stock values directly to force a
+condition (tests are not the harness; the harness rule "read only" is unchanged).
+
+`tests/stocks.test.js` (add):
+1. A lagged stock with half-life 24 h, value 0, target 100: after 24 calls of `stepStocks(world, 1)`
+   it is 50 ± 0.5; it never passes 100 over 500 calls; each call writes one `Drift` entry with
+   `ref.target` and `ref.before`; once the move rounds to 0 no entry is written.
+2. `setTarget` clamps to `min`..`max` and stores `pushes`.
+
+`tests/wellbeing.test.js` (new):
+3. **Setup:** a world with the new data gives Sarah `stress.sarah` = `baseStress` (check the formula
+   for anxious 0, 5 and 10: 5, 20, 35) and `sleepdebt.sarah` = 0. A world **without** them has no
+   such stocks and `world.couplings` is undefined.
+4. **Low needs push stress, slowly:** set every need to 80, then bladder to 20 and hunger to 22,
+   and step to the next hh:00 (the needs drop a little on the way; none of the others reaches 25):
+   `pushes.lowNeeds` is 10, the target is base + 10, `couplings.fired.lowNeeds` went up by 1, and the
+   value moved by `cents(10 × (1 − 0.5 ** (1/48)))` (about 0.14), not 10. Set the needs back to 80:
+   at the next hh:00 the push is gone and the value drifts back down.
+5. **Money pushes adults:** `change(world, 'acct.joint', −2400, 'test')` (balance under £200):
+   at the next hh:00 `pushes.lowBalance` is 20 for Sarah (adult). Go past £0 into the overdraft:
+   `overdrawn` adds 15 too.
+6. **Rate multipliers:** set `sleepdebt.sarah` to 7 via `change()`; after the next hh:00
+   `person.rateTimes` is `{ fun: 1.4, energy: 1.2 }`; over the following 60 minutes (while awake and
+   not doing a fun or energy action — force an activity of washing up) fun drops 1.4 × as far as in a
+   control world.
+7. **Sleep debt:** the first check after a new game is skipped (debt stays 0). Then with
+   `sleptMinutes` = 300 at the next check: debt +3. With `sleptMinutes` = 720 the next day: −2
+   at most (repay cap), never under 0. Check the ledger reason `Sleep` and `ref.slept`.
+8. **Mood and penalty:** `scoreAction(sarah, tv, 20, 0, cfg)` equals the old score;
+   at stress 100 it is half. `dishes` at stress 40 is unchanged; at stress 100 it loses
+   `0.1 × 50 = 5`. Without `cfg`, stress makes no difference.
+9. **Interruption:** put Sarah in `read` (phase `do`) with bladder 8: after one `step` her new
+   activity is `toilet`, the log has "Stopped reading in the armchair: bladder too low (8)", and
+   `why.interrupted` is `{ action: 'read', need: 'bladder', value: 8 }`.
+10. **Not while asleep, not twice:** in `sleep` with bladder 5 → not interrupted. After the
+    interruption in test 9, stepping 10 more minutes gives no second "Stopped" line.
+11. **Nothing fills the need:** in a world whose actions list has no `toilet`, bladder 8 while
+    reading → no interruption, `noInterruptBefore` = now + 30, and no random number was drawn
+    (compare `world.rng.getState()` before and after).
+12. **Same seed, same day** with the new data: two runs of seed 3 for two game days give equal logs,
+    needs and stocks.
+13. **Save version 4:** a world with wellbeing saved after 2,000 minutes and loaded carries on equal
+    to the live world for 3,000 more (stocks, people, couplings.fired, log). A version 3 save (built
+    by deleting the new fields and setting `version: 3`) loads, keeps its money, and gets stress at
+    base and sleep debt 0.
+14. **Face:** `mood(needs, 60)` is `'uneasy'` with every need at 90; `mood(needs, 59)` follows the
+    needs as before.
+
+`tests/replay.test.js` (add):
+15. Seeds 1 and 2, one year: every invariant passes, including the four new ones; the joint account
+    still ends at **£19,862.96** (money does not depend on stress); each seed's stress `mean` is
+    within ±6 of its base (it rests at base, plus the occasional low-bladder push).
+16. `checkLagNoOvershoot` and `checkStressInRange` fail on hand-made bad input with a useful detail.
+
+All old tests must pass **unchanged** (they build worlds without the new data). If an old test
+fails, the opt-in rule (rule 3) was broken: fix the code, not the test.
+
+#### Step 9. Check and docs
+1. `npm test`: everything passes.
+2. `node tools/replay.js --seeds 20 --years 10`. **Expected:** all invariants pass (now 11 per
+   seed); warnings: same money, no turning points, no interruptions, sleep debt stayed at 0,
+   couplings never held (sleepDebt, lowBalance, overdrawn, highStress). `lowNeeds` should hold
+   for a few hours a year in most seeds (bladder dips to about 24). Stress seed means spread
+   roughly 5–35 with the anxious trait. If anything else shows up (for example interruptions, or
+   stress far from base), stop and tell the user before changing code. Note the run time (it was
+   70 s; the hourly work should add little).
+3. Open the page (`python3 -m http.server 8000`, `?fresh=1`): the panel shows the stress line;
+   the why line shows `mood ×…` on fun choices. Screenshots as in HOUSE_VIEW (the face change).
+4. Docs (CLAUDE.md "After every change"): STATUS (what was built, the summary's first lines, the
+   "dormant until L6/L7" note), DECISIONS (anything decided while building), ROADMAP (tick L4),
+   ARCHITECTURE (`src/sim/wellbeing.js`, `data/wellbeing.json`, `data/couplings.json`, save v4,
+   `tests/wellbeing.test.js`), SIMULATION section 0 (stress, couplings, sleep debt, interruptions,
+   the new score formula), this section's heading to "built" with an "As built" note, and the
+   STATUS known issue "Actions are never interrupted" replaced.
+5. Commit and push to `main` (no branches), then copy the changed docs to the Project.
+
+#### What this step does not do
+No obligations (L6), no beliefs (L5), no other family members (L7), no change to money flows (the
+family does not spend less when stressed: that is behaviour for L5/L8), no stress turning points in
+the harness (turning points stay money-only until a stress shock exists), no thought bubbles.
 
 ---
 

@@ -3,7 +3,12 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) and L3 (replay harness) are built. Next is L4 (couplings, stress, sleep debt), which needs a brief first.
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) and L3 (replay harness) are built. Next is L4 (couplings, stress, sleep debt, interruptions): the brief is written (LIFE_SYSTEMS 4d) and waits for the user's approval.
+
+## Latest (2026-11-11, night) — L4 brief written (docs only)
+- **L4 brief** is in `docs/LIFE_SYSTEMS.md` 4d, written for another model to code: `data/wellbeing.json`, `data/couplings.json`, `kind` and `countsAsSleep` in `data/actions.json`, lags in `stocks.js` (`setTarget`, `stepStocks`), new `src/sim/wellbeing.js`, hourly hook in `step()`, interruption rule, mood factor and stress penalty in the score, save version 4, panel stress line, the face at stress ≥ 60, a wellbeing probe and four invariants in the harness, 16 tests. **No code written.**
+- **Measured while writing it:** Sarah's needs never fall below about 24 and she always sleeps exactly 8 hours. So with today's world the interruption rule never fires, sleep debt stays 0, and stress rests at a base set by her anxious trait (5 to 35), plus a small push when bladder dips under 25. The machinery is proven by tests that force the conditions; it comes alive with obligations and children (L6/L7) and money trouble (L9/L11). The harness will say so as warnings.
+- **Defaults proposed (tuning, for the user to approve or change):** base stress 20 + 3 × (anxious − 5); half-life 48 game hours; couplings: any need under 25 +5 each, sleep debt over 6 h +15 (and fun ×1.4, energy ×1.2 faster), joint account under £200 +20, overdrawn +15, stress over 60 makes comfort drop ×1.2 faster; sleep need 8 h (settled at 18:00, repay at most 2 h a day); fun scores × (1 − stress/200); chores lose 0.1 a point above stress 50; a need under 10 interrupts anything but sleep; the face looks uneasy at stress 60 or more.
 
 ## Latest (2026-11-11, L3 replay harness built)
 - **L3 built** (LIFE_SYSTEMS 15a, "as built"). Run it with `node tools/replay.js --seeds 20 --years 10`: 20 seeds headless for 10 game years, about 70 s. It writes `replay-out/replay-report.json` and `replay-summary.txt` (git-ignored). `--daily`, `--from`, `--out` and `--quiet` as in the brief.
@@ -268,7 +273,7 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. L4 (couplings, stress, sleep debt, interruption rule): write the brief in LIFE_SYSTEMS and wait for the user's approval before any code. The harness will need a stress probe and a stress-range invariant then.
+1. User approves the L4 brief (LIFE_SYSTEMS 4d) and its tuning defaults, or changes them; then build it (any model can follow the brief).
 2. User checks the Household block on a real phone (sideways and upright).
 3. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
 4. Source the school term dates (needed before L6/L7).
