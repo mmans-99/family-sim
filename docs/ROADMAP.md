@@ -8,18 +8,20 @@ Each phase ends with something you can open and watch.
 - [x] Create GitHub repo (`mmans-99/family-sim`, public)
 - [x] GitHub Pages hosting turned on (live at mmans-99.github.io/family-sim)
 
-## Phase 1 — The house and one person
+## Phase 1 — The house and one person (complete)
 - [x] Clock with speed controls (pause / 1x / 2x / 4x)
 - [x] House map: top-down pixel-art plan of the ground floor, first floor and garden, with walls, doorways, windows, stairs and furniture drawn from the Sierrassets sprite pack, plus our own extras (stairs, shed, tree, lawn, path, rugs, front wall face). UK 3-bed semi layout, every room checked as walkable. Whole-house view on one screen, plus one view per floor. Pan and zoom.
 - [x] Objects: bed, fridge, cooker, toilet, bath (shower over it), sofa, TV, armchair, basin, sink, washing machine, garden chairs (`data/actions.json`)
 - [x] One adult who walks (pathfinding, stairs, back door) and uses objects: Sarah
 - [x] Needs that drop over time; picks actions to fix them
 - [x] Watch-only status line and panel: what she is doing, where, need bars, recent log
-- [ ] Save/load
+- [x] Save/load: the game is kept in the browser and reopened where it stopped; the time the page was closed is caught up on open, with a "while you were away" summary
+- [x] Bath: running the bath (tap and filling) comes before getting in
+- [x] Personality: five traits (outgoing, tidy, active, kind, anxious) rolled from the seed, affecting choices (tidy and active so far)
 
 ## Phase 1b — Life foundations (plan: `docs/LIFE_SYSTEMS.md`)
 Build these before Phase 2: everything after rests on them. Step numbers match LIFE_SYSTEMS.md section 16.
-- [ ] L0 Save/load, saveable random state, one random stream per system
+- [x] L0 Save/load, saveable random state, one random stream per system (`src/sim/save.js`, `src/save/store.js`, `subRng` in `src/sim/rng.js`)
 - [ ] L1 Calendar and two clocks (each game day ≈ 13 calendar days; dated bills, paydays, holidays)
 - [ ] L2 Stock engine + household money: accounts, bills, mortgage as ledgers
 - [ ] L3 Replay harness: run many seeds for years with no screen and report the lives

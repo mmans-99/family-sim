@@ -3,7 +3,7 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has needs, picks what to do, walks the house (stairs and garden included) and uses the furniture. A watch-only panel shows her needs and day. Still to do in Phase 1: save/load.
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). Next is Phase 1b, step L1 (calendar), once the user approves the calendar mapping in DECISIONS OPEN.
 
 ## Latest (2026-11-11, mid-afternoon) — life-like world plan
 - The user supplied a design brief for a life-like world (clocks and ledgers, not scripted
@@ -15,6 +15,18 @@ Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has n
 - ROADMAP gains Phase 1b (L0–L5) before Phase 2; later steps are listed in Phases 2–5.
   CLAUDE.md, SIMULATION.md, ARCHITECTURE.md and DECISIONS.md point to the new guide.
 - Waiting on the user: approve the calendar mapping (DECISIONS OPEN) before L1.
+
+## Latest (2026-11-11, finishing Phase 1)
+- **Save and load.** The game is saved in the browser (localStorage) every 10 seconds, and when the page is hidden or closed. Reopening restores it exactly; the missed time is run on open at the speed it was running (paused = no time passes), capped at one game year, and a "while you were away" box lists the last few things she did. Only `src/save/store.js` touches browser storage; `src/sim/save.js` is pure logic. `?fresh=1` forgets the save and starts again. Checked in a real browser: 07:00 saved, reopened 90 minutes later at 1x: 21:24 with the summary, and a second reopen did not catch up twice.
+- **Running the bath.** The bath now starts with a 6-minute "Running the bath" step at the bath, then she gets in (`prelude` in `data/actions.json`). Checked at 07:48 (filling) and 07:56 (in the bath, hidden by the cover).
+- **Personality.** Five traits, 0 to 10, rolled from the seed for Sarah (`personality: "random"` in `data/people.json`), shown under her name. Tidy and active change her choices so far: laundry and washing up (tidy), garden (active, outgoing), naps (active, negative). Outgoing, kind and anxious have no effect until Phase 2. The why line shows the personality multiplier when it is not neutral.
+- **Not committed or pushed:** this session can only read `mmans-99/family-sim`. Changes are in the working copy at `/home/claude/mmans-99/family-sim`.
+- Tests: 63 passing (new `tests/save.test.js`: save round trip gives the same day, catch-up rate and cap, prelude order, personality direction, seeded roll).
+
+## Known issues (added)
+- Sarah potters a lot between meals because nothing else needs doing yet (unchanged).
+- Saves are version 1. A save from a later, incompatible version is refused and a new game starts; the old save is overwritten when the new game first saves.
+- The favicon 404 in the browser console is harmless (no icon file yet).
 
 ## Latest (2026-11-11, afternoon)
 - **Why trace.** Every decision records why: the lowest need, score, squares, habit and the
@@ -155,13 +167,10 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User watches Sarah on the phone for a while and says what feels wrong.
-2. User approves (or changes) the calendar mapping in DECISIONS OPEN.
-3. L0: Save/load (last Phase 1 item, also LIFE_SYSTEMS.md step L0): save the world to the browser's storage, load it on open,
-   then catch up the time the page was closed (with a short "while you were away" summary).
-   The seed and the save version go in the save.
-4. L1–L5 (Phase 1b, `docs/LIFE_SYSTEMS.md`), then Phase 2: Tom, Oliver and Ruby.
-5. Record the exact Sierrassets licence wording in DECISIONS.md.
+1. User checks save/load, the bath and personality on the phone (`index.html` with `?fresh=1` for a new game).
+2. User approves (or changes) the calendar mapping in DECISIONS OPEN. Then L1 (calendar and two clocks), L2 to L5 (Phase 1b, `docs/LIFE_SYSTEMS.md`).
+3. Phase 2: Tom, Oliver and Ruby (L6 to L8).
+4. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
 - Sarah potters about a lot between meals, because nothing else needs doing yet. Childcare (Phase 2) and later outings will fill the day.
@@ -169,7 +178,7 @@ The user asked for the project to be read and the house view fixed. The view was
 - No thought bubbles or real mood yet; her face follows her needs as a stand-in.
 - Her face only shows on front-facing frames; from the side or back it is the plain template face.
 - The sleeping head is slightly wider than one pillow on the double bed.
-- The page always starts at 07:00 on Day 1 with the same seed. Reloading starts the day again (save/load is next).
+- A new game starts at 07:00 on Day 1 with seed 1. A saved game is kept in the browser; `?fresh=1` starts again.
 - The pack only has front views. The sofa faces the viewer, not the TV, and the lower dining chairs show their backs. A back-view sofa would need drawing.
 - The kitchen table has three chairs. Ruby needs a high chair (to draw on the extras sheet).
 - No pets or people sprites are used yet. The zip has a pets sheet; it is not in the repo.

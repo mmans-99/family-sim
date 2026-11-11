@@ -1,8 +1,10 @@
 // Entry point: clock, house view and camera controls, wired together.
 import { createClock, advance, setSpeed, readClock, SPEEDS, REAL_MS_PER_GAME_MINUTE } from './sim/clock.js';
 import { createWorld, step, roomName } from './sim/world.js';
+import { toSave, fromSave, minutesAway, catchUp } from './sim/save.js';
+import { readSave, writeSave, clearSave } from './save/store.js';
 import { peopleToDraw } from './render/people.js';
-import { renderPanel, renderStatusLine } from './ui/panel.js';
+import { renderPanel, renderStatusLine, clockText } from './ui/panel.js';
 import { buildScene, sceneBounds } from './render/scene.js';
 import { drawScene, snapFrame } from './render/house.js';
 import { loadPack } from './render/pack.js';
@@ -26,6 +28,7 @@ const panelEl = document.getElementById('people');
 const speedBar = document.getElementById('speeds');
 const viewBar = document.getElementById('views');
 const cameraBar = document.getElementById('camera');
+const awayEl = document.getElementById('away');
 
 // The scene is drawn small, then scaled up with hard edges for the pixel-art look.
 const lowres = document.createElement('canvas');
@@ -54,7 +57,8 @@ const CAMERA_BUTTONS = [
   ['reset', 'Reset view'],
 ];
 
-const SEED = 1; // fixed for now; it becomes part of the save in a later step
+const SEED = 1; // the seed of a new game; a saved game keeps its own
+const SAVE_EVERY_MS = 10000; // real time between saves while the page is open
 
 let house = null;
 let world = null;  // the simulation (src/sim/world.js)
@@ -195,15 +199,66 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+// "While you were away": how much game time passed, and the last few things that happened.
+function showAway(from, minutes) {
+  const span = minutes >= 1440 ? `${(minutes / 1440).toFixed(1)} game days`
+    : minutes >= 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60} min`
+      : `${minutes} min`;
+  document.getElementById('away-text').textContent =
+    `While you were away: ${span} of the family's day went by.`;
+  const list = document.getElementById('away-log');
+  list.replaceChildren(...world.log.filter((e) => e.time > from).slice(-8).map((e) => {
+    const li = document.createElement('li');
+    const when = readClock({ totalMinutes: e.time, speed: 0 });
+    li.textContent = `Day ${when.day}, ${clockText(e.time)} · ${e.who}: ${e.text}`;
+    return li;
+  }));
+  awayEl.hidden = false;
+}
+
+function saveNow() {
+  writeSave(toSave(world, clock, Date.now()));
+}
+
 async function start() {
   const load = async (file) => (await fetch(`data/${file}`)).json();
   const [actions, needs, people] = await Promise.all(['actions.json', 'needs.json', 'people.json'].map(load));
   house = await load('house.json');
-  world = createWorld({ house, actions, needs, people, seed: SEED, time: clock.totalMinutes });
-  // Testing aid: index.html?minutes=600 starts the page 600 game minutes in, as if that time
-  // had already been lived (the same steps the clock would take).
-  const skip = Number(new URLSearchParams(window.location.search).get('minutes')) || 0;
-  for (let i = 0; i < Math.min(skip, 7 * 1440); i++) { clock.totalMinutes += 1; step(world); }
+  const data = { house, actions, needs, people };
+  const params = new URLSearchParams(window.location.search);
+  // Testing aid: index.html?fresh=1 forgets the saved game and starts a new one.
+  if (params.has('fresh')) clearSave();
+  const saved = params.has('fresh') ? null : readSave();
+  let restored = null;
+  if (saved) {
+    try {
+      restored = fromSave(saved, data);
+    } catch (err) {
+      console.warn('The saved game does not fit this version; starting a new one.', err);
+    }
+  }
+  if (restored) {
+    // The family keeps living while the page is closed: run the missed time now.
+    const away = minutesAway(saved, Date.now());
+    const from = restored.time;
+    catchUp(restored, away.minutes);
+    world = restored;
+    Object.assign(clock, { totalMinutes: world.time, speed: saved.clock.speed, carryMs: away.carryMs });
+    if (away.minutes > 0) showAway(from, away.minutes);
+  } else {
+    world = createWorld({ ...data, seed: SEED, time: clock.totalMinutes });
+    // Testing aid: index.html?minutes=600 starts a new game 600 game minutes in, as if that
+    // time had already been lived (the same steps the clock would take).
+    const skip = Number(params.get('minutes')) || 0;
+    for (let i = 0; i < Math.min(skip, 7 * 1440); i++) { clock.totalMinutes += 1; step(world); }
+  }
+  saveNow();
+  setInterval(saveNow, SAVE_EVERY_MS);
+  window.addEventListener('pagehide', saveNow);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveNow();
+  });
+  document.getElementById('away-close').addEventListener('click', () => { awayEl.hidden = true; });
   // Floor, furniture and people sprites, if the sheets are present.
   pack = await loadPack(undefined, world.people.map((p) => p.sprite));
   buildControls();

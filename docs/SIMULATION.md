@@ -20,6 +20,8 @@ Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `d
   piece. Keep actions scoring at least 1, take the best 3 and pick one weighted by
   score². If nothing qualifies, walk to a random square and potter about for 5–15 minutes.
   Actions are not interrupted once started.
+- **Running the bath:** an action with `prelude` (the bath, `data/actions.json`) first does the prelude action at the same furniture (6 minutes standing at the bath, the tap running), then the action itself. The prelude is never chosen on its own (it has no score).
+- **Personality:** five traits 0 to 10 (`personality` in `data/people.json`: `"random"` rolls them from the seed, or give numbers). An action's `likes` (weights) multiply its score by `traitFit`: 1 + Σ weight × (trait − 5) / 5, never below 0.2. Used so far: tidy (laundry, washing up), active (garden +, nap −), outgoing (garden). Kind and anxious have no effect until Phase 2 and the emotions work.
 - **Walking:** shortest route over the walking map, 8 squares per game minute. The map
   joins floors at the same height (ground floor and garden, through the back door) and
   the floors through the stairs: a flight is entered only from its bottom end or from the

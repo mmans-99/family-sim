@@ -155,7 +155,9 @@ test('every decision leaves a why trace: the need, the score, the habit and the 
     step(w);
     if (p.activity && p.activity !== before) {
       const why = p.why;
-      assert.equal(why.chosen, p.activity.action.label);
+      // A prelude (running the bath) is shown first; the trace names the action it leads to.
+      const shown = p.activity.next ? p.activity.next.action : p.activity.action;
+      assert.equal(why.chosen, shown.label);
       assert.ok(why.needs && typeof why.needs === 'object', 'needs snapshot kept');
       assert.ok(why.next.length <= 2, 'at most two runners-up');
       if (why.reason === 'need') {

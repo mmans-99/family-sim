@@ -31,9 +31,12 @@ simulator/
 │   ├── main.js             starts everything: clock, views, camera, drawing loop
 │   ├── sim/
 │   │   ├── clock.js        game time, speeds, day/season/year reading
-│   │   ├── rng.js          seeded random numbers (mulberry32)
+│   │   ├── rng.js          seeded random numbers (mulberry32), saveable state, subRng for separate streams
 │   │   ├── housemap.js     walking map from house.json: squares, steps, stairs, routes, where to stand to use furniture
-│   │   └── world.js        people, needs, the brain, walking, actions, log; step() = one game minute
+│   │   ├── world.js        people, needs, the brain, walking, actions, personality, log; step() = one game minute
+│   │   └── save.js         save to plain JSON, load from it, time away, catch-up (pure logic)
+│   ├── save/
+│   │   └── store.js        keeps the save in the browser (localStorage); the only save code that touches the browser
 │   ├── render/
 │   │   ├── scene.js        house data -> list of boxes (floor squares, walls, windows, doors, furniture)
 │   │   ├── camera.js       plan camera: grid position -> art pixels (16 per square), pan
@@ -48,6 +51,7 @@ simulator/
 └── tests/
     ├── sim.test.js         clock and random numbers
     ├── world.test.js       routes, stairs, back door, scoring, chores, same-seed days, a two-day run
+    ├── save.test.js        save round trip, time away, catch-up, bath prelude, personality
     ├── render.test.js      scene contents, plan camera, sprite maps, furniture layout, walking routes
     ├── palette.test.js     palette snapping
     └── raster.test.js      pixel-exact fills and lines
@@ -60,7 +64,7 @@ Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/r
 - Two speeds (planned, LIFE_SYSTEMS.md rule 5): people in the house step every game minute; off-screen agents (firms, institutions, economy, relatives) step once per game day at 00:00. Dated calendar rules fire at their hour on the game day that contains their date.
 - Each step: each person's needs drop → if free, the brain picks an action → walk along the route, or use the furniture (needs rise) → log. (Later: weather and economy before the people.)
 - The drawing loop runs every screen frame and reads the latest state. `people.js` moves walkers smoothly between minutes using the part of the minute that has passed; the sim itself never reads anything from the screen.
-- Testing aid: `index.html?minutes=N` starts the page N game minutes in (same steps as the clock).
+- Testing aids: `index.html?minutes=N` starts a new game N game minutes in (same steps as the clock); `index.html?fresh=1` forgets the save and starts a new game.
 - Build-time views: `SHOW_WHY` in `src/ui/panel.js` shows each person's latest decision
   (`person.why`). Set it to `false` before the finished full-screen view.
 - Drawing-only effects: an action's `steam` flag (`data/actions.json`) makes `people.js` pass a
@@ -82,6 +86,10 @@ Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/r
 - `main.js` draws into a small canvas and scales it up with hard edges. One art pixel is a whole number of device pixels. Zooming changes that number, so the art stays sharp at every zoom. Pan is turned into whole art pixels.
 - The sheets are `assets/furniture-pack/furniture.png` and `floors-walls.png`, plus our own `assets/extras/extras.png`. If the pack fails to load, everything is drawn as plain blocks and snapped to the palette. If only the extras fail, those pieces fall back to blocks.
 
-## Save format (planned)
-One JSON object: `{ version, seed, time, world, people[], log[] }`. Everything in `world` must be plain JSON (no Map, Set, classes or functions); random streams save their state. New systems add their state under `world` (`stocks`, `flows`, `calendar`, `household`, `economy`, `contacts`, ...).
-`version` lets future sessions upgrade old saves instead of breaking them.
+## Save format (version 1, as built)
+`src/sim/save.js` writes one plain JSON object: `{ version, savedAt, seed, clock: {totalMinutes, speed, carryMs}, time, rng, people[], log[] }`.
+- `savedAt` is real time in ms; the time away is the real time since then, at the saved speed, capped at one game year.
+- `rng` is the main random generator's position (`getState()`); `people[]` holds each person's `at`, `needs`, `personality`, `lastDone`, `why` and `activity`.
+- An activity stores its action as a copy and its furniture as an index in `data/house.json` (`furniture`). A loaded game must use the same house data.
+- A save from another version is refused. The file is stored by `src/save/store.js` under the key `family-sim.save`. Saves happen every 10 s, on `pagehide`, and when the page is hidden.
+- New systems add their state to the save as they are built (`stocks`, `flows`, `calendar`, `household`, `economy`, `contacts`, ...) and bump `version` when the shape changes.

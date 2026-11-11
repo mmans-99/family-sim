@@ -23,6 +23,10 @@
     .num { text-align: right; font-variant-numeric: tabular-nums; color: #5a5147; }
     .log { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.85rem; color: #3d352c; }
     .log .t { font-variant-numeric: tabular-nums; color: #7a6f62; margin-right: 4px; }
+    #away { border: 1px solid #4a4036; border-radius: 6px; background: #fff; padding: 8px 10px; margin-bottom: 8px; font-size: 0.9rem; }
+    #away p { margin: 0 0 4px; }
+    #away ol { margin: 0 0 6px; padding-left: 1.2em; color: #3d352c; font-size: 0.85rem; }
+    .traits { font-size: 0.8rem; color: #5a5147; margin-bottom: 6px; }
     .why { margin: 6px 0 0; font-size: 0.8rem; color: #5b4f40; background: #f3ead8; border-radius: 4px; padding: 4px 6px; }
   </style>
 </head>
@@ -30,6 +34,11 @@
   <h1>Family Simulator</h1>
   <div id="clock">Loading…</div>
   <div id="status"></div>
+  <section id="away" hidden aria-live="polite">
+    <p id="away-text"></p>
+    <ol id="away-log"></ol>
+    <button id="away-close" type="button">Close</button>
+  </section>
   <div id="speeds" class="bar"></div>
   <div id="views" class="bar"></div>
   <canvas id="house"></canvas>
