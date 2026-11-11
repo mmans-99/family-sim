@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs';
 import { cutOpenings, buildScene, sceneBounds, COLOURS } from '../src/render/scene.js';
 import { createCamera, project, TARGET, UNIT_PX } from '../src/render/camera.js';
 import { boxRect } from '../src/render/house.js';
-import { NAME_TO_SPRITE, SPRITE_RECTS, ROOM_TILE, FLOOR_TILES } from '../src/render/pack.js';
+import {
+  NAME_TO_SPRITE, SPRITE_RECTS, ROOM_TILE, FLOOR_TILES, EXTRA_RECTS, NAME_TO_TILE, NAME_TO_RUG,
+} from '../src/render/pack.js';
 
 const house = JSON.parse(readFileSync(new URL('../data/house.json', import.meta.url), 'utf8'));
 
@@ -75,8 +77,9 @@ test('a thin wall still covers at least one whole pixel', () => {
 });
 
 test('every sprite and floor tile named in the maps exists', () => {
-  for (const sprite of Object.values(NAME_TO_SPRITE)) assert.ok(SPRITE_RECTS[sprite], sprite);
-  for (const tile of Object.values(ROOM_TILE)) assert.ok(FLOOR_TILES[tile], tile);
+  for (const sprite of Object.values(NAME_TO_SPRITE)) assert.ok(SPRITE_RECTS[sprite] || EXTRA_RECTS[sprite], sprite);
+  for (const tile of Object.values(ROOM_TILE)) assert.ok(FLOOR_TILES[tile] || EXTRA_RECTS[tile], tile);
+  for (const name of [...Object.values(NAME_TO_TILE), ...Object.values(NAME_TO_RUG)]) assert.ok(EXTRA_RECTS[name], name);
 });
 
 test('furniture stays inside its room and no two standing pieces share a square', () => {
@@ -99,23 +102,99 @@ test('furniture stays inside its room and no two standing pieces share a square'
 
 test('placing a floor moves all of its boxes and nothing else', () => {
   const plain = sceneBounds(buildScene(house, ['first']));
-  const moved = buildScene(house, ['first', 'ground'], { first: { x: 0, y: -8.5 } });
+  const moved = buildScene(house, ['first', 'ground'], { first: { x: 0, y: -8.8 } });
   const first = sceneBounds(moved.filter((b) => b.floor === 'first'));
   const ground = sceneBounds(moved.filter((b) => b.floor === 'ground'));
-  assert.equal(first.y0, plain.y0 - 8.5);
+  assert.equal(first.y0, plain.y0 - 8.8);
   assert.equal(first.x0, plain.x0);
   assert.deepEqual(ground, sceneBounds(buildScene(house, ['ground'])));
 });
 
 test('in the whole-house layout the first floor does not touch the ground floor', () => {
-  const boxes = buildScene(house, ['first', 'ground', 'garden'], { first: { x: 0, y: -8.5 } });
+  const boxes = buildScene(house, ['first', 'ground', 'garden'], { first: { x: 0, y: -8.8 } });
   const first = sceneBounds(boxes.filter((b) => b.floor === 'first'));
   const ground = sceneBounds(boxes.filter((b) => b.floor === 'ground'));
-  assert.ok(first.y1 + 2 <= ground.y0, 'leave two squares for tall sprites and the floor name');
+  // ground.y0 is the top of the ground floor's front-wall face, which tall sprites stand against.
+  assert.ok(first.y1 + 1.5 <= ground.y0, 'leave a square and a half for the floor name');
 });
 
 test('a camera centre moves the middle of the screen', () => {
   const p = project({ panX: 0, panY: 0, cx: 1, cy: -4 }, 400, 300, 1, -4);
   assert.equal(p.sx, 200);
   assert.equal(p.sy, 150);
+});
+
+// Squares someone can stand on, and the steps between them: no wall in the way (or a doorway
+// through it), and no standing furniture on the square. Rugs and things on top don't block.
+function walkable(floorId) {
+  const floor = house.floors.find((f) => f.id === floorId);
+  const roomAt = new Map();
+  for (const r of floor.rooms) {
+    for (let x = r.x; x < r.x + r.w; x++) for (let y = r.y; y < r.y + r.h; y++) roomAt.set(`${x},${y}`, r.id);
+  }
+  const blocked = new Set();
+  for (const i of house.furniture) {
+    if (i.floor !== floorId || i.h < 0.05 || i.z || /^(stairs|stairwell)$/.test(i.name)) continue;
+    for (let x = i.x; x < i.x + i.w; x++) for (let y = i.y; y < i.y + i.d; y++) blocked.add(`${x},${y}`);
+  }
+  const doorBetween = (x, y, nx, ny) => (floor.doors ?? []).some((d) => (nx !== x
+    ? d.axis === 'v' && d.at === Math.max(x, nx) && d.from <= y && d.to >= y + 1
+    : d.axis === 'h' && d.at === Math.max(y, ny) && d.from <= x && d.to >= x + 1));
+  const reach = (start) => {
+    const seen = new Set([start]);
+    const todo = [start];
+    while (todo.length) {
+      const [x, y] = todo.pop().split(',').map(Number);
+      for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+        const k = `${nx},${ny}`;
+        if (seen.has(k) || !roomAt.has(k) || blocked.has(k)) continue;
+        if (roomAt.get(k) !== roomAt.get(`${x},${y}`) && !doorBetween(x, y, nx, ny)) continue;
+        seen.add(k);
+        todo.push(k);
+      }
+    }
+    return Object.assign(new Set([...seen].map((k) => roomAt.get(k))), { squares: seen });
+  };
+  return { floor, reach, doorBetween, roomAt };
+}
+
+test('every room on each floor can be walked to', () => {
+  for (const [floorId, start] of [['ground', '6,1'], ['first', '6,5']]) {
+    const { floor, reach } = walkable(floorId);
+    const rooms = reach(start);
+    for (const r of floor.rooms) assert.ok(rooms.has(r.id), `${r.name} cannot be reached on ${floorId}`);
+  }
+});
+
+test('like a UK semi, every first-floor room opens straight off the landing', () => {
+  const { floor, doorBetween, roomAt } = walkable('first');
+  for (const r of floor.rooms.filter((room) => room.id !== 'landing')) {
+    let found = false;
+    for (let x = r.x; x < r.x + r.w; x++) {
+      for (let y = r.y; y < r.y + r.h; y++) {
+        for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+          if (roomAt.get(`${nx},${ny}`) === 'landing' && doorBetween(x, y, nx, ny)) found = true;
+        }
+      }
+    }
+    assert.ok(found, `${r.name} has no door onto the landing`);
+  }
+});
+
+test('every piece someone uses has a free square beside it that can be walked to', () => {
+  const used = /bed|cot|cooker|sink|fridge|counter|toilet|basin|bath|washing|sofa|armchair|chair|table|wardrobe|dresser|drawers|TV unit|bookcase|toy box/;
+  for (const [floorId, start] of [['ground', '6,1'], ['first', '6,5']]) {
+    const { reach } = walkable(floorId);
+    const squares = reach(start).squares;
+    for (const i of house.furniture.filter((f) => f.floor === floorId && !f.z && used.test(f.name))) {
+      let ok = false;
+      for (let x = i.x - 1; x <= i.x + i.w; x++) {
+        for (let y = i.y - 1; y <= i.y + i.d; y++) {
+          const side = (x === i.x - 1 || x === i.x + i.w) !== (y === i.y - 1 || y === i.y + i.d);
+          if (side && squares.has(`${x},${y}`)) ok = true;
+        }
+      }
+      assert.ok(ok, `${i.name} at ${i.x},${i.y} on ${floorId} cannot be reached`);
+    }
+  }
 });

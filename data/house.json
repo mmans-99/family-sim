@@ -106,7 +106,7 @@
           "x": 0,
           "y": 0,
           "w": 5,
-          "h": 6,
+          "h": 3,
           "floor": "#cfc4b2"
         },
         {
@@ -119,34 +119,40 @@
           "floor": "#cdb08a"
         },
         {
-          "id": "bathroom",
-          "name": "Bathroom",
+          "id": "ruby",
+          "name": "Ruby's room",
           "x": 7,
           "y": 0,
           "w": 5,
           "h": 3,
-          "floor": "#dfe9ea"
+          "floor": "#cfc4b2"
         },
         {
           "id": "oliver",
           "name": "Oliver's room",
-          "x": 7,
+          "x": 0,
           "y": 3,
-          "w": 2,
+          "w": 5,
           "h": 3,
           "floor": "#cfc4b2"
         },
         {
-          "id": "ruby",
-          "name": "Ruby's room",
-          "x": 9,
+          "id": "bathroom",
+          "name": "Bathroom",
+          "x": 7,
           "y": 3,
-          "w": 3,
+          "w": 5,
           "h": 3,
-          "floor": "#cfc4b2"
+          "floor": "#dfe9ea"
         }
       ],
       "doors": [
+        {
+          "axis": "v",
+          "at": 5,
+          "from": 0,
+          "to": 1
+        },
         {
           "axis": "v",
           "at": 5,
@@ -156,18 +162,12 @@
         {
           "axis": "v",
           "at": 7,
-          "from": 0,
-          "to": 1
+          "from": 1,
+          "to": 2
         },
         {
           "axis": "v",
           "at": 7,
-          "from": 4,
-          "to": 5
-        },
-        {
-          "axis": "v",
-          "at": 9,
           "from": 4,
           "to": 5
         }
@@ -305,16 +305,6 @@
     },
     {
       "floor": "ground",
-      "name": "shoe rack",
-      "x": 5,
-      "y": 0,
-      "w": 1,
-      "d": 1,
-      "h": 0.5,
-      "colour": "#6e5a48"
-    },
-    {
-      "floor": "ground",
       "name": "kitchen counter",
       "x": 8,
       "y": 0,
@@ -356,18 +346,8 @@
     {
       "floor": "ground",
       "name": "chair facing",
-      "x": 9,
-      "y": 1,
-      "w": 1,
-      "d": 1,
-      "h": 0.6,
-      "colour": "#7a5a3a"
-    },
-    {
-      "floor": "ground",
-      "name": "chair facing",
       "x": 10,
-      "y": 1,
+      "y": 2,
       "w": 1,
       "d": 1,
       "h": 0.6,
@@ -376,7 +356,7 @@
     {
       "floor": "ground",
       "name": "dining table",
-      "x": 9,
+      "x": 8,
       "y": 2,
       "w": 2,
       "d": 1,
@@ -386,7 +366,7 @@
     {
       "floor": "ground",
       "name": "chair",
-      "x": 9,
+      "x": 8,
       "y": 3,
       "w": 1,
       "d": 1,
@@ -396,7 +376,7 @@
     {
       "floor": "ground",
       "name": "chair",
-      "x": 10,
+      "x": 9,
       "y": 3,
       "w": 1,
       "d": 1,
@@ -437,7 +417,7 @@
       "floor": "ground",
       "name": "bin",
       "x": 11,
-      "y": 4,
+      "y": 5,
       "w": 1,
       "d": 1,
       "h": 0.8,
@@ -445,53 +425,13 @@
     },
     {
       "floor": "ground",
-      "name": "stair step",
+      "name": "stairs",
       "x": 5,
       "y": 1,
       "w": 1,
-      "d": 1,
-      "h": 0.7,
-      "colour": "#c8a97e"
-    },
-    {
-      "floor": "ground",
-      "name": "stair step",
-      "x": 5,
-      "y": 2,
-      "w": 1,
-      "d": 1,
-      "h": 1.4,
-      "colour": "#c8a97e"
-    },
-    {
-      "floor": "ground",
-      "name": "stair step",
-      "x": 5,
-      "y": 3,
-      "w": 1,
-      "d": 1,
-      "h": 2.0999999999999996,
-      "colour": "#c8a97e"
-    },
-    {
-      "floor": "ground",
-      "name": "stair step",
-      "x": 5,
-      "y": 4,
-      "w": 1,
-      "d": 1,
+      "d": 4,
       "h": 2.8,
       "colour": "#c8a97e"
-    },
-    {
-      "floor": "first",
-      "name": "rug",
-      "x": 1,
-      "y": 2,
-      "w": 2,
-      "d": 1,
-      "h": 0.02,
-      "colour": "#9bb7d4"
     },
     {
       "floor": "first",
@@ -538,7 +478,7 @@
       "floor": "first",
       "name": "wardrobe",
       "x": 4,
-      "y": 0,
+      "y": 2,
       "w": 1,
       "d": 1,
       "h": 2.1,
@@ -546,29 +486,99 @@
     },
     {
       "floor": "first",
-      "name": "dresser",
-      "x": 0,
-      "y": 3,
-      "w": 2,
-      "d": 1,
-      "h": 0.9,
-      "colour": "#c9b28e"
+      "name": "blue rug",
+      "x": 1,
+      "y": 4,
+      "w": 3,
+      "d": 2,
+      "h": 0.02,
+      "colour": "#9bb7d4"
     },
     {
       "floor": "first",
-      "name": "landing plant",
-      "x": 6,
-      "y": 5,
+      "name": "Oliver's bed",
+      "x": 0,
+      "y": 3,
+      "w": 1,
+      "d": 2,
+      "h": 0.7,
+      "colour": "#7fb3d5"
+    },
+    {
+      "floor": "first",
+      "name": "bedside table",
+      "x": 1,
+      "y": 3,
+      "w": 1,
+      "d": 1,
+      "h": 0.5,
+      "colour": "#a58a64"
+    },
+    {
+      "floor": "first",
+      "name": "toy box",
+      "x": 3,
+      "y": 3,
+      "w": 1,
+      "d": 1,
+      "h": 0.4,
+      "colour": "#e0c25a"
+    },
+    {
+      "floor": "first",
+      "name": "gold rug",
+      "x": 8,
+      "y": 1,
+      "w": 2,
+      "d": 2,
+      "h": 0.02,
+      "colour": "#e2b25c"
+    },
+    {
+      "floor": "first",
+      "name": "nursing chair",
+      "x": 8,
+      "y": 0,
       "w": 1,
       "d": 1,
       "h": 1.0,
-      "colour": "#4f8a3c"
+      "colour": "#c0504d"
+    },
+    {
+      "floor": "first",
+      "name": "chest of drawers",
+      "x": 9,
+      "y": 0,
+      "w": 1,
+      "d": 1,
+      "h": 0.8,
+      "colour": "#a58a64"
+    },
+    {
+      "floor": "first",
+      "name": "cot",
+      "x": 11,
+      "y": 0,
+      "w": 1,
+      "d": 2,
+      "h": 1.0,
+      "colour": "#f2d7a5"
+    },
+    {
+      "floor": "first",
+      "name": "toy box",
+      "x": 10,
+      "y": 2,
+      "w": 1,
+      "d": 1,
+      "h": 0.4,
+      "colour": "#e0c25a"
     },
     {
       "floor": "first",
       "name": "basin",
       "x": 8,
-      "y": 0,
+      "y": 3,
       "w": 1,
       "d": 1,
       "h": 0.85,
@@ -578,7 +588,7 @@
       "floor": "first",
       "name": "bath",
       "x": 9,
-      "y": 0,
+      "y": 3,
       "w": 2,
       "d": 1,
       "h": 0.6,
@@ -586,19 +596,9 @@
     },
     {
       "floor": "first",
-      "name": "shower",
-      "x": 11,
-      "y": 0,
-      "w": 1,
-      "d": 1,
-      "h": 2.1,
-      "colour": "#cfe8f0"
-    },
-    {
-      "floor": "first",
       "name": "toilet",
       "x": 11,
-      "y": 2,
+      "y": 5,
       "w": 1,
       "d": 1,
       "h": 0.45,
@@ -606,83 +606,13 @@
     },
     {
       "floor": "first",
-      "name": "Oliver's bed",
-      "x": 8,
-      "y": 3,
-      "w": 1,
-      "d": 2,
-      "h": 0.7,
-      "colour": "#7fb3d5"
-    },
-    {
-      "floor": "first",
-      "name": "toy box",
-      "x": 8,
-      "y": 5,
-      "w": 1,
-      "d": 1,
-      "h": 0.4,
-      "colour": "#e0c25a"
-    },
-    {
-      "floor": "first",
-      "name": "toy box",
-      "x": 10,
-      "y": 3,
-      "w": 1,
-      "d": 1,
-      "h": 0.5,
-      "colour": "#e0c25a"
-    },
-    {
-      "floor": "first",
-      "name": "cot",
-      "x": 11,
-      "y": 3,
-      "w": 1,
-      "d": 2,
-      "h": 1.0,
-      "colour": "#f2d7a5"
-    },
-    {
-      "floor": "first",
-      "name": "stairwell step",
+      "name": "stairwell",
       "x": 5,
       "y": 1,
       "w": 1,
-      "d": 1,
-      "h": 0.02,
-      "colour": "#8f7654"
-    },
-    {
-      "floor": "first",
-      "name": "stairwell step",
-      "x": 5,
-      "y": 2,
-      "w": 1,
-      "d": 1,
+      "d": 4,
       "h": 0.02,
       "colour": "#a38865"
-    },
-    {
-      "floor": "first",
-      "name": "stairwell step",
-      "x": 5,
-      "y": 3,
-      "w": 1,
-      "d": 1,
-      "h": 0.02,
-      "colour": "#b79a73"
-    },
-    {
-      "floor": "first",
-      "name": "stairwell step",
-      "x": 5,
-      "y": 4,
-      "w": 1,
-      "d": 1,
-      "h": 0.02,
-      "colour": "#c8a97e"
     },
     {
       "floor": "garden",
@@ -736,23 +666,12 @@
     },
     {
       "floor": "garden",
-      "name": "tree trunk",
+      "name": "tree",
       "x": 8,
       "y": 7,
-      "w": 1,
-      "d": 1,
-      "h": 1.4,
-      "colour": "#6b4f2e"
-    },
-    {
-      "floor": "garden",
-      "name": "tree canopy",
-      "x": 7,
-      "y": 6,
-      "z": 1.4,
       "w": 2,
       "d": 2,
-      "h": 1.6,
+      "h": 3.0,
       "colour": "#4f8a3c"
     }
   ]

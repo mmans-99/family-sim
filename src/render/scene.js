@@ -14,7 +14,8 @@ export const COLOURS = {
 
 const DOOR_HEIGHT = 2.1;
 const DOOR_THICKNESS = 0.06;
-const FENCE_THICKNESS = 0.1;
+const FENCE_THICKNESS = 0.25;
+export const FACE_HEIGHT = 1; // the front wall's outside face, shown above it, in squares
 const WINDOW_SILL = 0.9;     // height of the window bottom above the floor
 const WINDOW_HEIGHT = 1.1;
 const WINDOW_EXTRA_THICKNESS = 0.05; // windows stand a little proud of the wall
@@ -88,10 +89,17 @@ function isOuter(e, b) {
     : e.at === b.minX || e.at === b.maxX;
 }
 
-// One window per two grid tiles of outside wall, each exactly one tile wide.
+// Where windows go along a piece of outside wall: one per two grid squares, each one
+// square wide. Returns the start of each window.
+export function windowStarts(piece) {
+  const starts = [];
+  for (let p = piece.from + 1; p + 1 <= piece.to - 0.5; p += 2) starts.push(p);
+  return starts;
+}
+
 function addWindows(boxes, e, piece, z0, thickness) {
   const mid = segMid(e.axis, e.at, piece.from, piece.to);
-  for (let p = piece.from + 1; p + 1 <= piece.to - 0.5; p += 2) {
+  for (const p of windowStarts(piece)) {
     boxes.push(tag(wallBox(
       e.axis, e.at, p, p + 1,
       z0 + WINDOW_SILL, WINDOW_HEIGHT, thickness + WINDOW_EXTRA_THICKNESS, COLOURS.glass,
@@ -138,12 +146,34 @@ function addFloor(boxes, house, floor, lift) {
         if (seen.has(key)) continue;
         seen.add(key);
         const outer = isOuter(e, b);
+        // The front wall (top of the drawing) also shows its outside face above it, which
+        // is what tall furniture on that wall is seen against.
+        const front = outer && e.axis === 'h' && e.at === b.minY;
+        const t = thickness / 2;
         for (const piece of cutOpenings(e, doors)) {
-          boxes.push(tag(wallBox(
+          const wall = tag(wallBox(
             e.axis, e.at, piece.from, piece.to, z0, height, thickness,
             outer ? COLOURS.brick : COLOURS.wall,
-          ), 'wall', segMid(e.axis, e.at, piece.from, piece.to)));
-          if (outer) addWindows(boxes, e, piece, z0, thickness);
+          ), 'wall', segMid(e.axis, e.at, piece.from, piece.to));
+          wall.outer = outer;
+          boxes.push(wall);
+          if (outer && !front) addWindows(boxes, e, piece, z0, thickness); // the front's are on its face
+          if (front) {
+            const x0 = piece.from - (piece.from === b.minX ? t : 0);
+            const x1 = piece.to + (piece.to === b.maxX ? t : 0);
+            const face = tag(box(x0, e.at - t - FACE_HEIGHT, z0, x1, e.at - t, z0 + height, COLOURS.wall), 'face');
+            face.windows = windowStarts(piece).map((p) => p - x0); // offsets, so moving the floor is safe
+            face.ends = [x0 < piece.from || doors.some((o) => o.axis === 'h' && o.at === e.at && o.to === piece.from),
+              x1 > piece.to || doors.some((o) => o.axis === 'h' && o.at === e.at && o.from === piece.to)];
+            boxes.push(face);
+          }
+        }
+        if (front) {
+          for (const d of doors.filter((o) => o.axis === 'h' && o.at === e.at && o.from >= e.from && o.to <= e.to)) {
+            const face = tag(box(d.from, e.at - t - FACE_HEIGHT, z0, d.to, e.at - t, z0 + DOOR_HEIGHT, COLOURS.door), 'face');
+            face.door = true;
+            boxes.push(face);
+          }
         }
       }
     }

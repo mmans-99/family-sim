@@ -15,6 +15,11 @@ simulator/
 ├── package.json            `npm test` runs node --test
 ├── .nojekyll               tells GitHub Pages to skip Jekyll (plain static site)
 ├── docs/                   project memory (see CLAUDE.md)
+├── assets/
+│   ├── furniture-pack/     Sierrassets sheets: furniture.png, floors-walls.png
+│   └── extras/extras.png   our own pieces the pack lacks (stairs, shed, tree, lawn, path, rugs, front wall face)
+├── tools/
+│   └── make_extras.py      draws assets/extras/extras.png (Python + Pillow)
 ├── data/
 │   └── house.json          house: floors, rooms, doorways, fences, furniture
 ├── src/
@@ -33,7 +38,7 @@ simulator/
 │       └── camera-controls.js   drag, two-finger, pinch, wheel; button actions
 └── tests/
     ├── sim.test.js         clock and random numbers
-    ├── render.test.js      scene contents, plan camera, sprite maps, furniture layout
+    ├── render.test.js      scene contents, plan camera, sprite maps, furniture layout, walking routes
     ├── palette.test.js     palette snapping
     └── raster.test.js      pixel-exact fills and lines
 ```
@@ -46,14 +51,14 @@ Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.j
 
 ## The house view
 (Step-by-step method, rules and checks: `docs/HOUSE_VIEW.md`.)
-- The view is straight down. The back wall of the house (y = 0) is at the top of the screen, and y grows down the screen. The default view shows the whole house on one screen, with the first floor placed above the ground floor and garden; buttons show one floor at a time.
-- `scene.js` builds boxes for the chosen floor: one per floor square, walls from room edges with doorways cut out, windows on outside walls, and furniture straight from `data/house.json`.
+- The view is straight down. The front of the house (y = 0, where the front door is) is at the top of the screen and the garden is at the bottom, and y grows down the screen. The default view shows the whole house on one screen, with the first floor placed above the ground floor and garden; buttons show one floor at a time.
+- `scene.js` builds boxes for the chosen floor: one per floor square, walls from room edges with doorways cut out (outside walls marked `outer`), windows on outside walls, a `face` box one square tall above the front wall (with its windows and the front door), and furniture straight from `data/house.json`.
 - `camera.js` turns a grid position into art pixels. One grid square is always 16 art pixels (`UNIT_PX`), the size the sprite pack is drawn at, so sprites are never stretched.
-- `house.js` draws in this order: floor squares (four 8x8 pack tiles each, or a plain colour), flat items (rugs, paths), then walls and furniture sorted from the top of the screen down, so lower things overlap those behind. Doors are not drawn; a doorway is a gap in the wall.
+- `house.js` draws in this order: floor squares (pack tiles repeated, or a plain colour), flat items (rugs built from a 9-piece template, tiled paths, the stairwell), then the front wall face, walls, windows, fences and furniture sorted from the top of the screen down, so lower things overlap those behind. Walls, windows and fences use the pack's colours (white walls with a dark grey edge, wooden fence with posts). Doors are not drawn; a doorway is a gap in the wall.
 - A furniture item whose name is in `NAME_TO_SPRITE` (`pack.js`) is drawn as a sprite, standing on the bottom edge of its squares and centred. Its `z` in the data lifts it up the screen (a TV on its unit). Other items are outlined blocks.
 - A view (`VIEWS` in `main.js`) lists its floors and where each is placed on the drawing. `buildScene` shifts a placed floor's boxes; the house data and the simulation keep each floor's own coordinates. `main.js` fits the view's bounds to the screen.
 - `main.js` draws into a small canvas and scales it up with hard edges. One art pixel is a whole number of device pixels. Zooming changes that number, so the art stays sharp at every zoom. Pan is turned into whole art pixels.
-- The sheets are `assets/furniture-pack/furniture.png` and `floors-walls.png`. If they fail to load, everything is drawn as plain blocks and snapped to the palette.
+- The sheets are `assets/furniture-pack/furniture.png` and `floors-walls.png`, plus our own `assets/extras/extras.png`. If the pack fails to load, everything is drawn as plain blocks and snapped to the palette. If only the extras fail, those pieces fall back to blocks.
 
 ## Save format (planned)
 One JSON object: `{ version, seed, time, world, people[], log[] }`.

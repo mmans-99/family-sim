@@ -3,9 +3,37 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 — house view built: a top-down pixel-art plan of each floor, drawn with the Sierrassets sprite pack. The clock is done. No people yet.
+Phase 1 — house view built: a top-down pixel-art plan of each floor (UK 3-bed semi layout), drawn with the Sierrassets sprite pack plus our own extras sheet. The clock is done. No people yet.
 
-## Last session (2026-11-11)
+## Last session (2026-11-11, afternoon)
+The user asked for the leftover block art to be replaced and for the first floor to be a
+typical UK house, with every bedroom reached from the landing.
+- **First floor, UK 3-bed semi:** master bedroom front left (door at the front end of the
+  landing), Oliver's room back left (door at the back end), Ruby's box room front right,
+  bathroom back right. All four open straight off the landing. Shower over the bath (the
+  separate shower is gone); master dresser dropped for space; wardrobe moved off an inside
+  wall. In this plan y = 0 is the front of the house (front door) and the garden is at the
+  back (bottom of the screen).
+- **Ground floor fixes** found by the new walking tests: the dining chairs were in front of
+  the cooker and sink and cut off half the kitchen and the utility room. The table and
+  three chairs now sit clear of the walkway. Shoe rack removed from the foot of the stairs.
+- **Art:** the pack has no stairs, shed, tree, fence, lawn or path, and its rug pieces are
+  autotiles. So `tools/make_extras.py` draws them in the pack's colours into
+  `assets/extras/extras.png`: stairs and stairwell (one item each now), shed, tree (one
+  item), grass tile, paving path, three rugs (any size, 9-piece), front wall face.
+- **Walls** now use the pack's style (white with dark grey edge), windows are glass with an
+  edge, the fence is wood with a post every square. The **front wall has a face** a square
+  tall, with windows and the front door, so tall furniture stands against a wall.
+- Whole-house view: first floor placed 8.8 squares up, top margin 1.1, so the art stays
+  the same size as before on desktop and phone.
+- Tests: 37 passing. New: every room can be walked to; every first-floor room opens off the
+  landing; every used piece (bed, cooker, toilet...) has a reachable free square beside it.
+- Screenshots checked: whole house, ground, first, garden at desktop size, and the whole
+  house at phone size (390 wide, 3x). Not yet checked by the user on a real phone.
+- `docs/HOUSE_VIEW.md` updated: extras sheet, face rule, no tall pieces on inside
+  cross walls, walking tests, UK layout rule, new spacing, new mistakes.
+
+## Earlier (2026-11-11, morning)
 The user asked for the project to be read and the house view fixed. The view was broken: sprites were picked from the wrong places on the sheet, stretched to uneven pixels, and laid over a 3D block scene. Fixed:
 - **View:** straight down, with the back wall (y = 0) at the top of the screen. Furniture against a back wall faces the viewer, as the pack draws it. `src/render/camera.js` is now a small plan camera.
 - **Sharp pixels:** one grid square is always 16 art pixels (`UNIT_PX`), the pack's own size, so sprites are never stretched. Zoom changes the size of an art pixel in whole device pixels (`main.js`).
@@ -51,15 +79,14 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks the new view on the phone (whole house and each floor).
-2. Art still as blocks: stairs, garden shed and tree, rugs, fence, walls. The pack has wall tiles and rugs that could replace them.
-3. Phase 1 continued: the first adult walks between rooms (the layout is now walkable), with needs and simple actions. Then the status panel (watch only).
-4. Record the exact Sierrassets licence wording in DECISIONS.md.
+1. User checks the new layout and art on the phone (whole house and each floor).
+2. Phase 1 continued: the first adult walks between rooms (the layout is now checked as
+   walkable), with needs and simple actions. Then the status panel (watch only).
+3. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
 - The pack only has front views. The sofa faces the viewer, not the TV, and the lower dining chairs show their backs. A back-view sofa would need drawing.
-- Tall sprites on the back wall (fridge, bookcase, wardrobe, shower) stick up above the house outline. That is normal for this art style, but there is no wall face behind them.
-- Ruby's room can only be reached through Oliver's room. Layout question for the user.
+- The kitchen table has three chairs. Ruby needs a high chair (to draw on the extras sheet).
 - No pets or people sprites are used yet. The zip has a pets sheet; it is not in the repo.
 - The pack's readme says "Thanks for buying", so it is a paid pack. Its sheets are in the public repo on the user's instruction (see DECISIONS).
 - Rooms have no name labels (floors do, in the whole-house view).

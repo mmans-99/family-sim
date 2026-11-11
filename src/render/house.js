@@ -4,9 +4,22 @@
 import { project, UNIT_PX } from './camera.js';
 import { OUTLINE, BACKGROUND, nearestColour } from './palette.js';
 import { blitSprite } from './raster.js';
-import { NAME_TO_SPRITE, FLOOR_TILE_PX } from './pack.js';
+import { NAME_TO_SPRITE, NAME_TO_TILE, NAME_TO_RUG, RUG_PIECE_PX } from './pack.js';
 
 const FLAT_HEIGHT = 0.05; // items thinner than this (rugs, paths) lie on the floor
+
+// Colours for walls, windows and fences when the pack is loaded, taken from the pack's
+// own wall tiles (white with a dark grey edge) and wood.
+const PACK_STYLE = {
+  edge: [56, 56, 56],
+  ink: [0, 0, 0],
+  wall: [243, 247, 243],
+  outerWall: [222, 229, 229],
+  glass: [186, 220, 232],
+  fence: [210, 146, 97],
+  post: [156, 91, 42],
+  door: [184, 112, 61],
+};
 
 function rgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -35,6 +48,84 @@ export function boxRect(b, cam, width, height) {
   const x0 = Math.round(a.sx);
   const y0 = Math.round(a.sy);
   return { x0, y0, x1: Math.max(x0 + 1, Math.round(c.sx)), y1: Math.max(y0 + 1, Math.round(c.sy)) };
+}
+
+// Cover a rectangle with a repeating tile. (ox, oy) is where a tile's top-left corner falls,
+// so neighbouring areas line up.
+function paintTiled(buf, tile, x0, y0, x1, y1, ox = x0, oy = y0) {
+  const mod = (a, n) => ((a % n) + n) % n;
+  for (let y = Math.max(0, y0); y < Math.min(buf.height, y1); y++) {
+    const ty = mod(y - oy, tile.height);
+    for (let x = Math.max(0, x0); x < Math.min(buf.width, x1); x++) {
+      const si = (ty * tile.width + mod(x - ox, tile.width)) * 4;
+      if (tile.data[si + 3] === 0) continue;
+      const di = (y * buf.width + x) * 4;
+      buf.data[di] = tile.data[si];
+      buf.data[di + 1] = tile.data[si + 1];
+      buf.data[di + 2] = tile.data[si + 2];
+      buf.data[di + 3] = 255;
+    }
+  }
+}
+
+// A rug of any size from a 24 x 24 template: corners as drawn, edges and middle repeated.
+function paintRug(buf, rug, x0, y0, x1, y1) {
+  const p = RUG_PIECE_PX;
+  const part = (sx, sy) => ({
+    width: p, height: p,
+    data: (() => {
+      const d = new Uint8ClampedArray(p * p * 4);
+      for (let r = 0; r < p; r++) d.set(rug.data.subarray(((sy + r) * rug.width + sx) * 4, ((sy + r) * rug.width + sx + p) * 4), r * p * 4);
+      return d;
+    })(),
+  });
+  const cols = [[x0, x0 + p, 0], [x0 + p, x1 - p, p], [x1 - p, x1, 2 * p]];
+  const rows = [[y0, y0 + p, 0], [y0 + p, y1 - p, p], [y1 - p, y1, 2 * p]];
+  for (const [ya, yb, sy] of rows) {
+    for (const [xa, xb, sx] of cols) {
+      if (xb > xa && yb > ya) paintTiled(buf, part(sx, sy), xa, ya, xb, yb);
+    }
+  }
+}
+
+// The outside face of the front wall, seen above its top edge: wall pieces, with a window
+// piece over each window and a door where the front door is.
+function paintFace(buf, b, r, pack) {
+  if (b.door) {
+    fillRect(buf, r.x0, r.y0 + 1, r.x1, r.y1, PACK_STYLE.door, PACK_STYLE.ink);
+    fillRect(buf, r.x1 - 4, r.y0 + 8, r.x1 - 3, r.y0 + 9, PACK_STYLE.ink); // handle
+    return;
+  }
+  const wall = pack.sprites.wall_face;
+  const win = pack.sprites.window_face;
+  const top = r.y1 - wall.height;
+  paintTiled(buf, wall, r.x0, top, r.x1, r.y1, r.x0, top);
+  for (const off of b.windows ?? []) {
+    const x = r.x0 + Math.round(off * UNIT_PX);
+    paintTiled(buf, win, x, top, x + win.width, r.y1, x, top);
+  }
+  // Edge lines only at the house corners and beside the front door.
+  if (b.ends?.[0]) fillRect(buf, r.x0, top, r.x0 + 1, r.y1, PACK_STYLE.edge);
+  if (b.ends?.[1]) fillRect(buf, r.x1 - 1, top, r.x1, r.y1, PACK_STYLE.edge);
+}
+
+// Walls, windows and fences in the pack's style.
+function paintStructure(buf, b, r) {
+  if (b.kind === 'wall') {
+    fillRect(buf, r.x0, r.y0, r.x1, r.y1, b.outer ? PACK_STYLE.outerWall : PACK_STYLE.wall, PACK_STYLE.edge);
+  } else if (b.kind === 'window') {
+    fillRect(buf, r.x0, r.y0, r.x1, r.y1, PACK_STYLE.glass, PACK_STYLE.edge);
+  } else if (b.kind === 'fence') {
+    fillRect(buf, r.x0, r.y0, r.x1, r.y1, PACK_STYLE.fence, PACK_STYLE.ink);
+    // A post at every whole grid square along the fence.
+    const along = r.x1 - r.x0 > r.y1 - r.y0;
+    const len = along ? r.x1 - r.x0 : r.y1 - r.y0;
+    for (let at = 0; at <= len; at += UNIT_PX) {
+      const c = Math.min(Math.max(at, 3), len - 3);
+      if (along) fillRect(buf, r.x0 + c - 3, r.y0 - 1, r.x0 + c + 3, r.y1 + 1, PACK_STYLE.post, PACK_STYLE.ink);
+      else fillRect(buf, r.x0 - 1, r.y0 + c - 3, r.x1 + 1, r.y0 + c + 3, PACK_STYLE.post, PACK_STYLE.ink);
+    }
+  }
 }
 
 // Snap every pixel of a w x h canvas to the palette. Only used when there are no sprites:
@@ -66,13 +157,20 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null) {
     if (b.kind === 'slab') {
       const tile = pack && b.tile ? pack.tiles[b.tile] : null;
       if (!tile) { fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour)); continue; }
-      for (let ty = r.y0; ty < r.y1; ty += FLOOR_TILE_PX) {
-        for (let tx = r.x0; tx < r.x1; tx += FLOOR_TILE_PX) {
-          blitSprite(buf, tile, tx + FLOOR_TILE_PX / 2, ty + FLOOR_TILE_PX);
-        }
-      }
+      paintTiled(buf, tile, r.x0, r.y0, r.x1, r.y1);
+    } else if (b.kind === 'face') {
+      // The front wall's face stands behind everything on that wall.
+      if (pack?.sprites.wall_face) standing.push({ row: r.y1, z: -1, draw: () => paintFace(buf, b, r, pack) });
     } else if (b.z1 - b.z0 < FLAT_HEIGHT) {
-      flat.push(() => fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour), OUTLINE));
+      const rug = pack?.rugs?.[NAME_TO_RUG[b.name]];
+      const tile = pack?.tiles[NAME_TO_TILE[b.name]];
+      const sprite = pack?.sprites[NAME_TO_SPRITE[b.name]];
+      if (rug) flat.push(() => paintRug(buf, rug, r.x0, r.y0, r.x1, r.y1));
+      else if (tile) flat.push(() => paintTiled(buf, tile, r.x0, r.y0, r.x1, r.y1));
+      else if (sprite) flat.push(() => blitSprite(buf, sprite, (r.x0 + r.x1) / 2, r.y1));
+      else flat.push(() => fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour), OUTLINE));
+    } else if (pack && (b.kind === 'wall' || b.kind === 'window' || b.kind === 'fence')) {
+      standing.push({ row: r.y1, z: b.z0, draw: () => paintStructure(buf, b, r) });
     } else {
       const sprite = pack && b.name ? pack.sprites[NAME_TO_SPRITE[b.name]] : null;
       const lift = Math.round((b.lift ?? 0) * UNIT_PX); // things on top of others sit higher up

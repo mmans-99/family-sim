@@ -7,10 +7,10 @@ import { createCamera, project, UNIT_PX } from './render/camera.js';
 import { BACKGROUND, OUTLINE } from './render/palette.js';
 import { attachCameraControls, nudge } from './ui/camera-controls.js';
 
-// Empty grid squares kept around a view. The top needs more: tall sprites on a back wall
-// (fridge, wardrobe) stick up a square above their floor, and floor names sit above that.
-const MARGIN = { top: 2.2, side: 0.4, bottom: 0.4 };
-const LABEL_RISE = 1.25; // floor names are written this many squares above the floor's back wall
+// Empty grid squares kept around a view. The front wall's face (a square tall, already part
+// of the view) is behind the tall sprites on that wall; the floor name sits above it.
+const MARGIN = { top: 1.1, side: 0.4, bottom: 0.4 };
+const LABEL_RISE = 1.3; // floor names are written this many squares above the floor's back wall
 const CONTROLS_HEIGHT = 230; // CSS pixels of the screen kept for the buttons around the canvas
 
 const clock = createClock();
@@ -36,7 +36,7 @@ const VIEWS = {
   all: {
     label: 'Whole house',
     floors: ['first', 'ground', 'garden'],
-    place: { first: { x: 0, y: -8.5 } },
+    place: { first: { x: 0, y: -8.8 } },
     labels: [['First floor', 'first'], ['Ground floor and garden', 'ground']],
   },
   ground: { label: 'Ground floor', floors: ['ground'] },

@@ -1,8 +1,34 @@
 // Pixel-art sprites from the Sierrassets "Furniture pack" (top-down art, 16 pixels per grid square).
-// The sheets are in assets/furniture-pack/. If they cannot be loaded, the house is drawn
+// The sheets are in assets/furniture-pack/. The pack has no stairs, shed, tree, fence, lawn,
+// path or whole rugs, so those are on our own sheet, assets/extras/extras.png, drawn in the
+// pack's colours by tools/make_extras.py. If the sheets cannot be loaded, the house is drawn
 // with plain coloured blocks instead, so the game still works.
 
 export const PACK_FOLDER = 'assets/furniture-pack/';
+export const EXTRAS_FILE = 'assets/extras/extras.png';
+
+// Where each piece sits on extras.png: [x, y, width, height]. Printed by tools/make_extras.py.
+export const EXTRA_RECTS = {
+  stairs_up: [0, 0, 16, 64],
+  stairs_down: [18, 0, 16, 64],
+  shed: [36, 0, 32, 40],
+  tree: [70, 0, 32, 44],
+  grass: [104, 0, 16, 16],
+  paving: [122, 0, 16, 16],
+  rug_red: [140, 0, 24, 24],
+  rug_blue: [166, 0, 24, 24],
+  rug_gold: [192, 0, 24, 24],
+  wall_face: [218, 0, 16, 16],
+  window_face: [236, 0, 16, 16],
+};
+
+// Extras that are sprites, standing on their squares like furniture.
+const EXTRA_SPRITES = ['stairs_up', 'stairs_down', 'shed', 'tree', 'wall_face', 'window_face'];
+// Extras that repeat over an area, one copy per grid square.
+const EXTRA_TILES = ['grass', 'paving'];
+// Rug templates: 24 x 24, cut into nine 8 x 8 pieces and stretched by repeating edges.
+export const RUG_PIECE_PX = 8;
+const EXTRA_RUGS = ['rug_red', 'rug_blue', 'rug_gold'];
 
 // Where each sprite sits on furniture.png: [x, y, width, height] in sheet pixels.
 export const SPRITE_RECTS = {
@@ -75,7 +101,17 @@ export const NAME_TO_SPRITE = {
   'toy box': 'chest',
   'garden table': 'table_wood',
   'garden chair': 'stool',
+  'nursing chair': 'armchair_red',
+  'chest of drawers': 'drawers_small',
+  'stairs': 'stairs_up',
+  'stairwell': 'stairs_down',
+  'shed': 'shed',
+  'tree': 'tree',
 };
+
+// Flat items (lying on the floor) drawn as a repeating tile or as a rug.
+export const NAME_TO_TILE = { 'path': 'paving' };
+export const NAME_TO_RUG = { 'rug': 'rug_red', 'blue rug': 'rug_blue', 'gold rug': 'rug_gold' };
 
 // Floor tiles on floors-walls.png. Each is 8 x 8 pixels, so four cover one grid square.
 export const FLOOR_TILE_PX = 8;
@@ -87,10 +123,12 @@ export const FLOOR_TILES = {
   tile_white: [27, 37],
 };
 
-// Which floor tile each room uses. Rooms not listed (the garden) keep plain blocks.
+// Which floor tile each room uses (8 x 8 pack tiles, or the 16 x 16 grass from extras).
+// Rooms not listed keep plain blocks.
 export const ROOM_TILE = {
   lounge: 'plank', hall: 'plank_dark', kitchen: 'tile_white', loo: 'tile_blue', utility: 'tile_white',
   master: 'plank', landing: 'plank_dark', bathroom: 'tile_blue', oliver: 'plank', ruby: 'plank',
+  garden: 'grass',
 };
 
 // Copy a rectangle out of pixel data: { width, height, data } with RGBA bytes.
@@ -104,14 +142,20 @@ export function crop(src, [x, y, w, h]) {
 }
 
 // Build the pack from the two loaded sheets. Returns cut-out sprites and floor tiles by name.
-export function makePack(furniture, floors) {
+export function makePack(furniture, floors, extras = null) {
   const sprites = {};
   for (const [name, rect] of Object.entries(SPRITE_RECTS)) sprites[name] = crop(furniture, rect);
   const tiles = {};
   for (const [name, [x, y]] of Object.entries(FLOOR_TILES)) {
     tiles[name] = crop(floors, [x, y, FLOOR_TILE_PX, FLOOR_TILE_PX]);
   }
-  return { sprites, tiles };
+  const rugs = {};
+  if (extras) {
+    for (const name of EXTRA_SPRITES) sprites[name] = crop(extras, EXTRA_RECTS[name]);
+    for (const name of EXTRA_TILES) tiles[name] = crop(extras, EXTRA_RECTS[name]);
+    for (const name of EXTRA_RUGS) rugs[name] = crop(extras, EXTRA_RECTS[name]);
+  }
+  return { sprites, tiles, rugs };
 }
 
 // Load the pack in a browser. Resolves to null if the images are not there.
@@ -120,7 +164,7 @@ export async function loadPack(folder = PACK_FOLDER) {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = reject;
-    img.src = folder + file;
+    img.src = file;
   });
   const toPixels = (img) => {
     const c = document.createElement('canvas');
@@ -132,8 +176,9 @@ export async function loadPack(folder = PACK_FOLDER) {
     return { width: d.width, height: d.height, data: d.data };
   };
   try {
-    const [furniture, floors] = await Promise.all([load('furniture.png'), load('floors-walls.png')]);
-    return makePack(toPixels(furniture), toPixels(floors));
+    const [furniture, floors] = await Promise.all([load(folder + 'furniture.png'), load(folder + 'floors-walls.png')]);
+    const extras = await load(EXTRAS_FILE).catch(() => null);
+    return makePack(toPixels(furniture), toPixels(floors), extras && toPixels(extras));
   } catch {
     return null;
   }

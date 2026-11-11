@@ -24,6 +24,21 @@ The art is the Sierrassets "Furniture pack". Two sheets are in `assets/furniture
   the others in the row carry wall shadows.
 - There is no atlas file. The zip's "individual sprites" are only numbered slices with
   no names. Sprites must be found by looking.
+- The pink, green and white blocks on `floors-walls.png` (x 27-135, y 46-155) are RPG-style
+  autotiles. Every 8x8 piece carries part of an inner outline, so they do not cut into a
+  whole rug or lawn. Do not try again; use the extras sheet below.
+- The pack has **no stairs, shed, tree, fence, lawn or garden path.**
+
+### Our own extras sheet
+`assets/extras/extras.png` holds what the pack lacks: `stairs_up` and `stairs_down`
+(16 x 64, one flight), `shed` (32 x 40), `tree` (32 x 44), `grass` and `paving` (16 x 16
+repeating tiles), `rug_red`, `rug_blue`, `rug_gold` (24 x 24 templates, cut into nine 8 x 8
+pieces so a rug can be any size in whole squares), `wall_face` and `window_face` (16 x 16).
+It is drawn pixel by pixel by `tools/make_extras.py` in the pack's colours: black outlines
+for objects (like the pack's furniture), dark grey (56, 56, 56) for floor-level things
+(like the pack's tiles). To change or add a piece: edit the script, run
+`python3 tools/make_extras.py` from the repo root, paste the printed rectangles into
+`EXTRA_RECTS` in `pack.js`, and look at the sheet enlarged before using it.
 
 ## 2. The rules that make it look right
 
@@ -33,12 +48,14 @@ Break any one of these and the view looks wrong.
    `camera.js`). Sprites are copied 1:1 into the small canvas.
 2. **Zoom by making art pixels bigger, in whole device pixels** (`drawFrame` in
    `main.js`). Never zoom by scaling sprites.
-3. **Back wall at the top.** y = 0 is the top of the screen and y grows downwards.
-   Furniture that stands against a wall goes on a room's top wall (its lowest y), so its
-   front faces the viewer.
+3. **Top wall is the one facing the viewer.** y = 0 is the top of the screen and y grows
+   downwards. On the house that top wall is the front (street side, front door); the
+   garden is at the bottom. Furniture that stands against a wall goes on a room's top wall
+   (its lowest y), so its front faces the viewer.
 4. **Draw in this order** (`drawScene` in `house.js`): floor squares, then flat things
-   (rugs, paths), then walls and furniture sorted by the screen row of their bottom
-   edge, top of screen first (so a floor placed higher on the drawing is drawn first). Lower things overlap what is behind them.
+   (rugs, paths, the stairwell), then the front wall face, walls, windows, fences and
+   furniture sorted by the screen row of their bottom edge, top of screen first (so a floor
+   placed higher on the drawing is drawn first). Lower things overlap what is behind them.
 5. **A sprite stands on the bottom edge of its squares, centred side to side.** Tall
    sprites (fridge, wardrobe) stick up above their square. That is intended.
 6. **Things on top of other things use `z`** in `house.json` (TV on its unit, lamp on a
@@ -48,6 +65,14 @@ Break any one of these and the view looks wrong.
    the plain-block fallback; it would change the pack's colours.
 8. **Floors never overlap on the drawing.** Seen from above, the first floor would cover
    the ground floor, so a view that shows both places them apart (section 5).
+9. **The front wall has a face.** `scene.js` adds a `face` box one square tall above the
+   front (top) outside wall, with its windows and the front door drawn on it. Tall sprites
+   on that wall stand against it. Its windows are drawn on the face only, not again on the
+   wall line. Other walls have no face: a face on an inside wall would cover the bottom row
+   of the room above it.
+10. **No tall sprites on inside walls that run across the screen.** A wardrobe or shower
+   against such a wall sticks up into the room above it on the drawing. Put tall pieces on
+   the front wall or against side walls.
 
 ## 3. How to find a sprite on the sheet (the step that went wrong before)
 
@@ -80,8 +105,18 @@ and the pixel just outside it is transparent.
 3. Keep it inside one room, off doorway squares, and off squares another standing piece
    uses. `tests/render.test.js` checks the first and last of these.
 4. Keep a walking route: every room's door square and the squares in front of it stay
-   empty. The stairs are one square wide at x = 5, y = 1 to 4, on purpose.
-5. To change a room's floor, edit `ROOM_TILE` in `pack.js`.
+   empty. The stairs are one square wide at x = 5, y = 1 to 4, on purpose, and the square
+   at each end (x 5, y 0 and y 5) stays clear. Two tests check routes: every room can be
+   walked to, and every piece someone uses (bed, cooker, toilet, chair...) has a free
+   square beside it that can be walked to. They caught dining chairs blocking the cooker
+   and a bed boxed in by a wardrobe, so run them after every layout change.
+5. The first floor follows a UK 3-bed semi: every bedroom and the bathroom opens straight
+   off the landing (a test checks this). Doors onto the landing's left side can only be
+   at y 0-1 or y 5-6, because the stairwell takes x = 5, y = 1 to 4.
+6. Stairs, stairwell, shed and tree are one item each (`stairs`, `stairwell`, `shed`,
+   `tree`), matching one sprite. Rugs are flat items named `rug`, `blue rug` or
+   `gold rug`, at least one square each way; paths are `path`.
+7. To change a room's floor, edit `ROOM_TILE` in `pack.js`.
 
 ## 5. Views: the whole house on one screen
 
@@ -92,14 +127,14 @@ How it works (all in `VIEWS` in `src/main.js`, drawn by the same `drawScene`):
 
 - A view is `{ label, floors, place, labels }`. `floors` lists floor ids from
   `house.json`. `place` moves a whole floor on the drawing, in grid squares.
-- In the whole-house view the first floor has `place: { first: { x: 0, y: -8.5 } }`:
-  it is drawn 8.5 squares up the screen, above the ground floor. The ground floor and
+- In the whole-house view the first floor has `place: { first: { x: 0, y: -8.8 } }`:
+  it is drawn 8.8 squares up the screen, above the ground floor. The ground floor and
   garden are not moved; the garden already joins the back of the house at y = 6.
 - `buildScene(house, floors, place)` in `scene.js` shifts every box of a placed floor and
   stamps each box with `b.floor`. Nothing else knows about the shift. `house.json` and
   the simulation always use the floor's own coordinates.
-- `sceneBounds(boxes)` gives the rectangle that holds the view. `main.js` adds `MARGIN`
-  (2.2 squares on top, for tall sprites and the floor name) and then:
+- `sceneBounds(boxes)` gives the rectangle that holds the view, including the front wall
+  face. `main.js` adds `MARGIN` (1.1 squares on top, for the floor name) and then:
   - shapes the canvas to the view, capped at the screen height left after the buttons;
   - picks the biggest whole device-pixel size at which the whole view fits both ways;
   - centres the view (`cam.cx`, `cam.cy`).
@@ -108,8 +143,9 @@ How it works (all in `VIEWS` in `src/main.js`, drawn by the same `drawScene`):
 
 Rules when expanding it:
 
-1. **Leave at least 2 squares between a floor and the one above it on the drawing.**
-   Tall sprites stick up 1 square and the name needs the rest. A test checks this.
+1. **Leave at least 1.5 squares between a floor and the top of the front wall face of the
+   floor below it on the drawing**, for the floor name. A test checks this. More space
+   makes the whole view taller, which can drop the art pixel size on a phone.
 2. **To add a floor** (loft, cellar, extension): add it to `floors` in `house.json` with
    its own id, add its id to the `all` view's `floors`, give it a `place` so it does not
    overlap, add a label, and add a button entry if it should have its own view. Phones
@@ -128,9 +164,9 @@ Rules when expanding it:
 Run the tests, then look at real screenshots of all three floors and a phone size.
 
 ```
-cd /home/claude/simulator
+cd <repo folder>          # e.g. /home/claude/family-sim
 node --test
-setsid nohup python3 -m http.server 8123 --directory /home/claude/simulator >/tmp/srv.log 2>&1 &
+setsid nohup python3 -m http.server 8123 >/tmp/srv.log 2>&1 &
 curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8123/index.html     # must print 200
 google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 \
   --virtual-time-budget=5000 --screenshot=/tmp/ground.png "http://localhost:8123/index.html?view=ground"
@@ -159,6 +195,9 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 | Stairs two squares wide filled the hall | Check a walking route after every layout change |
 | Said a change was done before looking at a screenshot | Screenshot all three floors first |
 | A docs script failed halfway and one doc was left stale | After any script, run `git status` and re-read what changed |
+| Dining chairs put in the walkway in front of the cooker and sink; a bed boxed in by a wardrobe | Run the walking tests after every layout change (section 4) |
+| Windows drawn twice on the front wall (face and wall line) | Front wall windows go on the face only |
+| Tried to cut rugs out of the pack's autotiles | They are autotiles; use the extras sheet |
 | Described the pack's licence from the zip alone | The zip has no licence text; its readme says "Thanks for buying". Ask the user for the seller's wording |
 
 ## 8. Where things are
@@ -168,7 +207,8 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 | `data/house.json` | Rooms, doors, fences, furniture. The only place layout lives |
 | `src/render/scene.js` | House data -> boxes (`kind`: slab, wall, window, door, fence, furniture); `place` shifts a floor; `sceneBounds` |
 | `src/render/camera.js` | `project()`: grid position -> art pixels. `UNIT_PX`, `TARGET` |
-| `src/render/pack.js` | `SPRITE_RECTS`, `NAME_TO_SPRITE`, `FLOOR_TILES`, `ROOM_TILE`, loader |
+| `src/render/pack.js` | `SPRITE_RECTS`, `EXTRA_RECTS`, `NAME_TO_SPRITE`, `NAME_TO_TILE`, `NAME_TO_RUG`, `FLOOR_TILES`, `ROOM_TILE`, loader |
+| `tools/make_extras.py` | Draws `assets/extras/extras.png` |
 | `src/render/house.js` | `drawScene()`: the drawing order in section 2 |
 | `src/render/raster.js` | `blitSprite()`: copies a sprite, skipping transparent pixels |
 | `src/main.js` | `VIEWS` (which floors, where placed), fitting a view to the screen, zoom as pixel size, pan, floor names, the frame loop |
