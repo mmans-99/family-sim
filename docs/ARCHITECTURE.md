@@ -21,7 +21,9 @@ simulator/
 │   └── people/sarah.png    Mum: every animation frame (+ sarah.json listing where each frame is)
 ├── tools/
 │   ├── make_extras.py      draws assets/extras/extras.png (Python + Pillow)
-│   └── make_mum.py         builds assets/people/sarah.* from Eris Esra's 16x32 template (template not in repo)
+│   ├── make_mum.py         builds assets/people/sarah.* from Eris Esra's 16x32 template (template not in repo)
+│   ├── replay.js           replay harness command line: `node tools/replay.js --seeds 20 --years 10` (writes replay-out/, ignored by git)
+│   └── replay/             replay harness (LIFE_SYSTEMS 15a): load.js (reads data/, the only file access), run.js (seeds, runMany), probes.js (money, calendar, needs, actions, log), checks.js (seven invariants), turning.js (turning points), summary.js (text summary)
 ├── data/
 │   ├── house.json          house: floors, rooms, doorways, fences, stairs, furniture
 │   ├── calendar.json       calendar start (1 Mar 2026) and dated rules: mortgage, pay, bills, savings interest, energy cap, Christmas
@@ -30,7 +32,8 @@ simulator/
 │   ├── tax.json            2026/27 income tax and employee NI rules (sourced in docs/FAMILY.md)
 │   ├── needs.json          needs and how fast they drop
 │   ├── actions.json        what people can do with furniture, and what it gives them
-│   └── people.json         who is simulated (Sarah for now) and where they start
+│   ├── people.json         who is simulated (Sarah for now) and where they start
+│   └── replay.json         replay harness settings: money stocks, turning-point thresholds, what is not measured yet (tuning)
 ├── src/
 │   ├── main.js             starts everything: clock, views, camera, drawing loop
 │   ├── sim/
@@ -64,7 +67,8 @@ simulator/
     ├── save.test.js        save round trip, time away, catch-up, bath prelude, personality
     ├── render.test.js      scene contents, plan camera, sprite maps, furniture layout, walking routes
     ├── palette.test.js     palette snapping
-    └── raster.test.js      pixel-exact fills and lines
+    ├── raster.test.js      pixel-exact fills and lines
+    └── replay.test.js      replay harness: same seed, read only, invariants fail when they should, turning points, two years, command line
 ```
 Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/random.js` (random helpers), stock lags (`target`, `halfLifeHours`, `stepStocks`, L4), `couplings.js`, `beliefs.js`, the labour ledger and bargaining (L8), `firms.js` (positions, firms, labour market), `places.js` (places, contacts, encounters), `economy.js`, `institutions.js`, `holidays.js`, `health.js`, `life.js`, `weather.js`, `commentary.js`, `src/save/store.js`, and `tools/replay.js` (headless multi-seed replay). Data to come: `couplings.json`, `obligations.json`, `labour.json`, `agecurves.json`, `lifecourse.json`, `firms.json`, `positions.json`, `places.json`, `economy.json`, `institutions.json`, `holidays.json`, `text/*.json`. Also `manifest.json` and `sw.js` for offline use.
 

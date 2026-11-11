@@ -3,7 +3,23 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) is built. Next is L3 (replay harness).
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) and L3 (replay harness) are built. Next is L4 (couplings, stress, sleep debt), which needs a brief first.
+
+## Latest (2026-11-11, L3 replay harness built)
+- **L3 built** (LIFE_SYSTEMS 15a, "as built"). Run it with `node tools/replay.js --seeds 20 --years 10`: 20 seeds headless for 10 game years, about 70 s. It writes `replay-out/replay-report.json` and `replay-summary.txt` (git-ignored). `--daily`, `--from`, `--out` and `--quiet` as in the brief.
+- **First result (20 seeds × 10 years)**, the summary's first lines:
+  ```
+  Replay: 20 seeds × 10 game years (1 Mar 2026 – 26 Feb 2036), 70.1 s
+  Invariants: all passed (7 checks × 20 seeds)
+  Seed 1 money: joint £2,500.00 → £159,759.25; savings £8,000.00 → £10,278.65; mortgage £228,302.03 → £158,492.93
+  Unpaid bills: none
+  Seeds: money identical; daily action counts differ (20 of 20 seeds distinct)
+  Turning points: none
+  ```
+  Warnings as the brief expects: every seed has the same money; no turning points. Seed 1 for one year ends with the joint account at £19,862.96, the same hand sum as `tests/household.test.js`.
+- **Built:** `data/replay.json`; `tools/replay.js` (command line); `tools/replay/` (load, run, probes, checks, turning, summary); `tests/replay.test.js` (8 tests). Tests: 120 passing (112 before).
+- **Read only:** no change to `src/sim/`. A test runs the harness and a plain run of the same minutes and checks the two worlds end the same. The harness copies the data for each seed.
+- **Decisions** (DECISIONS 2026-11-11): what `actionsDistinct` counts and when the warnings fire; leap days are not counted in the game calendar.
 
 ## Latest (2026-11-11, evening) — L3 brief written (docs only)
 - **L3 replay harness brief** is in `docs/LIFE_SYSTEMS.md` 15a, written for another model to code: `data/replay.json`, `tools/replay.js` and `tools/replay/` (run, probes, checks, turning points, summary), seven invariants, eight tests, the command line and the docs to update. **No code written.**
@@ -252,14 +268,14 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User approves the L3 brief (LIFE_SYSTEMS 15a); then build it (any model can follow the brief).
+1. L4 (couplings, stress, sleep debt, interruption rule): write the brief in LIFE_SYSTEMS and wait for the user's approval before any code. The harness will need a stress probe and a stress-range invariant then.
 2. User checks the Household block on a real phone (sideways and upright).
-3. After L3: L4 (couplings, stress, sleep debt, interruption rule) needs a brief and approval.
-4. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
-5. Source the school term dates (needed before L6/L7).
-6. Record the exact Sierrassets licence wording in DECISIONS.md.
+3. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
+4. Source the school term dates (needed before L6/L7).
+5. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
+- Calendar (L1/L3): a game year is 365 calendar days, so leap days are not counted. Ten game years run from 1 Mar 2026 to 26 Feb 2036 (DECISIONS 2026-11-11).
 - Money (L2): no transfers between accounts and no repayment of the overdraft from savings (both are behaviour, L5/L8). The family's surplus means the overdraft is not reached in normal play. Interest is on the easy-access rate only.
 - Money is tuning in places (labelled in the data): the bill days and hours, the starting balances, the food and everyday figures (averages, and everyday is an understatement), the 1 March payment reading.
 - The family panel is cut off at its right edge in landscape at 844 × 390 in headless Chrome; the committed version does the same. Not caused by L2. Check on a real phone.

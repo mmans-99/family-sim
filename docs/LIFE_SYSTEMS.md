@@ -10,7 +10,7 @@ file's section 1 (rules) and the section for the step you are building. Read
 
 **Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
 (calendar). L2 is built (money, 2026-11-11; see 3a "as built"), with the mapping approved by the user on 2026-11-11 and the refinements listed in
-the section 2 note below. L3 (replay harness) has a detailed brief in 15a, not built yet. Each later step must be approved by the user before its code is written
+the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). Each later step must be approved by the user before its code is written
 (CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 
 ---
@@ -822,7 +822,9 @@ Checks (`tests/replay.test.js`, run with a small N and Y so tests stay quick):
 Run it with `node tools/replay.js --seeds 20 --years 10` and put a line in `docs/STATUS.md`
 with the results after each step.
 
-### 15a. L3 build brief (written 2026-11-11; not built, waiting for the user's approval)
+### 15a. L3 build brief (approved 2026-11-11; built 2026-11-11)
+
+**As built.** Steps 1 to 8 are done, with the files in Step 2 (`tools/replay.js` and `tools/replay/`, `data/replay.json`, `tests/replay.test.js`; `replay-out/` is git-ignored). No change to `src/sim/`. Choices the brief left open are in DECISIONS (2026-11-11): what `actionsDistinct` counts and when the warnings fire; the run gives each seed its own copy of the data and leaves run time to the command line. Result on 20 seeds × 10 game years: all seven invariants pass, the two expected warnings (same money; no turning points), about 70 s. The 8 new tests and the 112 old ones pass (120).
 
 This is the exact plan for step L3. It is written so another model can build it without the
 chat history. Where this brief and the general text of section 15 differ, **this brief wins**:
