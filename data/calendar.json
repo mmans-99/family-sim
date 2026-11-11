@@ -1,10 +1,15 @@
 {
-  "about": "Calendar start and dated rules (docs/LIFE_SYSTEMS.md section 2). Each game day stands for 365 / 28 calendar days. A rule fires at its hour (game time) on the game day whose span contains its date. Council tax months and school term dates are not here yet: they need sourcing first (DECISIONS OPEN).",
+  "about": "Calendar start and dated rules (docs/LIFE_SYSTEMS.md section 2). Each game day stands for 365 / 28 calendar days. A rule fires at its hour (game time) on the game day whose span contains its date. Bill and pay days are tuning until checked against the bills themselves (docs/FAMILY.md). School term dates are not here yet (DECISIONS OPEN).",
   "start": { "year": 2026, "month": 3, "day": 1 },
   "rules": [
     { "id": "mortgage", "label": "Mortgage payment", "repeat": "monthly", "day": 1, "hour": 6, "source": "docs/FAMILY.md, mortgage (monthly repayment, paid on the 1st: tuning)" },
     { "id": "payday", "label": "Payday", "repeat": "monthly", "day": 28, "hour": 9, "tuning": true },
-    { "id": "energyCap", "label": "Energy price cap changes", "repeat": "quarterly", "months": [1, 4, 7, 10], "day": 1, "hour": 0, "source": "Ofgem price cap runs quarterly from 1 January, 1 April, 1 July and 1 October" },
-    { "id": "christmas", "label": "Christmas Day", "repeat": "yearly", "month": 12, "day": 25, "hour": 7, "tuning": true }
+    { "id": "energyCap", "label": "Energy price cap reviewed (prices change from L11)", "repeat": "quarterly", "months": [1, 4, 7, 10], "day": 1, "hour": 0, "source": "Ofgem price cap runs quarterly from 1 January, 1 April, 1 July and 1 October" },
+    { "id": "christmas", "label": "Christmas Day", "repeat": "yearly", "month": 12, "day": 25, "hour": 7, "tuning": true },
+    { "id": "councilTax", "label": "Council tax instalment", "repeat": "monthly", "months": [4, 5, 6, 7, 8, 9, 10, 11, 12, 1], "day": 1, "hour": 7, "source": "Birmingham default instalments: 10 monthly, April to January (uktax.tools; to confirm with the council)", "tuning": true },
+    { "id": "water", "label": "Water bill", "repeat": "monthly", "day": 15, "hour": 7, "tuning": true },
+    { "id": "energy", "label": "Energy bill", "repeat": "monthly", "day": 10, "hour": 7, "tuning": true },
+    { "id": "bills20", "label": "Broadband and phone bills", "repeat": "monthly", "day": 20, "hour": 7, "tuning": true },
+    { "id": "interest", "label": "Savings interest", "repeat": "monthly", "day": "last", "hour": 23, "tuning": true }
   ]
 }

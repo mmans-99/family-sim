@@ -1,0 +1,15 @@
+{
+  "about": "2026/27 income tax (England, Wales and Northern Ireland) and employee National Insurance (Class 1), for take-home pay (src/sim/household.js). Income tax bands are widths of taxable income after the personal allowance; the allowance taper (£1 lost for every £2 of income over £100,000) is in the code's rule, not used at £75k. Scotland's bands are not modelled.",
+  "source": "Income tax: gov.uk 'Income Tax rates and Personal Allowances' (2026/27 rates); cross-checked on litrg.org.uk and moneytothemasses.com. NI: gov.uk 'Rates and thresholds for employers 2026 to 2027' (employee rates); cross-checked on litrg.org.uk.",
+  "year": "2026/27",
+  "incomeTax": {
+    "allowance": 12570,
+    "taperFrom": 100000,
+    "bands": [
+      { "width": 37700, "rate": 0.2 },
+      { "width": 74870, "rate": 0.4 },
+      { "width": null, "rate": 0.45 }
+    ]
+  },
+  "ni": { "from": 12570, "upper": 50270, "main": 0.08, "above": 0.02 }
+}

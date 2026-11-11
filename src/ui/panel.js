@@ -1,5 +1,7 @@
 // The watch-only status panel: what each person is doing, where, their needs as bars, and
 // the latest lines from the activity log. It only reads the world; it never changes it.
+import { read } from '../sim/stocks.js';
+import { nextMoneyEvent, pounds } from '../sim/household.js';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -50,11 +52,27 @@ export function renderStatusLine(el, world, roomName) {
   el.textContent = world.people.map((p) => `${p.name}: ${doingText(p)} (${roomName(world, p)})`).join(' · ');
 }
 
+// The household's money in one line, and the next payment or bill. Overdraft only when in use.
+function moneyText(world) {
+  if (!world.stocks?.['acct.joint']) return '';
+  const parts = [
+    `Joint account ${pounds(read(world, 'acct.joint'))}`,
+    `Savings ${pounds(read(world, 'acct.savings'))}`,
+    `Mortgage left ${pounds(read(world, 'debt.mortgage'))}`,
+  ];
+  if (read(world, 'debt.overdraft') > 0) parts.push(`Overdraft ${pounds(read(world, 'debt.overdraft'))}`);
+  const next = nextMoneyEvent(world);
+  const nextLine = next ? `Next: ${next.label} on ${next.date}` : '';
+  return `<div class="money">${esc(parts.join(' · '))}</div>`
+    + (nextLine ? `<div class="money">${esc(nextLine)}</div>` : '');
+}
+
 export function renderPanel(el, world, roomName) {
-  // The household's dated events (rent, pay, bills), newest first. Nothing owns them yet.
+  // The household's dated events (rent, pay, bills), newest first.
   const events = world.log.filter((e) => e.who === 'House').slice(-3).reverse()
     .map((e) => `<li><span class="t">${clockText(e.time)}</span> ${esc(e.text)}</li>`).join('');
   const household = `<div class="person house-events"><div class="who"><b>Household</b></div>`
+    + moneyText(world)
     + `<ol class="log">${events || '<li>No dated events yet</li>'}</ol></div>`;
   el.innerHTML = household + world.people.map((p) => {
     const bars = Object.entries(world.needDefs).map(([id, def]) => {

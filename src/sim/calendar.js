@@ -29,12 +29,18 @@ export function calendarSpan(gameDay) {
   return [startIndex(gameDay), startIndex(gameDay + 1) - 1];
 }
 
-// Does a dated rule fall on this calendar date? Rules: monthly (on `day`, optionally only in
-// `months`), quarterly (on `day` in `months`), yearly (on `month` and `day`).
-function matches(rule, d) {
+// The number of days in a month (month 1 to 12), leap years included.
+export const daysInMonth = (year, month) => new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+// Does a dated rule fall on this calendar date? Rules: monthly (on `day`, or `day: "last"` for
+// the last day of the month, optionally only in `months`), quarterly (on `day` in `months`),
+// yearly (on `month` and `day`).
+export function matches(rule, d) {
   switch (rule.repeat) {
-    case 'monthly':
-      return (!rule.months || rule.months.includes(d.month)) && d.day === rule.day;
+    case 'monthly': {
+      const onDay = rule.day === 'last' ? d.day === daysInMonth(d.year, d.month) : d.day === rule.day;
+      return (!rule.months || rule.months.includes(d.month)) && onDay;
+    }
     case 'quarterly':
       return rule.months.includes(d.month) && d.day === rule.day;
     case 'yearly':

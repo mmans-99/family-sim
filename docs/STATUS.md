@@ -3,7 +3,17 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. Next is L2 (stock engine and household money).
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) is built. Next is L3 (replay harness).
+
+## Latest (2026-11-11, L2 money built)
+- **L2 built** (LIFE_SYSTEMS 3a, "as built"). Tom's take-home pay is £4,317.28 a month (2026/27 income tax, NI, 5% net-pay pension on £75,000). The mortgage is an amortising loan: £1,339.23 a month, interest and capital split, £228,302.03 at the start.
+- **Money in the game:** joint account £2,500 (spills into a £1,500 overdraft, which is repaid first from money in), savings £8,000 (2.53% a year, paid monthly). Pay on the 28th, mortgage on the 1st, council tax (Band C, 10 instalments April to January), water, energy, broadband, phones, weekly food and everyday spending.
+- **Code:** `src/sim/stocks.js` (the only way to change a balance, with a ledger), `src/sim/household.js` (pay, tax, mortgage, flows, next event), `src/sim/world.js` (fires the flows; weekly spend at each flow's hour), `src/sim/save.js` (save version 3; versions 1 and 2 still load), `src/ui/panel.js` (Household block, read only). Data: `data/stocks.json`, `data/flows.json`, `data/tax.json`, new rules in `data/calendar.json`.
+- **Sourced:** tax and NI, Birmingham Band C, water, energy, broadband, phones, food, everyday, savings rate. Figures, sources and conflicts are in `docs/FAMILY.md`. Gaps are labelled tuning.
+- **Tests:** 112 passing (was 89). New: `tests/stocks.test.js` (spill, overdraft limit, floors and ceilings, overdraft repaid first, ledger roll-up), `tests/household.test.js` (tax at the band edges and the taper, NI, take-home, mortgage schedule, start balances, next event, one game year as a hand sum £22,993.16, save with money, a version 2 save gets money), `day: "last"` in `tests/calendar.test.js`.
+- **Checked:** the panel at phone portrait (`?fresh=1&minutes=3440`): the Household block and every figure traced by hand. Landscape: the family panel is cut off at the right in headless Chrome, but the committed version does the same (see Known issues).
+- **Decisions to confirm:** 23 repayments at the start, not 22 (DECISIONS 2026-11-11). The pension is on the whole salary, not the qualifying band.
+- Working copy: `/home/claude/family-sim`, to be committed and pushed to `main`.
 
 ## Latest (2026-11-11, edge scenery built)
 - **Edge scenery built** (HOUSE_VIEW 10.5): the street, pavement, kerb, road centre line, the neighbour's
@@ -232,17 +242,18 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks the landscape view and the new street on a real phone (sideways and upright), and the Full screen button.
-2. Decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
-3. L2 from the approved brief in `docs/LIFE_SYSTEMS.md` 3a: source the figures first (Step 0), then code. Confirm with the user that the session is for L2 (CLAUDE.md).
-4. User checks the calendar on the phone (the date range on the clock and the Household section).
-5. Source the council tax months and school term dates (needed before L6/L7).
-6. Phase 2: Tom, Oliver and Ruby (L6 to L8).
-7. Record the exact Sierrassets licence wording in DECISIONS.md.
+1. User checks the Household block on a real phone (sideways and upright) and confirms the 23-repayment start (DECISIONS 2026-11-11).
+2. Confirm the spending assumptions: the surplus is about £1,700 a month at these figures (DECISIONS, OPEN).
+3. L3, the replay harness (LIFE_SYSTEMS section 15): a headless multi-seed run, so every later step is checked. Needs a brief and the user's approval before coding (CLAUDE.md).
+4. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
+5. Source the school term dates (needed before L6/L7).
+6. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
-- Household events have no owner yet: they only write a line (money and school come in L2 and L6/L7).
-- The mortgage day, payday and Christmas times are tuning (labelled in `data/calendar.json`).
+- Money (L2): no transfers between accounts and no repayment of the overdraft from savings (both are behaviour, L5/L8). The family's surplus means the overdraft is not reached in normal play. Interest is on the easy-access rate only.
+- Money is tuning in places (labelled in the data): the bill days and hours, the starting balances, the food and everyday figures (averages, and everyday is an understatement), the 1 March payment reading.
+- The family panel is cut off at its right edge in landscape at 844 × 390 in headless Chrome; the committed version does the same. Not caused by L2. Check on a real phone.
+- School events have no owner yet (L6/L7).
 - Weekdays are computed but not shown: game days do not match real weekdays.
 - Sarah potters about a lot between meals, because nothing else needs doing yet. Childcare (Phase 2) and later outings will fill the day.
 - Actions are never interrupted: a bath runs its full time even if she badly needs the toilet.

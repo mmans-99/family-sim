@@ -276,7 +276,8 @@ Migrating needs into stocks is optional and comes later (step 3c) if it helps co
 The panel gets a **Household** line: account balance, savings, days to next mortgage. The log
 shows "Paid the mortgage (£1,340)" and "Tom was paid".
 
-### 3a. L2 build brief (approved 2026-11-11, NOT built yet)
+### 3a. L2 build brief (approved 2026-11-11; built 2026-11-11)
+**As built.** Steps 0 to 7 are done. Where the build differs from this brief, the reason is in DECISIONS (2026-11-11): 23 repayments are counted at the start, not 22 (the 1 March 2026 payment is at 06:00, before the game opens, so it is in the opening balance; the year has 11 mortgage payments, not 12); money in repays the overdraft first (not in the brief); the pension is 5% of the whole salary; no published worked example for take-home pay was found, so the test uses a hand sum; the Step 0 gaps are labelled `tuning` in the data and listed in `docs/FAMILY.md`. Extra work beyond the brief: `nextMoneyEvent` (the panel's "Next" line), `runWeeklyFlows` (called from `step()` at each flow's hour), and the ledger roll-up (oldest entries into `ledgerTotals` by reason) is in `stocks.js` `record()`.
 This is the exact plan for step L2. The user approved it on 2026-11-11 with these choices
 (DECISIONS 2026-11-11): council tax **Band C**, **no car**, **Child Benefit not claimed**,
 starting balances **£2,500** joint account and **£8,000** savings (tuning), Tom on **£75,000**

@@ -9,6 +9,7 @@
 import { createRng, subRng } from './rng.js';
 import { MINUTES_PER_DAY } from './clock.js';
 import { dueOnGameDay, formatDate } from './calendar.js';
+import { runFlowsForRule, runWeeklyFlows, setupMoney } from './household.js';
 import { buildMap, keyOf, parseKey } from './housemap.js';
 
 export const WALK_SQUARES_PER_MINUTE = 8; // about 1.3 squares a real second at 1x: easy to follow
@@ -48,7 +49,7 @@ export function inHours(hour, [from, to]) {
 
 const DEFAULT_CALENDAR = { start: { year: 2026, month: 3, day: 1 }, rules: [] };
 
-export function createWorld({ house, actions, needs, people, calendar = DEFAULT_CALENDAR, seed = 1, time = 7 * 60 }) {
+export function createWorld({ house, actions, needs, people, calendar = DEFAULT_CALENDAR, money = null, seed = 1, time = 7 * 60 }) {
   const map = buildMap(house);
   const world = {
     seed,
@@ -58,6 +59,8 @@ export function createWorld({ house, actions, needs, people, calendar = DEFAULT_
     // the queue holds today's events not yet fired; fired counts each rule's firings.
     calendar: { start: calendar.start, rules: calendar.rules, queue: [], fired: {} },
     house, map,
+    // Money (LIFE_SYSTEMS 3a). Empty until setupMoney runs; plain JSON throughout.
+    stocks: {}, flows: [], loans: {}, tax: null, salary: null,
     actions: actions.actions,
     potter: actions.potter,
     needDefs: needs.needs,
@@ -76,6 +79,7 @@ export function createWorld({ house, actions, needs, people, calendar = DEFAULT_
   for (const p of world.people) {
     if (!map.free(p.at)) throw new Error(`${p.name} starts on a square nobody can stand on: ${p.at}`);
   }
+  if (money) setupMoney(world, money);
   queueDay(world, true); // a game that starts mid-day does not fire the events that already passed
   return world;
 }
@@ -91,8 +95,14 @@ export function queueDay(world, skipPast) {
   }
 }
 
-// Fire the queued events whose hour has come. Nothing owns them yet, so each one writes a line
-// in the household log and is counted.
+// A line in the household's log (the panel's Household block).
+function houseLog(world, text) {
+  world.log.push({ time: world.time, who: 'House', text, why: null });
+  if (world.log.length > LOG_LENGTH) world.log.shift();
+}
+
+// Fire the queued events whose hour has come. Each one is counted. A rule with money flows
+// (data/flows.json) runs them and logs what was paid; any other rule just writes its label.
 function fireDue(world) {
   const now = world.time % MINUTES_PER_DAY;
   const cal = world.calendar;
@@ -101,8 +111,9 @@ function fireDue(world) {
   cal.queue = cal.queue.filter((e) => e.hour * 60 > now);
   for (const e of due) {
     cal.fired[e.id] = (cal.fired[e.id] ?? 0) + 1;
-    world.log.push({ time: world.time, who: 'House', text: `${e.label} (${formatDate(e.date)})`, why: null });
-    if (world.log.length > LOG_LENGTH) world.log.shift();
+    const lines = runFlowsForRule(world, e.id);
+    if (lines.length === 0) lines.push(`${e.label} (${formatDate(e.date)})`);
+    for (const text of lines) houseLog(world, text);
   }
 }
 
@@ -292,6 +303,7 @@ export function step(world) {
   world.time += 1;
   if (world.time % MINUTES_PER_DAY === 0) queueDay(world, false);
   fireDue(world);
+  for (const line of runWeeklyFlows(world, world.time % MINUTES_PER_DAY)) houseLog(world, line);
   for (const person of world.people) stepPerson(world, person);
 }
 

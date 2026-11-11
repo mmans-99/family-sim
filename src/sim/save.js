@@ -8,8 +8,13 @@ import { advance, MINUTES_PER_YEAR } from './clock.js';
 
 // Version 2 added the calendar (queue and counts). Version 1 saves still load: their calendar
 // starts from the current game day, which createWorld already queues.
-export const SAVE_VERSION = 2;
-const READABLE_VERSIONS = [1, 2];
+// Version 3 added money: the stocks (balances and ledgers) and the mortgage loan. Versions 1
+// and 2 still load: they get their money from the data, for the save's date (setupMoney).
+export const SAVE_VERSION = 3;
+const READABLE_VERSIONS = [1, 2, 3];
+
+// Plain JSON copy (the world holds only plain data).
+const clone = (x) => JSON.parse(JSON.stringify(x));
 
 const encodeActivity = (a, world) => ({
   action: { ...a.action },
@@ -54,19 +59,25 @@ export function toSave(world, clock, savedAt) {
     })),
     log: world.log.map((e) => ({ ...e })),
     calendar: { queue: world.calendar.queue.map((e) => ({ ...e })), fired: { ...world.calendar.fired } },
+    stocks: clone(world.stocks),
+    loans: clone(world.loans),
   };
 }
 
 // Rebuild the world from a save. Throws if the save is from another version or does not fit
 // the house data.
-export function fromSave(save, { house, actions, needs, people, calendar }) {
+export function fromSave(save, { house, actions, needs, people, calendar, money }) {
   if (!READABLE_VERSIONS.includes(save?.version)) {
     throw new Error(`save version ${save?.version} is not one this game reads (${READABLE_VERSIONS.join(', ')})`);
   }
-  const world = createWorld({ house, actions, needs, people, calendar, seed: save.seed, time: save.time });
+  const world = createWorld({ house, actions, needs, people, calendar, money, seed: save.seed, time: save.time });
   if (save.calendar) {
     world.calendar.queue = save.calendar.queue.map((e) => ({ ...e }));
     world.calendar.fired = { ...save.calendar.fired };
+  }
+  if (save.version >= 3) {
+    world.stocks = clone(save.stocks);
+    world.loans = clone(save.loans);
   }
   world.rng = createRng(save.seed, save.rng);
   for (const s of save.people) {

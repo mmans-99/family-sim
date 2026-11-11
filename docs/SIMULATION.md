@@ -27,7 +27,8 @@ Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `d
   the floors through the stairs: a flight is entered only from its bottom end or from the
   landing square above its top step, never over the banister. Furniture is used from a
   free square beside it in the same room.
-- **Dated events:** each game day, `queueDay` queues the rules that fall in it (`src/sim/calendar.js`); `fireDue` fires each at its hour and writes a Household line. Nothing owns them yet, so no one reacts to them (L2 onwards).
+- **Dated events:** each game day, `queueDay` queues the rules that fall in it (`src/sim/calendar.js`); `fireDue` fires each at its hour. A rule with money flows (`data/flows.json`) runs them and logs what was paid; any other rule writes its label. Nothing owns the school events yet (L6/L7).
+- **Money (L2, as built):** `src/sim/stocks.js` holds the balances (`world.stocks`) and changes them only through `change()`. Money out below £0 spills into the overdraft, which stops at its limit (the rest is not paid and the log says so). Money in repays the overdraft first. Every change writes a ledger entry with its reason. `src/sim/household.js` works out Tom's take-home pay from the 2026/27 rules, the mortgage repayment (interest on the balance, the rest is capital), the weekly food and everyday spend (booked at 10:00 on each game day, for the calendar days it covers) and the savings interest. The panel's Household block shows the balances and the next money event. Nothing in the money changes what the family does yet: they do not react to bills (L4 and L8).
 - **Log:** each decision adds a line (`world.log`, last 50), shown in the status panel.
 - **Why trace:** every decision also stores a `why` (on the log line and as `person.why`):
   the chosen action, the reason (`need`, or nothing scored high enough and she wanders), the

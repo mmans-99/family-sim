@@ -1,0 +1,25 @@
+{
+  "about": "The household's money at the start of the game (docs/LIFE_SYSTEMS.md 3a, Step 1). Starting balances are tuning. The mortgage loan is from docs/FAMILY.md. Debts are positive numbers (what is owed). The overdraft fills when the joint account would go below £0; a full overdraft means the rest of a bill is not paid.",
+  "stocks": [
+    { "id": "acct.joint", "kind": "money", "value": 2500, "min": 0, "floor": "spill", "spillTo": "debt.overdraft", "ledgerKeep": 60, "tuning": true },
+    { "id": "acct.savings", "kind": "money", "value": 8000, "min": 0, "floor": "hard", "ledgerKeep": 60, "tuning": true },
+    { "id": "debt.overdraft", "kind": "money", "value": 0, "min": 0, "max": 1500, "floor": "hard", "ceiling": "hard", "ledgerKeep": 60, "tuning": true },
+    { "id": "debt.mortgage", "kind": "money", "value": null, "min": 0, "floor": "hard", "ledgerKeep": 60, "about": "Starts at null: the code works out the balance on the game's start date from the loan below." }
+  ],
+  "mortgage": {
+    "loan": 238500,
+    "rate": 0.046,
+    "termMonths": 300,
+    "firstPayment": { "year": 2024, "month": 5, "day": 1 },
+    "fixedUntil": { "year": 2029, "month": 4, "day": 30 },
+    "source": "docs/FAMILY.md, Home and mortgage: £238,500 loan, about 4.6% fixed, 25-year term. These are assumptions, not a lender's offer. The first payment date (1 May 2024) is tuning."
+  },
+  "salary": {
+    "who": "tom",
+    "gross": 75000,
+    "pension": 0.05,
+    "pensionMethod": "netPay",
+    "studentLoan": false,
+    "about": "Tom's salary and pension (user choice, 2026-11-11). The 5% is taken from his whole salary: the simplification is that the auto-enrolment qualifying-earnings band is not used."
+  }
+}

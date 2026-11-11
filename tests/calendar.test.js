@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { calendarDate, calendarSpan, dateAt, dueOnGameDay, weekday, formatDate, gameDayDates } from '../src/sim/calendar.js';
+import { calendarDate, calendarSpan, dateAt, dueOnGameDay, weekday, formatDate, gameDayDates, matches } from '../src/sim/calendar.js';
 import { createWorld, step } from '../src/sim/world.js';
 
 const load = (f) => JSON.parse(readFileSync(new URL(`../data/${f}`, import.meta.url), 'utf8'));
@@ -104,4 +104,14 @@ test('running the world fires each dated event once, at its hour, and writes it 
 test('a game that starts mid-day does not fire events that already passed that day', () => {
   const w = createWorld({ house: load('house.json'), actions: load('actions.json'), needs: load('needs.json'), people: load('people.json'), calendar: cal, seed: 1, time: 7 * 60 });
   assert.equal(w.calendar.queue.some((e) => e.id === 'mortgage'), false, 'the 06:00 mortgage is already past at 07:00');
+});
+
+test('a rule on day "last" fires on the last day of each month, leap years included', () => {
+  const rule = { id: 'interest', repeat: 'monthly', day: 'last', hour: 23 };
+  assert.equal(matches(rule, { year: 2027, month: 2, day: 28 }), true);
+  assert.equal(matches(rule, { year: 2028, month: 2, day: 29 }), true, '29 February in a leap year');
+  assert.equal(matches(rule, { year: 2028, month: 2, day: 28 }), false);
+  assert.equal(matches(rule, { year: 2026, month: 4, day: 30 }), true);
+  assert.equal(matches(rule, { year: 2026, month: 12, day: 31 }), true);
+  assert.equal(matches(rule, { year: 2026, month: 12, day: 30 }), false);
 });
