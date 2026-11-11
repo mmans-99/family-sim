@@ -12,6 +12,10 @@ source of truth — not chat history.
    - `docs/ARCHITECTURE.md` — code layout, tick loop, save format
    - `docs/SIMULATION.md` — how people, needs, emotions, time, life, economy work
    - `docs/FAMILY.md` — the starting family, home, mortgage and bills
+   - `docs/LIFE_SYSTEMS.md` — the build guide for making the world life-like (calendar,
+     stock engine, beliefs, households, jobs, economy, institutions, health). Its section 1
+     rules apply to all new `src/sim/` code. Read it before building any step L0–L16.
+   - `docs/WORLD_PRINCIPLES.md` — the design brief behind LIFE_SYSTEMS.md (the why).
    - `docs/HOUSE_VIEW.md` — how the house view is drawn, how to pick sprites,
      how to check it, and the mistakes to avoid. **Read it in full before
      changing anything in `src/render/`, `data/house.json` or `assets/`.**

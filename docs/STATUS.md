@@ -5,6 +5,17 @@
 ## Current phase
 Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has needs, picks what to do, walks the house (stairs and garden included) and uses the furniture. A watch-only panel shows her needs and day. Still to do in Phase 1: save/load.
 
+## Latest (2026-11-11, mid-afternoon) — life-like world plan
+- The user supplied a design brief for a life-like world (clocks and ledgers, not scripted
+  content). Saved as `docs/WORLD_PRINCIPLES.md`.
+- Wrote `docs/LIFE_SYSTEMS.md`: the detailed build guide for it, made for other AI models
+  to follow. Rules for all new sim code, then one section per system with files, JSON shapes,
+  function signatures, how it plugs into `step()`, tests and mistakes to avoid, and a build
+  order L0–L16 (section 16). **Docs only: no code written.**
+- ROADMAP gains Phase 1b (L0–L5) before Phase 2; later steps are listed in Phases 2–5.
+  CLAUDE.md, SIMULATION.md, ARCHITECTURE.md and DECISIONS.md point to the new guide.
+- Waiting on the user: approve the calendar mapping (DECISIONS OPEN) before L1.
+
 ## Latest (2026-11-11, afternoon)
 - **Why trace.** Every decision records why: the lowest need, score, squares, habit and the
   two next-best options (`person.why` and the log line). Shown under each person in the panel
@@ -145,11 +156,12 @@ The user asked for the project to be read and the house view fixed. The view was
 
 ## Next step
 1. User watches Sarah on the phone for a while and says what feels wrong.
-2. Save/load (last Phase 1 item): save the world to the browser's storage, load it on open,
+2. User approves (or changes) the calendar mapping in DECISIONS OPEN.
+3. L0: Save/load (last Phase 1 item, also LIFE_SYSTEMS.md step L0): save the world to the browser's storage, load it on open,
    then catch up the time the page was closed (with a short "while you were away" summary).
    The seed and the save version go in the save.
-3. Phase 2: Tom, Oliver and Ruby, with age-based abilities and childcare.
-4. Record the exact Sierrassets licence wording in DECISIONS.md.
+4. L1–L5 (Phase 1b, `docs/LIFE_SYSTEMS.md`), then Phase 2: Tom, Oliver and Ruby.
+5. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
 - Sarah potters about a lot between meals, because nothing else needs doing yet. Childcare (Phase 2) and later outings will fill the day.

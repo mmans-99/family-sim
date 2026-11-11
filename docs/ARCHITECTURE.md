@@ -52,11 +52,12 @@ simulator/
     ├── palette.test.js     palette snapping
     └── raster.test.js      pixel-exact fills and lines
 ```
-Planned, not built yet: `schedule.js`, `offsite.js`, `economy.js`, `weather.js`, `events.js`, `life.js`, `log.js`, and `src/save/store.js`. Also `manifest.json` and `sw.js` for offline use.
+Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/random.js` (random helpers), `calendar.js` (calendar on the life clock), `stocks.js` (stocks, flows, ledgers, lags), `couplings.js`, `beliefs.js`, `household.js` (accounts, labour ledger, bargaining), `firms.js` (positions, firms, labour market), `places.js` (places, contacts, encounters), `economy.js`, `institutions.js`, `holidays.js`, `health.js`, `life.js`, `weather.js`, `commentary.js`, `src/save/store.js`, and `tools/replay.js` (headless multi-seed replay). Data to come: `data/calendar.json`, `stocks.json`, `flows.json`, `couplings.json`, `obligations.json`, `labour.json`, `agecurves.json`, `lifecourse.json`, `firms.json`, `positions.json`, `places.json`, `economy.json`, `institutions.json`, `holidays.json`, `text/*.json`. Also `manifest.json` and `sw.js` for offline use.
 
 ## The tick
 - The sim steps in fixed game minutes: `step(world)` in `src/sim/world.js` is one game minute.
 - Each frame, `main.js` asks the clock how many whole game minutes passed and runs that many steps.
+- Two speeds (planned, LIFE_SYSTEMS.md rule 5): people in the house step every game minute; off-screen agents (firms, institutions, economy, relatives) step once per game day at 00:00. Dated calendar rules fire at their hour on the game day that contains their date.
 - Each step: each person's needs drop → if free, the brain picks an action → walk along the route, or use the furniture (needs rise) → log. (Later: weather and economy before the people.)
 - The drawing loop runs every screen frame and reads the latest state. `people.js` moves walkers smoothly between minutes using the part of the minute that has passed; the sim itself never reads anything from the screen.
 - Testing aid: `index.html?minutes=N` starts the page N game minutes in (same steps as the clock).
@@ -82,5 +83,5 @@ Planned, not built yet: `schedule.js`, `offsite.js`, `economy.js`, `weather.js`,
 - The sheets are `assets/furniture-pack/furniture.png` and `floors-walls.png`, plus our own `assets/extras/extras.png`. If the pack fails to load, everything is drawn as plain blocks and snapped to the palette. If only the extras fail, those pieces fall back to blocks.
 
 ## Save format (planned)
-One JSON object: `{ version, seed, time, world, people[], log[] }`.
+One JSON object: `{ version, seed, time, world, people[], log[] }`. Everything in `world` must be plain JSON (no Map, Set, classes or functions); random streams save their state. New systems add their state under `world` (`stocks`, `flows`, `calendar`, `household`, `economy`, `contacts`, ...).
 `version` lets future sessions upgrade old saves instead of breaking them.

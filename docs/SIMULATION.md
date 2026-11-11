@@ -36,6 +36,14 @@ Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `d
 - **Frosted cover:** actions marked `"hide": true` (the toilet and the bath) cover the whole
   furniture and the figure in it with a moving frosted-glass mosaic while in use. Drawing only.
 
+## Life-like world: where the plan lives
+The plan for everything beyond section 0 (calendar, stocks and ledgers, couplings,
+beliefs, households and invisible work, positions and firms, places and chance meetings,
+the economy's three loops, institutions, holidays, health, death and grief) is in
+`docs/LIFE_SYSTEMS.md`, built in steps L0–L16. The brief it follows is
+`docs/WORLD_PRINCIPLES.md`. Where the sections below disagree with LIFE_SYSTEMS.md,
+LIFE_SYSTEMS.md wins; update the section here as each step is built.
+
 ## 1. Needs (0–100, drop over time)
 Hunger, Energy, Bladder, Hygiene, Fun, Social, Comfort.
 Rates differ by age (toddlers tire fast, need help with most needs).
