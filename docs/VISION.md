@@ -25,7 +25,11 @@ Mum, Dad, one school-age child, one toddler. See `FAMILY.md`.
 
 ## Scope rule
 The house is the whole world for now. The outside world is simulated as
-text and numbers only (no visual town).
+text and numbers only (no visual town). The view draws a thin edge of scenery
+around the house (pavement, road, the neighbouring half of the semi, fences)
+so it does not float on blank space; nothing happens there. A visible street
+or neighbourhood may come in Phase 3, when people leave the house; this rule
+will be revisited then (DECISIONS 2026-11-11).
 
 ## Not in scope (for now)
 - Player building/buying furniture

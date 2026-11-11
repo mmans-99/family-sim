@@ -3,7 +3,18 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. Next is L2 (stock engine and household money), once its design is approved.
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. Next is the landscape full-screen view (design agreed, waiting for approval to build), then L2 (stock engine and household money).
+
+## Latest (2026-11-11, evening) — landscape view design agreed (docs only)
+- The user asked for the house full screen in landscape, with the menus in the background, and an
+  "open world" feel like *Shakedown: Hawaii*. The design is written up in `docs/HOUSE_VIEW.md`
+  section 10: floating menus and a side panel, a follow camera that looks ahead, snap zoom levels,
+  a minimap, and edge scenery (pavement, road, the other half of the semi, fences).
+- Decided (DECISIONS 2026-11-11): art stays top-down; zoom snaps to whole pixels; the outside beyond
+  the edge scenery stays text only until Phase 3. VISION, ROADMAP (new "Landscape view" section) and
+  ARCHITECTURE (planned files) updated.
+- **No code written.** Waiting on the user: auto-hide after 5 s (default) and portrait kept with a
+  hint (default), then approval to build.
 
 ## Latest (2026-11-11, mid-afternoon) — life-like world plan
 - The user supplied a design brief for a life-like world (clocks and ledgers, not scripted
@@ -179,11 +190,14 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks the calendar on the phone (the date range on the clock and the Household section).
-2. L2 (stock engine and household money: accounts, bills, mortgage as ledgers), `docs/LIFE_SYSTEMS.md` section 3. Show the user the plan and wait for approval before coding.
-3. Source the council tax months and school term dates (needed before L6/L7).
-4. Phase 2: Tom, Oliver and Ruby (L6 to L8).
-5. Record the exact Sierrassets licence wording in DECISIONS.md.
+1. User answers the two open choices (auto-hide, portrait) and approves the landscape view step.
+2. Build the landscape view (`docs/HOUSE_VIEW.md` section 10), screenshots of every zoom level and
+   floor, sideways and upright, before saying it works.
+3. User checks the calendar on the phone (the date range on the clock and the Household section).
+4. L2 (stock engine and household money: accounts, bills, mortgage as ledgers), `docs/LIFE_SYSTEMS.md` section 3. Show the user the plan and wait for approval before coding.
+5. Source the council tax months and school term dates (needed before L6/L7).
+6. Phase 2: Tom, Oliver and Ruby (L6 to L8).
+7. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
 - Household events have no owner yet: they only write a line (money and school come in L2 and L6/L7).

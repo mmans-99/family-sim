@@ -28,6 +28,16 @@ Build these before Phase 2: everything after rests on them. Step numbers match L
 - [ ] L4 Couplings and lags: stress, sleep debt; low needs interrupt actions
 - [ ] L5 Beliefs: people act on what they think, not the true values
 
+## Landscape view (UI step, before L2)
+Design agreed 2026-11-11: `docs/HOUSE_VIEW.md` section 10. Code waits for the user's approval.
+- [ ] Full-screen landscape layout: menus float over the house; side panel holds needs, log, Household
+- [ ] Follow camera: glides with a person, looks ahead, stops at the world's edge; tap a face to follow
+- [ ] Snap zoom levels: Close, Room, Whole house
+- [ ] Minimap with people dots and the view box; tap to move the camera
+- [ ] Edge scenery: front garden, pavement, road, the other half of the semi, fences (drawing only)
+- [ ] Portrait still works; full-screen button; web app manifest for "Add to Home Screen"
+- [ ] Auto-hide of buttons (if the user keeps that default)
+
 ## Phase 2 — The family
 - [ ] L6 Obligations in the brain (school run, appointments, deadlines)
 - [ ] L7 Age curves for needs and abilities; childcare
@@ -46,6 +56,7 @@ Build these before Phase 2: everything after rests on them. Step numbers match L
 - [ ] Off-screen activities (shopping, park, friends, gym)
 - [ ] Running text commentary feed for people outside
 - [ ] Money: wages, bills, food shopping, savings
+- [ ] Visible street or neighbourhood beyond the house edge (follow camera goes with people outside; update VISION.md first)
 
 ## Phase 4 — The world
 - [ ] L11 Economy as three loops (income, credit, shocks); energy cap; remortgage in spring 2029

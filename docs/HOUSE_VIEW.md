@@ -144,6 +144,10 @@ and the pixel just outside it is transparent.
 
 ## 5. Views: the whole house on one screen
 
+> **Planned change (agreed 2026-11-11, not built yet):** the fixed views become a landscape,
+> full-screen view with a follow camera, snap zoom levels and a minimap. The whole-house
+> layout below stays as the world the camera moves over. See section 10 before building it.
+
 The page opens on **Whole house**: every floor on one screen, so people can be followed
 without changing view. The other buttons show one floor, bigger.
 
@@ -274,3 +278,108 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 Follow "After every change" in `CLAUDE.md`: update STATUS, DECISIONS, ROADMAP and
 ARCHITECTURE as needed, update this file if the method changed, commit, push, and copy
 the changed docs to the Project.
+
+## 10. Planned: landscape full-screen view and follow camera (agreed, not built)
+
+Agreed with the user on 2026-11-11 as the design. **No code yet.** Two small choices are still
+open (DECISIONS, OPEN); the defaults below apply unless the user changes them. Build only after
+the user approves the step (CLAUDE.md).
+
+**Reference:** *Shakedown: Hawaii* (Vblank, 2019): a top-down 16-bit open world where the camera
+travels with the character. We keep our top-down art (it already matches) and borrow the camera
+feel. One lesson from its reviews: its camera sits too close when moving, so you cannot see ahead.
+Ours looks ahead.
+
+Everything here is camera and layout only. The player watches; nothing changes what the family
+does. Nothing in `src/sim/` changes, and the save format does not change.
+
+### 10.1 Screen layout (phone held sideways)
+```
++--------------------------------------+
+| Day 3 - 28 Mar 09:12      ||  1 2 4 = |
+|                                      |
+|          (house fills the screen)    |
+|                                      |
+| [Sarah]                    +------+  |
+|                            | mini |  |
+| (Follow)  +  -             +------+  |
++--------------------------------------+
+```
+- The canvas fills the whole screen. Menus float over its edges on see-through dark backgrounds.
+- **Top left:** clock strip (year, day, season, the game day's date range, time).
+- **Top right:** pause, 1x, 2x, 4x, and the menu button (three lines), which opens the side panel.
+- **Bottom left:** one round face per person; tap to follow that person. Only Sarah for now.
+  Under the faces: Follow on/off, zoom in, zoom out.
+- **Bottom right:** the minimap (10.4).
+- **Side panel:** slides in from the right, about a third of the screen wide. Holds everything
+  that is under the house today: need bars, traits, the why line (while `SHOW_WHY` is on), the
+  log, the Household events, the full-screen button and the credits. Tap outside it to close.
+- **"While you were away"** shows as a card in the middle of the screen with a Close button.
+- **Auto-hide (default, OPEN):** after 5 seconds with no touch the buttons fade to faint; the clock
+  strip and minimap stay. Any tap brings them back.
+- **Full screen:** a button in the side panel calls the browser's full-screen request. On Android
+  Chrome it then locks the screen sideways (`screen.orientation.lock('landscape')`, which only
+  works in full screen). iPhone Safari does not allow full screen for pages, so a web app
+  manifest (`manifest.webmanifest`, `display: fullscreen`, `orientation: landscape`) lets
+  "Add to Home Screen" open the game like an app with no address bar. Free; no app store.
+
+### 10.2 Follow camera
+- **World:** the whole-house layout of section 5 (first floor placed above the ground floor,
+  garden below). The camera moves over it; `place` and `buildScene` are unchanged. When a person
+  swaps floors on the top step, the camera glides up or down the screen to them.
+- **Look ahead:** while walking, the camera aims about 2 squares ahead of the person in the
+  direction of the step; it eases back to them when they stop.
+- **Glide:** each frame the camera moves about 15% of the way to its aim, so it never jumps.
+  Use real frame time so the glide is the same at any frame rate.
+- **Edges:** the camera stops at the world's edge (house, garden and edge scenery), so blank
+  space past the street or garden is never shown.
+- **Drag** stops following, and the Follow button lights up to resume. Tapping a face starts
+  following that person. Turning a tap into grid squares follows section 5, rule 5.
+- The maths (aim, look ahead, glide, edge clamp) goes in a pure module with no DOM,
+  `src/render/follow.js`, so it can be tested with `node --test`.
+
+### 10.3 Zoom levels (snap, never slide)
+Rule 2 of section 2 still holds: one art pixel is a whole number of device pixels. So zoom
+**snaps** between levels; only the camera's position moves smoothly.
+- **Close:** about 8 x 5 squares around the person.
+- **Room (default):** about 14 x 8 squares.
+- **Whole house:** everything fits; following turns off.
+For each level, pick the biggest whole pixel size at which that many squares fit the screen.
+Plus, minus, pinch and the mouse wheel step between levels.
+
+### 10.4 Minimap
+- A small plan in a corner: each room a flat block in its floor colour, walls as lines, a
+  coloured dot per person, and a white box showing what the main view shows.
+- Floors placed as in the whole-house layout.
+- Tap the minimap: the camera glides there and following turns off.
+- Drawn by `src/render/minimap.js` on its own small canvas.
+
+### 10.5 Edge scenery (drawn only)
+So the house does not float on blank space:
+- **Front (top of the screen):** a front garden strip, pavement, kerb and part of the road.
+- **Sides:** the other half of the semi-detached house as a plain roof and wall shape on the
+  attached side; a fence on the other side.
+- **Back:** the garden's back fence with grass beyond.
+New pieces (road, kerb, pavement edge, roof, side fence) are drawn by `tools/make_extras.py` into
+the extras sheet, in the pack's colours, like the shed and tree (section 1). Scenery goes in
+`data/house.json` as its own entries so content stays in data. Nobody walks there; the walking map
+ignores it; the simulation does not know it exists. A visible town is Phase 3, when people leave
+the house for work and school; `VISION.md` changes then, not now.
+
+### 10.6 Portrait (default, OPEN)
+Portrait keeps working (phone-first rule): the house fills the top of the screen and the side panel
+becomes a sheet sliding up from the bottom. A small hint, which can be closed, suggests turning
+the phone sideways.
+
+### 10.7 What stays the same
+`src/sim/`, the save format, the drawing order and art rules (section 2), sprites, and the test links
+`?view=`, `?minutes=` and `?fresh=` (`?view=` opens that floor at the Room zoom with following off).
+
+### 10.8 How to check it
+- `node --test`, with new tests for: glide and look ahead, edge clamp, zoom level sizes (whole
+  pixels only), minimap scale, tap to grid squares.
+- Screenshots at 844 x 390 (sideways) and 390 x 844 (upright), both with
+  `--force-device-scale-factor=3`: each zoom level; following Sarah on the ground floor, first
+  floor and garden (use `?minutes=`); side panel open; minimap; the away card; the edge scenery.
+  Look at every one with the Read tool before saying it works (section 6).
+- Then update this section from "planned" to "as built", and section 5 to match.
