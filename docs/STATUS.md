@@ -3,7 +3,7 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). Next is Phase 1b, step L1 (calendar), once the user approves the calendar mapping in DECISIONS OPEN.
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. Next is L2 (stock engine and household money), once its design is approved.
 
 ## Latest (2026-11-11, mid-afternoon) — life-like world plan
 - The user supplied a design brief for a life-like world (clocks and ledgers, not scripted
@@ -15,6 +15,18 @@ Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, u
 - ROADMAP gains Phase 1b (L0–L5) before Phase 2; later steps are listed in Phases 2–5.
   CLAUDE.md, SIMULATION.md, ARCHITECTURE.md and DECISIONS.md point to the new guide.
 - Waiting on the user: approve the calendar mapping (DECISIONS OPEN) before L1.
+
+## Latest (2026-11-11, L1 calendar)
+- The user approved the calendar mapping (DECISIONS, 2026-11-11). Built as LIFE_SYSTEMS section 2, with three refinements recorded in DECISIONS: the clock shows the game day's date range, game days partition the calendar exactly, weekdays are computed but not shown.
+- **Dates on the clock.** The clock reads "Year 1, Day 3 (Spring) · 27 Mar 2026 – 8 Apr 2026 · 06:05 · 1x". Each game day is about 13 calendar days (365 ÷ 28); game day 1 is 1 March 2026.
+- **Dated rules** (`data/calendar.json`): mortgage on the 1st at 06:00, payday on the 28th at 09:00, energy cap on 1 Jan/Apr/Jul/Oct at 00:00, Christmas Day at 07:00. Nothing owns them yet: each fires once at its hour, writes a "House" line and is counted in `world.calendar.fired`.
+- **Household section** in the panel shows the last three House lines.
+- A game that starts mid-day does not fire events already past.
+- **Save format is version 2** (calendar queue and counts). Version 1 saves still load.
+- Checked: 1 April 2026 at 06:00 shows "Mortgage payment (1 Apr 2026)" and the energy cap at 00:00; every floor (first, ground, garden) and the whole house looked at in screenshots; no errors in the browser console.
+- Tests: 72 passing (new `tests/calendar.test.js`: dates, game-day spans, one game year 12/12/4/1, four years 48/47/16/4 (28 Feb 2030 falls in year 5), leap day, weekdays, firing in a live world, no firing twice).
+- **Not committed to main:** on branch `l1-calendar` (from `phase-1-finish`, PR #1).
+- Not yet: council tax months and school term dates (need sourcing first); owners for the events (money in L2, school in L6/L7).
 
 ## Latest (2026-11-11, finishing Phase 1)
 - **Save and load.** The game is saved in the browser (localStorage) every 10 seconds, and when the page is hidden or closed. Reopening restores it exactly; the missed time is run on open at the speed it was running (paused = no time passes), capped at one game year, and a "while you were away" box lists the last few things she did. Only `src/save/store.js` touches browser storage; `src/sim/save.js` is pure logic. `?fresh=1` forgets the save and starts again. Checked in a real browser: 07:00 saved, reopened 90 minutes later at 1x: 21:24 with the summary, and a second reopen did not catch up twice.
@@ -167,12 +179,16 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks save/load, the bath and personality on the phone (`index.html` with `?fresh=1` for a new game).
-2. User approves (or changes) the calendar mapping in DECISIONS OPEN. Then L1 (calendar and two clocks), L2 to L5 (Phase 1b, `docs/LIFE_SYSTEMS.md`).
-3. Phase 2: Tom, Oliver and Ruby (L6 to L8).
-4. Record the exact Sierrassets licence wording in DECISIONS.md.
+1. User checks the calendar on the phone (the date range on the clock and the Household section).
+2. L2 (stock engine and household money: accounts, bills, mortgage as ledgers), `docs/LIFE_SYSTEMS.md` section 3. Show the user the plan and wait for approval before coding.
+3. Source the council tax months and school term dates (needed before L6/L7).
+4. Phase 2: Tom, Oliver and Ruby (L6 to L8).
+5. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
+- Household events have no owner yet: they only write a line (money and school come in L2 and L6/L7).
+- The mortgage day, payday and Christmas times are tuning (labelled in `data/calendar.json`).
+- Weekdays are computed but not shown: game days do not match real weekdays.
 - Sarah potters about a lot between meals, because nothing else needs doing yet. Childcare (Phase 2) and later outings will fill the day.
 - Actions are never interrupted: a bath runs its full time even if she badly needs the toilet.
 - No thought bubbles or real mood yet; her face follows her needs as a stand-in.

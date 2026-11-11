@@ -2,6 +2,7 @@
 import { createClock, advance, setSpeed, readClock, SPEEDS, REAL_MS_PER_GAME_MINUTE } from './sim/clock.js';
 import { createWorld, step, roomName } from './sim/world.js';
 import { toSave, fromSave, minutesAway, catchUp } from './sim/save.js';
+import { gameDayDates } from './sim/calendar.js';
 import { readSave, writeSave, clearSave } from './save/store.js';
 import { peopleToDraw } from './render/people.js';
 import { renderPanel, renderStatusLine, clockText } from './ui/panel.js';
@@ -128,8 +129,9 @@ function renderClock() {
   const t = readClock(clock);
   const hh = String(t.hour).padStart(2, '0');
   const mm = String(t.minute).padStart(2, '0');
+  const date = gameDayDates(world.time, world.calendar.start);
   clockEl.textContent =
-    `Year ${t.year}, Day ${t.day} (${t.season}) · ${hh}:${mm} · ` +
+    `Year ${t.year}, Day ${t.day} (${t.season}) · ${date} · ${hh}:${mm} · ` +
     (t.speed === 0 ? 'paused' : SPEED_LABELS[t.speed]);
 }
 
@@ -222,9 +224,11 @@ function saveNow() {
 
 async function start() {
   const load = async (file) => (await fetch(`data/${file}`)).json();
-  const [actions, needs, people] = await Promise.all(['actions.json', 'needs.json', 'people.json'].map(load));
+  const [actions, needs, people, calendar] = await Promise.all(
+    ['actions.json', 'needs.json', 'people.json', 'calendar.json'].map(load),
+  );
   house = await load('house.json');
-  const data = { house, actions, needs, people };
+  const data = { house, actions, needs, people, calendar };
   const params = new URLSearchParams(window.location.search);
   // Testing aid: index.html?fresh=1 forgets the saved game and starts a new one.
   if (params.has('fresh')) clearSave();

@@ -51,7 +51,12 @@ export function renderStatusLine(el, world, roomName) {
 }
 
 export function renderPanel(el, world, roomName) {
-  el.innerHTML = world.people.map((p) => {
+  // The household's dated events (rent, pay, bills), newest first. Nothing owns them yet.
+  const events = world.log.filter((e) => e.who === 'House').slice(-3).reverse()
+    .map((e) => `<li><span class="t">${clockText(e.time)}</span> ${esc(e.text)}</li>`).join('');
+  const household = `<div class="person house-events"><div class="who"><b>Household</b></div>`
+    + `<ol class="log">${events || '<li>No dated events yet</li>'}</ol></div>`;
+  el.innerHTML = household + world.people.map((p) => {
     const bars = Object.entries(world.needDefs).map(([id, def]) => {
       const v = Math.round(p.needs[id]);
       return `<div class="need"><span>${esc(def.label)}</span>`

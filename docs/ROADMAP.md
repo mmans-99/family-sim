@@ -22,7 +22,7 @@ Each phase ends with something you can open and watch.
 ## Phase 1b — Life foundations (plan: `docs/LIFE_SYSTEMS.md`)
 Build these before Phase 2: everything after rests on them. Step numbers match LIFE_SYSTEMS.md section 16.
 - [x] L0 Save/load, saveable random state, one random stream per system (`src/sim/save.js`, `src/save/store.js`, `subRng` in `src/sim/rng.js`)
-- [ ] L1 Calendar and two clocks (each game day ≈ 13 calendar days; dated bills, paydays, holidays)
+- [x] L1 Calendar and two clocks (each game day ≈ 13 calendar days; dated bills, paydays, holidays). `src/sim/calendar.js`, `data/calendar.json`; date range on the clock; Household log
 - [ ] L2 Stock engine + household money: accounts, bills, mortgage as ledgers
 - [ ] L3 Replay harness: run many seeds for years with no screen and report the lives
 - [ ] L4 Couplings and lags: stress, sleep debt; low needs interrupt actions

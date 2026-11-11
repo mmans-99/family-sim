@@ -1,0 +1,10 @@
+{
+  "about": "Calendar start and dated rules (docs/LIFE_SYSTEMS.md section 2). Each game day stands for 365 / 28 calendar days. A rule fires at its hour (game time) on the game day whose span contains its date. Council tax months and school term dates are not here yet: they need sourcing first (DECISIONS OPEN).",
+  "start": { "year": 2026, "month": 3, "day": 1 },
+  "rules": [
+    { "id": "mortgage", "label": "Mortgage payment", "repeat": "monthly", "day": 1, "hour": 6, "source": "docs/FAMILY.md, mortgage (monthly repayment, paid on the 1st: tuning)" },
+    { "id": "payday", "label": "Payday", "repeat": "monthly", "day": 28, "hour": 9, "tuning": true },
+    { "id": "energyCap", "label": "Energy price cap changes", "repeat": "quarterly", "months": [1, 4, 7, 10], "day": 1, "hour": 0, "source": "Ofgem price cap runs quarterly from 1 January, 1 April, 1 July and 1 October" },
+    { "id": "christmas", "label": "Christmas Day", "repeat": "yearly", "month": 12, "day": 25, "hour": 7, "tuning": true }
+  ]
+}
