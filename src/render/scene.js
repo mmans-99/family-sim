@@ -12,6 +12,23 @@ export const COLOURS = {
   floor: '#e0b98a',   // wood
 };
 
+// Edge scenery (house.json `scenery`, HOUSE_VIEW 10.5): flat, drawn only, never walked on.
+// Plain colours are used when the sprite pack is not loaded, and by the minimap.
+export const SCENERY_COLOURS = {
+  road: '#4a4a4e',
+  road_line: '#4a4a4e',
+  kerb: '#cecbc4',
+  pavement: '#c8c8c2',
+  grass: '#68ac64',
+  paving: '#c8c4ba',
+  roof: '#3a4454',
+  roof_ridge: '#60707f',
+  front_wall: '#96503f',
+  hedge: '#346e3e',
+};
+const SCENERY_Z0 = -0.3; // under everything: the floor slabs sit on 0
+const SCENERY_Z1 = -0.29;
+
 const DOOR_HEIGHT = 2.1;
 const DOOR_THICKNESS = 0.06;
 const FENCE_THICKNESS = 0.25;
@@ -203,6 +220,18 @@ function addFloor(boxes, house, floor, lift) {
 // the ground floor. Each box remembers which floor it belongs to (b.floor).
 export function buildScene(house, floorIds, place = {}) {
   const boxes = [];
+  // Scenery goes first, so it is drawn under the house. It belongs to the floor it names
+  // (always the ground floor) and moves with that floor's place.
+  for (const e of house.scenery ?? []) {
+    if (!floorIds.includes(e.floor)) continue;
+    const { x = 0, y = 0 } = place[e.floor] ?? {};
+    const colour = SCENERY_COLOURS[e.kind] ?? '#888888';
+    const b = box(e.x + x, e.y + y, SCENERY_Z0, e.x + e.w + x, e.y + e.h + y, SCENERY_Z1, colour);
+    b.kind = 'scenery';
+    b.tile = e.kind;      // pack tile name (paintTiled), or null-safe fallback via colour
+    b.floor = e.floor;
+    boxes.push(b);
+  }
   for (const floor of house.floors) {
     if (!floorIds.includes(floor.id)) continue;
     const start = boxes.length;

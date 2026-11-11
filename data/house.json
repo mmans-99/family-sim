@@ -684,5 +684,119 @@
       "h": 3.0,
       "colour": "#4f8a3c"
     }
+  ],
+  "scenery": [
+    {
+      "kind": "road",
+      "floor": "ground",
+      "x": -3.125,
+      "y": -6.875,
+      "w": 30.25,
+      "h": 1
+    },
+    {
+      "kind": "road_line",
+      "floor": "ground",
+      "x": -3.125,
+      "y": -5.875,
+      "w": 30.25,
+      "h": 1
+    },
+    {
+      "kind": "kerb",
+      "floor": "ground",
+      "x": -3.125,
+      "y": -4.875,
+      "w": 30.25,
+      "h": 0.25
+    },
+    {
+      "kind": "pavement",
+      "floor": "ground",
+      "x": -3.125,
+      "y": -4.625,
+      "w": 30.25,
+      "h": 1.5
+    },
+    {
+      "kind": "grass",
+      "floor": "ground",
+      "x": -3.125,
+      "y": -3.125,
+      "w": 16.25,
+      "h": 2
+    },
+    {
+      "kind": "paving",
+      "floor": "ground",
+      "x": 6,
+      "y": -3.125,
+      "w": 1,
+      "h": 2
+    },
+    {
+      "kind": "front_wall",
+      "floor": "ground",
+      "x": -3.125,
+      "y": -3.125,
+      "w": 9.125,
+      "h": 0.375
+    },
+    {
+      "kind": "front_wall",
+      "floor": "ground",
+      "x": 7,
+      "y": -3.125,
+      "w": 6.125,
+      "h": 0.375
+    },
+    {
+      "kind": "roof",
+      "floor": "ground",
+      "x": -3.125,
+      "y": -1.125,
+      "w": 3,
+      "h": 7.125
+    },
+    {
+      "kind": "roof_ridge",
+      "floor": "ground",
+      "x": -3.125,
+      "y": 2.5,
+      "w": 3,
+      "h": 1
+    },
+    {
+      "kind": "grass",
+      "floor": "ground",
+      "x": -3.125,
+      "y": 6,
+      "w": 3,
+      "h": 4.125
+    },
+    {
+      "kind": "paving",
+      "floor": "ground",
+      "x": 12.125,
+      "y": -1.125,
+      "w": 1,
+      "h": 7.125
+    },
+    {
+      "kind": "grass",
+      "floor": "ground",
+      "x": 12.125,
+      "y": 6,
+      "w": 1,
+      "h": 4.125
+    },
+    {
+      "kind": "hedge",
+      "floor": "ground",
+      "x": -3.125,
+      "y": 10.125,
+      "w": 16.25,
+      "h": 1
+    }
   ]
 }

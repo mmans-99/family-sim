@@ -24,6 +24,14 @@ export const EXTRA_RECTS = {
   sarah_walk: [268, 0, 12, 21],
   sarah_sit: [282, 0, 12, 17],
   sarah_lie: [296, 0, 10, 9],
+  road: [308, 0, 16, 16],
+  road_line: [326, 0, 16, 16],
+  kerb: [344, 0, 16, 4],
+  pavement: [362, 0, 16, 16],
+  roof: [380, 0, 16, 16],
+  roof_ridge: [398, 0, 16, 16],
+  front_wall: [416, 0, 16, 6],
+  hedge: [434, 0, 16, 16],
 };
 
 // Extras that are sprites, standing on their squares like furniture.
@@ -32,7 +40,9 @@ const EXTRA_SPRITES = [
   'sarah_stand', 'sarah_walk', 'sarah_sit', 'sarah_lie',
 ];
 // Extras that repeat over an area, one copy per grid square.
-const EXTRA_TILES = ['grass', 'paving'];
+const EXTRA_TILES = [
+  'grass', 'paving', 'road', 'road_line', 'kerb', 'pavement', 'roof', 'roof_ridge', 'front_wall', 'hedge',
+];
 // Rug templates: 24 x 24, cut into nine 8 x 8 pieces and stretched by repeating edges.
 export const RUG_PIECE_PX = 8;
 const EXTRA_RUGS = ['rug_red', 'rug_blue', 'rug_gold'];

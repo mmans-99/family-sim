@@ -3,7 +3,21 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. Next is the landscape full-screen view (design agreed, waiting for approval to build), then L2 (stock engine and household money).
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. Next is L2 (stock engine and household money).
+
+## Latest (2026-11-11, edge scenery built)
+- **Edge scenery built** (HOUSE_VIEW 10.5): the street, pavement, kerb, road centre line, the neighbour's
+  roof and garden, our front path and side path, the garden hedge. Drawing only. The first floor now sits
+  to the right of the ground floor, with the street along the top of the world.
+- Changes from the brief, recorded in DECISIONS and HOUSE_VIEW 10.5: the centre line is on the top of its
+  tile (the brief said bottom); the ground label reads "Ground floor" (the long one collided at phone width).
+- Tests: 89 passing (four scenery tests replace the old layout test).
+- Checked: landscape room zoom, whole house, first floor and garden; portrait whole house. No console errors.
+- **Not checked yet:** Sarah climbing the stairs (camera glide to the landing), dragging to the top-left
+  corner (clamp at the street), and a real phone.
+- **Open (DECISIONS):** in portrait the minimap covers the "Show all" button. Pre-existing layout; not
+  changed in this step.
+- Working copy: `/home/claude/family-sim`, pushed to `main`.
 
 ## Latest (2026-11-11, late night) — plans written for the next two steps (docs only)
 - The user approved plans for edge scenery and L2 money, and asked for them to be written so another
@@ -218,10 +232,10 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks the landscape view on a real phone (sideways and upright), and the Full screen button.
-2. Build edge scenery from the brief in `docs/HOUSE_VIEW.md` 10.5, then screenshot it.
-3. User checks the calendar on the phone (the date range on the clock and the Household section).
-4. L2 from the approved brief in `docs/LIFE_SYSTEMS.md` 3a: source the figures first (Step 0), then code. The plan is approved; still confirm with the user that the session is for L2 (CLAUDE.md).
+1. User checks the landscape view and the new street on a real phone (sideways and upright), and the Full screen button.
+2. Decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
+3. L2 from the approved brief in `docs/LIFE_SYSTEMS.md` 3a: source the figures first (Step 0), then code. Confirm with the user that the session is for L2 (CLAUDE.md).
+4. User checks the calendar on the phone (the date range on the clock and the Household section).
 5. Source the council tax months and school term dates (needed before L6/L7).
 6. Phase 2: Tom, Oliver and Ruby (L6 to L8).
 7. Record the exact Sierrassets licence wording in DECISIONS.md.

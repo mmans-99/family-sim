@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { cutOpenings, buildScene, sceneBounds, COLOURS } from '../src/render/scene.js';
 import { createCamera, project, TARGET, UNIT_PX } from '../src/render/camera.js';
 import { boxRect } from '../src/render/house.js';
+import { buildMap } from '../src/sim/housemap.js';
 import {
   NAME_TO_SPRITE, SPRITE_RECTS, ROOM_TILE, FLOOR_TILES, EXTRA_RECTS, NAME_TO_TILE, NAME_TO_RUG,
 } from '../src/render/pack.js';
@@ -110,12 +111,54 @@ test('placing a floor moves all of its boxes and nothing else', () => {
   assert.deepEqual(ground, sceneBounds(buildScene(house, ['ground'])));
 });
 
-test('in the whole-house layout the first floor does not touch the ground floor', () => {
-  const boxes = buildScene(house, ['first', 'ground', 'garden'], { first: { x: 0, y: -8.8 } });
+// Edge scenery (HOUSE_VIEW 10.5): the first floor sits to the right of the ground floor.
+const SIDE_BY_SIDE = { first: { x: 14.5, y: 0 } };
+const FLOORS = ['first', 'ground', 'garden'];
+const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+const rectOf = (x, y, w, h) => ({ x0: x, y0: y, x1: x + w, y1: y + h });
+
+test('the first floor is side by side with the ground floor, a square apart', () => {
+  const boxes = buildScene(house, FLOORS, SIDE_BY_SIDE);
   const first = sceneBounds(boxes.filter((b) => b.floor === 'first'));
-  const ground = sceneBounds(boxes.filter((b) => b.floor === 'ground'));
-  // ground.y0 is the top of the ground floor's front-wall face, which tall sprites stand against.
-  assert.ok(first.y1 + 1.5 <= ground.y0, 'leave a square and a half for the floor name');
+  const ground = sceneBounds(boxes.filter((b) => b.floor === 'ground' && b.kind !== 'scenery'));
+  // The side path (x 12.125 to 13.125) is part of what the ground floor takes up.
+  const groundRight = Math.max(ground.x1, ...house.scenery.filter((e) => e.kind === 'paving').map((e) => e.x + e.w));
+  assert.ok(groundRight + 1 <= first.x0, 'leave a square between the house and the first floor');
+  assert.ok(first.y0 >= ground.y0 - 0.001 && first.y1 <= ground.y1 + 2, 'first floor is on the same row');
+});
+
+test('edge scenery is valid, drawable and never over the house', () => {
+  for (const e of house.scenery) {
+    assert.ok(e.w > 0 && e.h > 0, `${e.kind} has a size`);
+    assert.ok(e.kind in EXTRA_RECTS, `${e.kind} has a sprite or tile on the extras sheet`);
+  }
+  // Every piece of scenery stays clear of the ground floor and the garden (walls allowed
+  // their half thickness on each side).
+  const half = house.wallThickness / 2;
+  const footprints = [];
+  for (const f of house.floors.filter((f) => f.id === 'ground' || f.id === 'garden')) {
+    for (const r of f.rooms) footprints.push(rectOf(r.x - half, r.y - half, r.w + 2 * half, r.h + 2 * half));
+  }
+  for (const e of house.scenery) {
+    const s = rectOf(e.x, e.y, e.w, e.h);
+    for (const f of footprints) assert.ok(!overlaps(s, f), `${e.kind} at ${e.x},${e.y} overlaps the house`);
+  }
+});
+
+test('the walking map has no square under edge scenery', () => {
+  const map = buildMap(house);
+  for (const sq of map.squares.values()) {
+    if (sq.floor !== 'ground') continue;
+    const cell = rectOf(sq.x, sq.y, 1, 1);
+    for (const e of house.scenery) {
+      assert.ok(!overlaps(cell, rectOf(e.x, e.y, e.w, e.h)), `square ${sq.x},${sq.y} is under ${e.kind}`);
+    }
+  }
+});
+
+test('the whole world reaches the top edge of the street', () => {
+  const b = sceneBounds(buildScene(house, FLOORS, SIDE_BY_SIDE));
+  assert.equal(b.y0, -6.875);
 });
 
 test('a camera centre moves the middle of the screen', () => {

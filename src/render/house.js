@@ -257,10 +257,20 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null, people = 
   const buf = ctx.createImageData(width, height);
   fillRect(buf, 0, 0, width, height, BACKGROUND);
 
+  // Edge scenery first, under the house (HOUSE_VIEW 10.5). Tiles start at the box's own corner
+  // so neighbouring pieces (road and its centre line, grass and paths) line up.
+  for (const b of boxes) {
+    if (b.kind !== 'scenery') continue;
+    const r = boxRect(b, cam, width, height);
+    const tile = pack?.tiles?.[b.tile];
+    if (tile) paintTiled(buf, tile, r.x0, r.y0, r.x1, r.y1, r.x0, r.y0);
+    else fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour));
+  }
+
   const flat = [];
   const standing = [];
   for (const b of boxes) {
-    if (b.kind === 'door') continue; // seen from above, a doorway is a gap in the wall
+    if (b.kind === 'door' || b.kind === 'scenery') continue; // a doorway is a gap in the wall; scenery is done above
     const r = boxRect(b, cam, width, height);
     if (b.kind === 'slab') {
       const tile = pack && b.tile ? pack.tiles[b.tile] : null;

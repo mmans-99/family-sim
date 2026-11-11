@@ -15,8 +15,9 @@ export function drawMinimap(ctx, w, h, { boxes, bounds, people, view }) {
   ctx.fillStyle = '#2b2620';
   ctx.fillRect(0, 0, w, h);
 
+  // Edge scenery first (road, pavement, grass), then one box per floor square.
   for (const b of boxes) {
-    if (b.kind !== 'slab') continue; // one box per floor square
+    if (b.kind !== 'slab' && b.kind !== 'scenery') continue;
     const p0 = toMap(frame, b.x0, b.y0);
     const p1 = toMap(frame, b.x1, b.y1);
     ctx.fillStyle = b.colour;

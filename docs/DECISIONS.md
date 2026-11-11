@@ -105,3 +105,10 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-11: No car. — Tom works from home; can be added later with its bills.
 - 2026-11-11: Child Benefit is not claimed. — At £75k the High Income Child Benefit Charge takes back most of it; many families in that position opt out. Tuning; can change.
 - 2026-11-11: Money starts at £2,500 in the joint account and £8,000 in savings (tuning). Tom earns £75,000 with a 5% workplace pension (net-pay arrangement) and no student loan. Overdraft limit £1,500 (tuning). — User approved the suggested defaults.
+
+- 2026-11-11: Edge scenery built (HOUSE_VIEW 10.5), as approved: the first floor is to the right of the ground floor at `x 14.5`, the neighbour's half of the semi on the left, the street along the top edge of the world (`MARGIN.top` 0). The eight new pieces are appended to `tools/make_extras.py`, so no existing rectangle moved. — Follows the approved brief.
+- 2026-11-11: Centre line of the road sits in the top two rows of the `road_line` tile, not the bottom as the brief's tile note said. — The layout puts the line on the boundary between the far and near halves (the top edge of that box). The bottom put the dashes on the kerb. The brief's tile note was wrong; corrected in HOUSE_VIEW 10.5.
+- 2026-11-11: Ground-floor label reads "Ground floor", not "Ground floor and garden". — At phone width the long label ran into "First floor", which now sits beside it. Reversible.
+- 2026-11-11: `?view=` centres a floor on the house alone, without the scenery. — Otherwise the street pulled the ground-floor view off-centre.
+- 2026-11-11: OPEN: on a phone in portrait the minimap covers the "Show all" button. Not caused by the scenery change (the minimap sits bottom right in both orientations), so it is recorded here and not fixed in this step. — Found in the portrait screenshot; needs a decision on the control layout.
+

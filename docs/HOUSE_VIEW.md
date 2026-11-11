@@ -257,6 +257,8 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 | Windows drawn twice on the front wall (face and wall line) | Front wall windows go on the face only |
 | Tried to cut rugs out of the pack's autotiles | They are autotiles; use the extras sheet |
 | Covered a person with their whole sprite frame, so the cover spilled onto the wall | Use the sprite's visible pixels (`opaqueBounds` in `house.js`) plus one pixel |
+| Put the road's centre line on the bottom of its tile, when the layout puts it on the top edge | Work out where a tile's line falls from the layout, then check the screenshot |
+| Long floor label ran into the next floor's label at phone width | Check labels in portrait as well as landscape |
 | Described the pack's licence from the zip alone | The zip has no licence text; its readme says "Thanks for buying". Ask the user for the seller's wording |
 
 ## 8. Where things are
@@ -264,7 +266,7 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 | File | Job |
 |---|---|
 | `data/house.json` | Rooms, doors, fences, furniture. The only place layout lives |
-| `src/render/scene.js` | House data -> boxes (`kind`: slab, wall, window, door, fence, furniture); `place` shifts a floor; `sceneBounds` |
+| `src/render/scene.js` | House data -> boxes (`kind`: scenery, slab, wall, window, door, fence, furniture); `place` shifts a floor; `sceneBounds`; `SCENERY_COLOURS` |
 | `src/render/camera.js` | `project()`: grid position -> art pixels. `UNIT_PX`, `TARGET` |
 | `src/render/pack.js` | `SPRITE_RECTS`, `EXTRA_RECTS`, `NAME_TO_SPRITE`, `NAME_TO_TILE`, `NAME_TO_RUG`, `FLOOR_TILES`, `ROOM_TILE`, loader |
 | `tools/make_extras.py` | Draws `assets/extras/extras.png` |
@@ -282,8 +284,8 @@ the changed docs to the Project.
 ## 10. Landscape full-screen view and follow camera (built 2026-11-11, except 10.5 — brief ready)
 
 Designed with the user on 2026-11-11 and approved to build. The two open choices were approved
-at the proposed defaults (DECISIONS). Built as described below, except edge scenery (10.5),
-which is not built yet. Where the build differs, DECISIONS (2026-11-11) says how.
+at the proposed defaults (DECISIONS). Built as described below, including edge scenery (10.5)
+(2026-11-11, see there). Where the build differs, DECISIONS (2026-11-11) says how.
 
 **Reference:** *Shakedown: Hawaii* (Vblank, 2019): a top-down 16-bit open world where the camera
 travels with the character. We keep our top-down art (it already matches) and borrow the camera
@@ -354,7 +356,29 @@ Plus, minus, pinch and the mouse wheel step between levels.
 - Tap the minimap: the camera glides there and following turns off.
 - Drawn by `src/render/minimap.js` on its own small canvas.
 
-### 10.5 Edge scenery (drawn only) — build brief, approved 2026-11-11, NOT built yet
+### 10.5 Edge scenery (drawn only) — as built 2026-11-11
+**As built:** `tools/make_extras.py` draws eight new pieces (`road`, `road_line`, `kerb`,
+`pavement`, `roof`, `roof_ridge`, `front_wall`, `hedge`), appended after the old ones so every old
+rectangle is unchanged (checked pixel by pixel). `data/house.json` has a top-level `scenery` list
+(14 entries, ground floor coordinates, as in the table below). `scene.js` builds those as
+`kind: 'scenery'` boxes first, with `SCENERY_COLOURS` as the plain-colour fallback and minimap
+colour. `house.js` draws them under everything. `minimap.js` draws them too. `main.js`:
+`WORLD.place` is `{ first: { x: 14.5, y: 0 } }`, `MARGIN` is `{ top: 0, side: 0, bottom: 0.4 }`,
+and the ground label reads "Ground floor" (see the two changes below). `?view=` centres on the
+house only, without the street.
+**Changed from the brief:**
+- The centre line is in the TOP two rows of the `road_line` tile, not the bottom. The brief's tile
+  note said bottom, but its layout puts the line on the boundary between the far and near halves of
+  the road, which is the top edge of the `road_line` box. The bottom put the dashes on the kerb.
+- The ground-floor label is "Ground floor", not "Ground floor and garden": at phone width the long
+  label ran into "First floor".
+**Checked:** `node --test` (89 passing: the old layout test was replaced by four scenery tests:
+side by side with a square between, valid and clear of the house, no walking square under scenery,
+and the world's top edge at y -6.875). Screenshots in landscape (844 x 390 at 2x and 3x) of the
+room zoom, whole house, first floor and garden, and in portrait (390 x 844 at 3x) of the whole
+house. Each was looked at. No console errors.
+**Not checked yet:** Sarah climbing the stairs (the camera's sideways glide to the landing), dragging
+to the top-left corner (the clamp at the road), and a real phone.
 So the house does not float on blank space. Decisions (DECISIONS 2026-11-11): the first floor
 moves to the **right** of the ground floor (option 1); the neighbour's half of the semi is
 attached on the **left** (lounge side, x < 0); our free side is the right (kitchen side).
@@ -477,5 +501,6 @@ the phone sideways.
 - Screenshots at 844 x 390 (sideways) and 390 x 844 (upright), both with
   `--force-device-scale-factor=3`: each zoom level; following Sarah on the ground floor, first
   floor and garden (use `?minutes=`); side panel open; minimap; the away card; the edge scenery.
+  (The edge scenery was checked as described in 10.5. The rest of this list is still to do.)
   Look at every one with the Read tool before saying it works (section 6).
 - Then update this section from "planned" to "as built", and section 5 to match.

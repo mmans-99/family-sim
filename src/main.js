@@ -19,7 +19,7 @@ import { attachCameraControls } from './ui/camera-controls.js';
 
 // Empty grid squares kept around the house. The front wall's face (a square tall, already part
 // of the drawing) is behind the tall sprites on that wall; the floor name sits above it.
-const MARGIN = { top: 2.2, side: 0.4, bottom: 0.4 }; // room above the top floor for its name and the clock
+const MARGIN = { top: 0, side: 0, bottom: 0.4 }; // the street (edge scenery) is the top edge of the world
 const LABEL_RISE = 1.3; // floor names are written this many squares above the floor's back wall
 const IDLE_MS = 5000;   // the floating buttons fade after this long without a touch
 const MINIMAP_WIDTH = 120; // CSS pixels
@@ -31,8 +31,8 @@ const FACE_COLOURS = ['#e8a87c', '#7fb3d5', '#a3d9a5', '#d7bde2']; // one per pe
 // drawing: [text, floor id].
 const WORLD = {
   floors: ['first', 'ground', 'garden'],
-  place: { first: { x: 0, y: -8.8 } },
-  labels: [['First floor', 'first'], ['Ground floor and garden', 'ground']],
+  place: { first: { x: 14.5, y: 0 } },
+  labels: [['First floor', 'first'], ['Ground floor', 'ground']],
 };
 const SPEED_LABELS = { 0: 'Pause', 1: '1x', 2: '2x', 4: '4x' };
 const LEVEL_LABELS = { close: 'Close', room: 'Room', whole: 'Whole house' };
@@ -105,7 +105,8 @@ function toggleFollow() {
 
 // `?view=first` (or ground, garden) opens that floor at the Room level, following off.
 function viewFloor(id) {
-  const b = sceneBounds(buildScene(house, [id], WORLD.place));
+  // The house alone: edge scenery (the street) is not part of the floor's own view.
+  const b = sceneBounds(buildScene(house, [id], WORLD.place).filter((x) => x.kind !== 'scenery'));
   cam.x = (b.x0 + b.x1) / 2;
   cam.y = (b.y0 + b.y1) / 2;
   cam.level = 'room';

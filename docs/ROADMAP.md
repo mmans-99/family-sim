@@ -34,7 +34,7 @@ Design agreed 2026-11-11: `docs/HOUSE_VIEW.md` section 10. Built 2026-11-11 afte
 - [x] Follow camera: glides with a person, looks ahead, stops at the world's edge; tap a face to follow
 - [x] Snap zoom levels: Close, Room, Whole house
 - [x] Minimap with people dots and the view box; tap to move the camera
-- [ ] Edge scenery: front garden, pavement, road, the other half of the semi, fences (drawing only). Build brief ready: `docs/HOUSE_VIEW.md` 10.5
+- [x] Edge scenery: front garden, pavement, road, the other half of the semi, fences (drawing only). Built 2026-11-11; phone check and stairs/clamp checks still to do (`docs/HOUSE_VIEW.md` 10.5)
 - [x] Portrait still works; full-screen button; web app manifest for "Add to Home Screen" (no icon file yet)
 - [x] Auto-hide of buttons after 5 s (default approved)
 

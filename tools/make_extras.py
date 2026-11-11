@@ -50,6 +50,23 @@ SHED_ROOF = (110, 84, 70, 255)
 SHED_ROOF_DARK = (82, 60, 52, 255)
 SHED_ROOF_LIGHT = (140, 110, 92, 255)
 
+# Edge scenery colours (DECISIONS 2026-11-11, HOUSE_VIEW 10.5).
+ROAD = (74, 74, 78, 255)
+ROAD_SPECK = (96, 96, 100, 255)
+ROAD_DARK = (58, 58, 62, 255)
+ROAD_WHITE = (238, 238, 232, 255)
+KERB_LIGHT = (206, 204, 196, 255)
+KERB_EDGE = (124, 120, 112, 255)
+PAVE_SLAB = (200, 200, 194, 255)
+PAVE_JOINT = (150, 148, 142, 255)
+SLATE = (58, 68, 84, 255)
+SLATE_JOINT = (40, 46, 58, 255)
+SLATE_RIDGE = (96, 110, 128, 255)
+BRICK = (150, 80, 64, 255)
+BRICK_JOINT = (110, 56, 46, 255)
+BRICK_CAP = (200, 190, 180, 255)
+HEDGE_BASE = (52, 110, 62, 255)
+
 
 def rect(im, x0, y0, x1, y1, c):
     """Fill x0..x1-1, y0..y1-1."""
@@ -297,6 +314,95 @@ def figure(rows, colours):
     return im
 
 
+
+# ---- Edge scenery (HOUSE_VIEW 10.5) ----------------------------------------------------
+# Drawn only: nobody walks on these. Repeating tiles must join without seams, so the
+# edges are kept free of any border line.
+
+def road():
+    """16 x 16 asphalt that repeats without seams: plain grey with a few specks."""
+    im = Image.new('RGBA', (16, 16), ROAD)
+    for (x, y) in [(1, 2), (6, 5), (12, 1), (9, 9), (3, 12), (14, 13), (11, 6)]:
+        im.putpixel((x, y), ROAD_SPECK)
+        im.putpixel(((x + 5) % 16, (y + 3) % 16), ROAD_DARK)
+    return im
+
+
+def road_line():
+    """The road with a white dash along its TOP 2 rows: one 8-pixel dash, then 8 of road,
+    so it repeats every 16 pixels. The top edge is the middle of the street (the far and
+    near halves meet there), so the dash is the centre line."""
+    im = road()
+    rect(im, 0, 0, 8, 2, ROAD_WHITE)
+    return im
+
+
+def kerb():
+    """16 x 4 stone kerb: light stone with a darker edge where it drops to the road."""
+    im = Image.new('RGBA', (16, 4), KERB_LIGHT)
+    rect(im, 0, 0, 16, 1, (226, 224, 216, 255))
+    rect(im, 0, 3, 16, 4, KERB_EDGE)
+    im.putpixel((5, 1), (176, 172, 164, 255))
+    im.putpixel((12, 2), (176, 172, 164, 255))
+    return im
+
+
+def pavement():
+    """16 x 16 pale slabs: two 8 x 16 slabs with a joint between and at each side."""
+    im = Image.new('RGBA', (16, 16), PAVE_SLAB)
+    rect(im, 0, 0, 1, 16, PAVE_JOINT)
+    rect(im, 8, 0, 9, 16, PAVE_JOINT)
+    rect(im, 2, 3, 6, 4, (212, 212, 206, 255))
+    rect(im, 10, 11, 14, 12, (212, 212, 206, 255))
+    return im
+
+
+def roof():
+    """16 x 16 slates seen from above: 4-pixel rows, joints staggered row to row."""
+    im = Image.new('RGBA', (16, 16), SLATE)
+    for row in range(4):
+        top = row * 4
+        rect(im, 0, top + 3, 16, top + 4, SLATE_JOINT)     # course joint
+        offset = 0 if row % 2 == 0 else 4              # joints staggered row to row
+        for x in (offset, (offset + 8) % 16):
+            rect(im, x, top, x + 1, top + 3, SLATE_JOINT)
+        for x in range(16):
+            if (x + row * 2) % 8 == 0:
+                im.putpixel((x, top + 1), (70, 80, 98, 255))  # slate highlight
+    return im
+
+
+def roof_ridge():
+    """The roof tile with the ridge across its middle: a lighter band with a dark edge."""
+    im = roof()
+    rect(im, 0, 7, 16, 9, SLATE_RIDGE)
+    rect(im, 0, 7, 16, 8, SLATE_JOINT)
+    return im
+
+
+def front_wall():
+    """16 x 6 low garden wall seen from above: a light stone cap over red-brown bricks."""
+    im = Image.new('RGBA', (16, 6), BRICK)
+    rect(im, 0, 0, 16, 1, BRICK_CAP)
+    rect(im, 0, 5, 16, 6, EDGE)
+    for y in (2, 3):
+        im.putpixel((4, y), BRICK_JOINT)
+        im.putpixel((12, y), BRICK_JOINT)
+    rect(im, 0, 2, 16, 3, BRICK_JOINT)
+    rect(im, 0, 4, 16, 5, BRICK_JOINT)
+    return im
+
+
+def hedge():
+    """16 x 16 dark leafy edge: a fixed scatter of leaf clumps on a dark base."""
+    im = Image.new('RGBA', (16, 16), HEDGE_BASE)
+    for (x, y) in [(1, 1), (7, 0), (13, 2), (4, 6), (11, 5), (0, 10), (8, 9), (14, 12), (3, 14), (10, 15)]:
+        for dx, dy in [(0, 0), (1, 0), (0, 1), (1, 1)]:
+            im.putpixel(((x + dx) % 16, (y + dy) % 16), LEAF)
+        im.putpixel((x % 16, (y + 1) % 16), LEAF_LIGHT)
+    return im
+
+
 PIECES = [
     ('stairs_up', stairs_up()),
     ('stairs_down', stairs_down()),
@@ -313,6 +419,15 @@ PIECES = [
     ('sarah_walk', figure(WALK, SARAH)),
     ('sarah_sit', figure(SIT, SARAH)),
     ('sarah_lie', figure(LIE, SARAH)),
+    # Edge scenery: appended so every rectangle above stays where it was.
+    ('road', road()),
+    ('road_line', road_line()),
+    ('kerb', kerb()),
+    ('pavement', pavement()),
+    ('roof', roof()),
+    ('roof_ridge', roof_ridge()),
+    ('front_wall', front_wall()),
+    ('hedge', hedge()),
 ]
 
 
