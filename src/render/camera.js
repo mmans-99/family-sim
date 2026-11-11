@@ -1,59 +1,23 @@
-// Camera for the house view: straight down, like a plan. The furniture pack is top-down art.
-// No turn and no tilt. Zoom and pan only.
+// Camera for the house view: straight down, like a plan, to suit the top-down sprite pack.
+// The back wall of the house (y = 0) is at the top of the screen and y grows down the screen,
+// so furniture standing against a back wall faces the viewer, as the sprites are drawn.
+// One grid square is always UNIT_PX art pixels, so sprites are never stretched. Zooming
+// changes how big one art pixel is on screen (see main.js), not this maths.
 // Pure maths, no DOM. Units: 1 unit = one grid square of the house. z is height above the ground.
 
-export const TARGET = { x: 6, y: 3, z: 1.2 }; // middle of the ground floor (the house is 6 deep)
-export const UNITS_ACROSS_AT_ZOOM_1 = 16;
-const PLAN_YAW = 0;            // no turn: +y points up the screen
-const PLAN_PITCH = Math.PI / 2; // looking straight down
-
-function normalise([x, y, z]) {
-  const len = Math.hypot(x, y, z);
-  return [x / len, y / len, z / len];
-}
-const LIGHT = normalise([-0.4, 0.45, 0.8]);
+export const UNIT_PX = 16; // art pixels per grid square: the size the sprite pack is drawn at
+export const TARGET = { x: 6, y: 3 }; // the grid point shown in the middle of the screen
 
 export function createCamera() {
-  return { yaw: PLAN_YAW, pitch: PLAN_PITCH, zoomMul: 1, panX: 0, panY: 0 };
+  return { zoomMul: 1, panX: 0, panY: 0 };
 }
 
-// Turn a direction (or a point relative to TARGET) by the camera's yaw.
-function rotateDir(cam, [x, y, z]) {
-  const c = Math.cos(cam.yaw);
-  const s = Math.sin(cam.yaw);
-  return [x * c - y * s, x * s + y * c, z];
-}
-
-// How far a ground position is from the middle of the house, towards the viewer
-// (negative = nearer the viewer than the middle).
-export function viewY(cam, x, y) {
-  return rotateDir(cam, [x - TARGET.x, y - TARGET.y, 0])[1];
-}
-
-// World point -> screen pixels. depth: bigger means further from the viewer.
-export function project(cam, width, height, x, y, z) {
-  const [xr, yr] = rotateDir(cam, [x - TARGET.x, y - TARGET.y, 0]);
-  const zr = z - TARGET.z;
-  const zoom = (width / UNITS_ACROSS_AT_ZOOM_1) * cam.zoomMul;
-  const cp = Math.cos(cam.pitch);
-  const sp = Math.sin(cam.pitch);
+// Grid position -> art pixels. Height (z) does not move a point; it only decides what is on top.
+// depth: bigger means further from the viewer (lower down), so it is drawn first.
+export function project(cam, width, height, x, y, z = 0) {
   return {
-    sx: width / 2 + cam.panX + xr * zoom,
-    sy: height / 2 + cam.panY - (zr * cp + yr * sp) * zoom,
-    depth: yr * cp - zr * sp,
+    sx: width / 2 + cam.panX + (x - TARGET.x) * UNIT_PX,
+    sy: height / 2 + cam.panY + (y - TARGET.y) * UNIT_PX,
+    depth: -z,
   };
-}
-
-// Does a face with this outward normal point towards the viewer?
-// The viewer sits towards -y and above, looking down at the pitch angle.
-export function facesViewer(cam, n) {
-  const [, ny, nz] = rotateDir(cam, n);
-  // A face seen edge-on (exactly 0) is not drawn. The small margin stops rounding error from counting it.
-  return -ny * Math.cos(cam.pitch) + nz * Math.sin(cam.pitch) > 1e-9;
-}
-
-// Brightness of a face: 0.6 in shadow up to 1.0 facing the light.
-export function shade(cam, n) {
-  const [x, y, z] = rotateDir(cam, n);
-  return 0.6 + 0.4 * Math.max(0, x * LIGHT[0] + y * LIGHT[1] + z * LIGHT[2]);
 }

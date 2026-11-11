@@ -1,6 +1,5 @@
-// Turns data/house.json into a flat list of solid boxes for the 3D view.
+// Turns data/house.json into a flat list of solid boxes for the house view.
 // Pure logic (no drawing), so it can be tested without a browser.
-import { viewY } from './camera.js';
 import { ROOM_TILE } from './pack.js';
 
 export const COLOURS = {
@@ -19,10 +18,6 @@ const FENCE_THICKNESS = 0.1;
 const WINDOW_SILL = 0.9;     // height of the window bottom above the floor
 const WINDOW_HEIGHT = 1.1;
 const WINDOW_EXTRA_THICKNESS = 0.05; // windows stand a little proud of the wall
-
-// Cutaway: walls nearer the camera than this (in view units) are lowered to a ledge.
-export const CUT_HEIGHT = 0.3;
-export const CUT_NEAR = -0.5;
 
 export function box(x0, y0, z0, x1, y1, z1, colour) {
   return { x0, y0, z0, x1, y1, z1, colour, kind: 'other', mid: null };
@@ -167,6 +162,7 @@ function addFloor(boxes, house, floor, lift) {
     const bz = z0 + (item.z ?? 0);
     const piece = box(item.x, item.y, bz, item.x + item.w, item.y + item.d, bz + item.h, item.colour);
     piece.name = item.name; // lets the pack swap the block for a sprite
+    piece.lift = item.z ?? 0; // height above its own floor (a TV on its unit, a lamp on a table)
     boxes.push(tag(piece, 'furniture'));
   }
 }
@@ -179,22 +175,4 @@ export function buildScene(house, floorIds, lift = {}) {
     if (floorIds.includes(floor.id)) addFloor(boxes, house, floor, lift[floor.id] ?? 0);
   }
   return boxes;
-}
-
-// Cutaway: walls between the camera and the middle of the house are lowered to a ledge,
-// and the doors and windows in them are removed. Everything else is left alone.
-export function applyCutaway(boxes, cam, enabled) {
-  if (!enabled) return boxes;
-  const out = [];
-  for (const b of boxes) {
-    const isCuttable = b.kind === 'wall' || b.kind === 'door' || b.kind === 'window';
-    const near = isCuttable && b.mid && viewY(cam, b.mid.x, b.mid.y) < CUT_NEAR;
-    if (!near) {
-      out.push(b);
-    } else if (b.kind === 'wall') {
-      out.push({ ...b, z1: Math.min(b.z1, b.z0 + CUT_HEIGHT) });
-    }
-    // doors and windows on a near wall are dropped with it
-  }
-  return out;
 }

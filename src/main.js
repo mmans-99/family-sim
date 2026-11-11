@@ -1,16 +1,15 @@
 // Entry point: clock, 3D house view and camera controls, wired together.
 import { createClock, advance, setSpeed, readClock, SPEEDS } from './sim/clock.js';
-import { buildScene, applyCutaway } from './render/scene.js';
+import { buildScene } from './render/scene.js';
 import { drawScene, snapFrame } from './render/house.js';
 import { loadPack } from './render/pack.js';
-import { createCamera } from './render/camera.js';
+import { createCamera, UNIT_PX, TARGET } from './render/camera.js';
 import { BACKGROUND } from './render/palette.js';
 import { attachCameraControls, nudge } from './ui/camera-controls.js';
 
-// One art pixel is a whole number of screen pixels, so every pixel is the same size.
-// The art grid is about 190 art pixels across, whatever the screen width.
-const ART_PIXELS_ACROSS = 181; // one grid tile is 16 art pixels across, as in the sprite pack
-const MIN_PIXEL = 3;
+// One art pixel is a whole number of device pixels, so every art pixel is the same size and
+// the sprites stay sharp. At zoom 1 the screen is about this many grid squares wide.
+const SQUARES_ACROSS = 12.5; // the house is 12 squares wide
 
 const clock = createClock();
 const cam = createCamera();
@@ -26,12 +25,11 @@ const lowres = document.createElement('canvas');
 const lowCtx = lowres.getContext('2d');
 
 const SPEED_LABELS = { 0: 'Pause', 1: '1x', 2: '2x', 4: '4x' };
-// "lift" pulls a floor up so the house can be seen in layers ("exploded" view).
 // Looking straight down, floors would sit on top of each other, so each view shows one floor.
 const VIEWS = {
-  ground: { label: 'Ground floor', floors: ['ground'], lift: {} },
-  first: { label: 'First floor', floors: ['first'], lift: {} },
-  garden: { label: 'Garden', floors: ['garden'], lift: {} },
+  ground: { label: 'Ground floor', floors: ['ground'], middleY: 3 },
+  first: { label: 'First floor', floors: ['first'], middleY: 3 },
+  garden: { label: 'Garden', floors: ['garden'], middleY: 8 },
 };
 const CAMERA_BUTTONS = [
   ['in', '＋ Zoom'],
@@ -42,12 +40,13 @@ const CAMERA_BUTTONS = [
 let house = null;
 let pack = null; // sprites, if the pack is present
 let scene = [];
-let cutaway = false; // from above there are no near walls to lower, so this starts off
+let viewShift = 0; // art pixels to move up, so the chosen floor sits in the middle
 let lastMinute = -1;
 let lastTime = performance.now();
 
 function showView(id) {
-  scene = buildScene(house, VIEWS[id].floors, VIEWS[id].lift);
+  scene = buildScene(house, VIEWS[id].floors);
+  viewShift = (VIEWS[id].middleY - TARGET.y) * UNIT_PX;
   for (const btn of viewBar.children) {
     btn.setAttribute('aria-pressed', String(btn.dataset.view === id));
   }
@@ -68,14 +67,6 @@ function buildControls() {
     btn.addEventListener('click', () => showView(id));
     viewBar.appendChild(btn);
   }
-  const cutBtn = document.createElement('button');
-  cutBtn.dataset.cutaway = 'true';
-  cutBtn.textContent = 'Cutaway walls';
-  cutBtn.addEventListener('click', () => {
-    cutaway = !cutaway;
-    cutBtn.setAttribute('aria-pressed', String(cutaway));
-  });
-  cameraBar.appendChild(cutBtn);
   for (const [action, label] of CAMERA_BUTTONS) {
     const btn = document.createElement('button');
     btn.textContent = label;
@@ -91,15 +82,12 @@ function resizeCanvas() {
   canvas.style.height = `${cssH}px`;
   canvas.width = Math.round(cssW * dpr);
   canvas.height = Math.round(cssH * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
 function updateButtons() {
   for (const btn of speedBar.children) {
     btn.setAttribute('aria-pressed', String(Number(btn.dataset.speed) === clock.speed));
   }
-  const cutBtn = cameraBar.querySelector('[data-cutaway]');
-  if (cutBtn) cutBtn.setAttribute('aria-pressed', String(cutaway));
 }
 
 function renderClock() {
@@ -112,20 +100,24 @@ function renderClock() {
 }
 
 function drawFrame() {
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  const pixel = Math.max(MIN_PIXEL, Math.round(w / ART_PIXELS_ACROSS));
-  const lw = Math.floor(w / pixel);
-  const lh = Math.floor(h / pixel);
+  // Work in device pixels, so one art pixel is a whole number of real screen pixels.
+  const w = canvas.width;
+  const h = canvas.height;
+  const dpr = w / canvas.clientWidth;
+  const base = w / (SQUARES_ACROSS * UNIT_PX); // device pixels per art pixel at zoom 1
+  const pixel = Math.max(1, Math.floor(base * cam.zoomMul)); // zooming makes art pixels bigger
+  const lw = Math.ceil(w / pixel);
+  const lh = Math.ceil(h / pixel);
   if (lowres.width !== lw || lowres.height !== lh) {
     lowres.width = lw;
     lowres.height = lh;
   }
-  // Pan is in screen pixels, so scale it down to art pixels.
-  const artCam = { ...cam, panX: cam.panX / pixel, panY: cam.panY / pixel };
-  drawScene(lowCtx, applyCutaway(scene, cam, cutaway), artCam, lw, lh, pack);
-  snapFrame(lowCtx, lw, lh); // remove blurry in-between colours before scaling up
+  // Pan is in CSS pixels, so turn it into whole art pixels.
+  const artCam = { ...cam, panX: Math.round((cam.panX * dpr) / pixel), panY: Math.round((cam.panY * dpr) / pixel) - viewShift };
+  drawScene(lowCtx, scene, artCam, lw, lh, pack);
+  if (!pack) snapFrame(lowCtx, lw, lh); // plain blocks only: keep to the fixed palette
 
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = `rgb(${BACKGROUND.join(', ')})`;
   ctx.fillRect(0, 0, w, h);
@@ -147,12 +139,14 @@ function frame(now) {
 async function start() {
   const res = await fetch('data/house.json');
   house = await res.json();
-  pack = await loadPack(); // furniture sprites, if the sheet is present
+  pack = await loadPack(); // floor and furniture sprites, if the sheets are present
   buildControls();
   attachCameraControls(canvas, cam);
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
-  showView('ground');
+  // The page can be opened on a chosen floor, e.g. index.html?view=first
+  const asked = new URLSearchParams(window.location.search).get('view');
+  showView(asked in VIEWS ? asked : 'ground');
   requestAnimationFrame((now) => {
     lastTime = now;
     requestAnimationFrame(frame);

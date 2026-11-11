@@ -3,9 +3,21 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camera). The clock is done. No people yet.
+Phase 1 — house view built: a top-down pixel-art plan of each floor, drawn with the Sierrassets sprite pack. The clock is done. No people yet.
 
-## Last session (2026-11-10)
+## Last session (2026-11-11)
+The user asked for the project to be read and the house view fixed. The view was broken: sprites were picked from the wrong places on the sheet, stretched to uneven pixels, and laid over a 3D block scene. Fixed:
+- **View:** straight down, with the back wall (y = 0) at the top of the screen. Furniture against a back wall faces the viewer, as the pack draws it. `src/render/camera.js` is now a small plan camera.
+- **Sharp pixels:** one grid square is always 16 art pixels (`UNIT_PX`), the pack's own size, so sprites are never stretched. Zoom changes the size of an art pixel in whole device pixels (`main.js`).
+- **Sprites:** 32 furniture sprites re-picked by looking at the sheet (`SPRITE_RECTS` in `pack.js`), and 5 floor tiles from `floors-walls.png` (four 8x8 tiles per square).
+- **Drawing order** (`house.js`): floors, then rugs and paths, then walls and furniture from the top of the screen down. Doorways are gaps. A sprite stands on the bottom edge of its squares; `z` in the data lifts it (TV on its unit, lamp on a bedside table).
+- **Layout** (`data/house.json`): rearranged for this view. Stairs are one square wide at x = 5, so the hall is walkable. Lounge and master doors moved to y 5-6; front and back doors to x 6-7. The second WC door (from the kitchen) is gone. Kitchen is now counter, cooker, sink, fridge along the back wall. Beds are 2x2 and 1x2. The landing has a floor. Walls are 0.25 thick (4 pixels).
+- **Removed:** the cutaway button and code (no near walls from above), the "All floors" view, the old 3D projection, face shading.
+- The page can open on a floor: `index.html?view=first` (or `ground`, `garden`).
+- Tests: 31 passing, including a check that furniture stays in its room and no two pieces share a square.
+- Checked in screenshots at desktop size and at phone size (390 wide, 3x pixels). Not yet checked by the user on a real phone.
+
+## Earlier (2026-11-10) — superseded where it differs from the above
 - The house view is now straight down, like a plan (the pack is top-down art). Only zoom, pan and the floor buttons remain: Ground, First, Garden. The cutaway is off by default. Tests: 31 passing. A screenshot was checked; the user has not yet seen it on a phone.
 - Correction: I had called the pack front/side-view. It isn't; the furniture shows its tops and the floors are flat top-down tiles. The flat front view was wrong and has been replaced.
 - Mapped 17 furniture sprites from the Sierrassets sheet (`src/render/pack.js`): sofa, armchair, two beds, dining and coffee tables, bedside table, base and wall units, TV and TV unit, wardrobe, bookcase, fridge, washing machine, plant, chair. Turned sprites on again. Tests: 30 passing.
@@ -37,20 +49,19 @@ Phase 1 — house view built (3D dollhouse, pixel-art style, cutaway, free camer
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. Check the straight-down view with the user (screenshot or phone).
-2. Map the rest of the furniture (toilet, bath, basin, shower, hob, sink, cot, dresser, kitchen cabinets, desks, beds). Floors and walls come from `floors-walls.png`.
-3. Record the exact Sierrassets licence wording in DECISIONS.md (ask the user for the source page text).
-4. Get feedback on the house view on the phone (cutaway, camera, text size).
-5. Phase 1 continued (after the art): the first adult walks between rooms, with needs and simple actions. Then the status panel (watch only).
+1. User checks the new view on the phone (all three floors).
+2. Art still as blocks: stairs, garden shed and tree, rugs, fence, walls. The pack has wall tiles and rugs that could replace them.
+3. Phase 1 continued: the first adult walks between rooms (the layout is now walkable), with needs and simple actions. Then the status panel (watch only).
+4. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
-- Sprites are placed by hand from a rectangle list in `pack.js`. Some are smaller than their footprint (the sofa is 2 grid units wide, its footprint 3). Sprites are scaled with nearest-neighbour, so the pixels are uneven at some zooms.
-- The TV unit sits against the front wall of the lounge in `data/house.json`, so it covers part of the sofa. Check the data layout.
-- A GitHub Pages build (run #1, from 18:26 on 9 Nov) is still listed as queued. It's harmless: a later build succeeded.
-- Rooms have no name labels in the 3D view yet.
-- No roof. Walls are plain. The look is rendered from 3D shapes, so it's close to, not the same as, the hand-drawn reference. Colours are a first pass and may need tuning on a phone.
-- Floor tiles and furniture colours are busy in places. Needs a visual pass after the user's feedback.
-- The house view has only been tested in a desktop-sized preview, not on a real phone.
+- The pack only has front views. The sofa faces the viewer, not the TV, and the lower dining chairs show their backs. A back-view sofa would need drawing.
+- Tall sprites on the back wall (fridge, bookcase, wardrobe, shower) stick up above the house outline. That is normal for this art style, but there is no wall face behind them.
+- Ruby's room can only be reached through Oliver's room. Layout question for the user.
+- No pets or people sprites are used yet. The zip has a pets sheet; it is not in the repo.
+- The pack's readme says "Thanks for buying", so it is a paid pack. Its sheets are in the public repo on the user's instruction (see DECISIONS).
+- Rooms have no name labels.
+- A GitHub Pages build (run #1, 9 Nov) is still listed as queued. Harmless.
 
 ## Notes for next session
 - GitHub Pages only serves files. It can't run the sim while the browser is closed; catch-up on open covers this.

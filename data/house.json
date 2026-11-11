@@ -1,6 +1,6 @@
 {
   "name": "3-bed semi-detached, Birmingham",
-  "wallThickness": 0.15,
+  "wallThickness": 0.25,
   "floorThickness": 0.2,
   "floors": [
     {
@@ -59,20 +59,20 @@
         {
           "axis": "h",
           "at": 0,
-          "from": 5,
-          "to": 6
+          "from": 6,
+          "to": 7
         },
         {
           "axis": "h",
           "at": 6,
-          "from": 5,
-          "to": 6
+          "from": 6,
+          "to": 7
         },
         {
           "axis": "v",
           "at": 5,
-          "from": 2,
-          "to": 3
+          "from": 5,
+          "to": 6
         },
         {
           "axis": "v",
@@ -85,12 +85,6 @@
           "at": 7,
           "from": 4,
           "to": 5
-        },
-        {
-          "axis": "h",
-          "at": 4,
-          "from": 7,
-          "to": 8
         },
         {
           "axis": "h",
@@ -122,7 +116,7 @@
           "y": 0,
           "w": 2,
           "h": 6,
-          "noSlab": true
+          "floor": "#cdb08a"
         },
         {
           "id": "bathroom",
@@ -156,8 +150,8 @@
         {
           "axis": "v",
           "at": 5,
-          "from": 2,
-          "to": 3
+          "from": 5,
+          "to": 6
         },
         {
           "axis": "v",
@@ -174,8 +168,8 @@
         {
           "axis": "v",
           "at": 9,
-          "from": 3,
-          "to": 4
+          "from": 4,
+          "to": 5
         }
       ]
     },
@@ -220,33 +214,64 @@
   "furniture": [
     {
       "floor": "ground",
-      "name": "sofa",
-      "x": 0,
-      "y": 1,
-      "w": 3,
-      "d": 1,
-      "h": 1.1,
-      "colour": "#6b7a8f"
-    },
-    {
-      "floor": "ground",
-      "name": "sofa back",
-      "x": 0,
-      "y": 1,
-      "w": 3,
-      "d": 1,
-      "h": 1.5,
-      "colour": "#5f6c80"
-    },
-    {
-      "floor": "ground",
       "name": "rug",
       "x": 1,
       "y": 2,
       "w": 3,
-      "d": 3,
+      "d": 2,
       "h": 0.02,
       "colour": "#c97c5d"
+    },
+    {
+      "floor": "ground",
+      "name": "plant",
+      "x": 0,
+      "y": 0,
+      "w": 1,
+      "d": 1,
+      "h": 1.2,
+      "colour": "#4f8a3c"
+    },
+    {
+      "floor": "ground",
+      "name": "TV unit",
+      "x": 1,
+      "y": 0,
+      "w": 2,
+      "d": 1,
+      "h": 0.5,
+      "colour": "#3a3a3a"
+    },
+    {
+      "floor": "ground",
+      "name": "TV",
+      "x": 1,
+      "y": 0,
+      "w": 2,
+      "d": 1,
+      "h": 1.1,
+      "colour": "#111111",
+      "z": 0.5
+    },
+    {
+      "floor": "ground",
+      "name": "lamp",
+      "x": 3,
+      "y": 0,
+      "w": 1,
+      "d": 1,
+      "h": 1.0,
+      "colour": "#ffd166"
+    },
+    {
+      "floor": "ground",
+      "name": "bookcase",
+      "x": 4,
+      "y": 0,
+      "w": 1,
+      "d": 1,
+      "h": 1.9,
+      "colour": "#8b6b43"
     },
     {
       "floor": "ground",
@@ -261,8 +286,8 @@
     {
       "floor": "ground",
       "name": "armchair",
-      "x": 3,
-      "y": 2,
+      "x": 0,
+      "y": 3,
       "w": 1,
       "d": 1,
       "h": 1.0,
@@ -270,103 +295,58 @@
     },
     {
       "floor": "ground",
-      "name": "TV unit",
+      "name": "sofa",
       "x": 1,
-      "y": 0,
-      "w": 3,
-      "d": 1,
-      "h": 0.5,
-      "colour": "#3a3a3a"
-    },
-    {
-      "floor": "ground",
-      "name": "TV",
-      "x": 1,
-      "y": 0,
-      "z": 0.6,
+      "y": 4,
       "w": 2,
       "d": 1,
       "h": 1.1,
-      "colour": "#111111"
+      "colour": "#6b7a8f"
     },
     {
       "floor": "ground",
-      "name": "bookcase",
-      "x": 4,
+      "name": "shoe rack",
+      "x": 5,
       "y": 0,
       "w": 1,
       "d": 1,
-      "h": 1.9,
-      "colour": "#8b6b43"
+      "h": 0.5,
+      "colour": "#6e5a48"
     },
     {
       "floor": "ground",
-      "name": "plant pot",
-      "x": 0,
-      "y": 5,
-      "w": 1,
-      "d": 1,
-      "h": 0.6,
-      "colour": "#7a5a3a"
-    },
-    {
-      "floor": "ground",
-      "name": "plant",
-      "x": 0,
-      "y": 5,
-      "z": 0.5,
-      "w": 1,
-      "d": 1,
-      "h": 1.2,
-      "colour": "#4f8a3c"
-    },
-    {
-      "floor": "ground",
-      "name": "base units",
-      "x": 7,
+      "name": "kitchen counter",
+      "x": 8,
       "y": 0,
-      "w": 4,
+      "w": 1,
       "d": 1,
       "h": 0.9,
       "colour": "#e8e0cf"
     },
     {
       "floor": "ground",
-      "name": "hob",
-      "x": 8,
+      "name": "cooker",
+      "x": 9,
       "y": 0,
-      "z": 0.9,
       "w": 1,
       "d": 1,
-      "h": 0.02,
+      "h": 0.9,
       "colour": "#2b2b2b"
     },
     {
       "floor": "ground",
-      "name": "sink",
-      "x": 9,
+      "name": "kitchen sink",
+      "x": 10,
       "y": 0,
-      "z": 0.9,
       "w": 1,
       "d": 1,
-      "h": 0.02,
+      "h": 0.9,
       "colour": "#9fb8c4"
     },
     {
       "floor": "ground",
-      "name": "wall units",
-      "x": 7,
-      "y": 0,
-      "z": 1.6,
-      "w": 4,
-      "d": 1,
-      "h": 0.8,
-      "colour": "#e8e0cf"
-    },
-    {
-      "floor": "ground",
       "name": "fridge",
-      "x": 10,
+      "x": 11,
       "y": 0,
       "w": 1,
       "d": 1,
@@ -375,38 +355,38 @@
     },
     {
       "floor": "ground",
+      "name": "chair facing",
+      "x": 9,
+      "y": 1,
+      "w": 1,
+      "d": 1,
+      "h": 0.6,
+      "colour": "#7a5a3a"
+    },
+    {
+      "floor": "ground",
+      "name": "chair facing",
+      "x": 10,
+      "y": 1,
+      "w": 1,
+      "d": 1,
+      "h": 0.6,
+      "colour": "#7a5a3a"
+    },
+    {
+      "floor": "ground",
       "name": "dining table",
-      "x": 8,
+      "x": 9,
       "y": 2,
-      "w": 3,
-      "d": 2,
+      "w": 2,
+      "d": 1,
       "h": 0.75,
       "colour": "#a0764a"
     },
     {
       "floor": "ground",
       "name": "chair",
-      "x": 8,
-      "y": 1,
-      "w": 1,
-      "d": 1,
-      "h": 0.6,
-      "colour": "#7a5a3a"
-    },
-    {
-      "floor": "ground",
-      "name": "chair",
-      "x": 10,
-      "y": 1,
-      "w": 1,
-      "d": 1,
-      "h": 0.6,
-      "colour": "#7a5a3a"
-    },
-    {
-      "floor": "ground",
-      "name": "chair",
-      "x": 8,
+      "x": 9,
       "y": 3,
       "w": 1,
       "d": 1,
@@ -422,22 +402,12 @@
       "d": 1,
       "h": 0.6,
       "colour": "#7a5a3a"
-    },
-    {
-      "floor": "ground",
-      "name": "shoe rack",
-      "x": 5,
-      "y": 5,
-      "w": 2,
-      "d": 1,
-      "h": 0.5,
-      "colour": "#6e5a48"
     },
     {
       "floor": "ground",
       "name": "toilet",
-      "x": 7,
-      "y": 5,
+      "x": 8,
+      "y": 4,
       "w": 1,
       "d": 1,
       "h": 0.45,
@@ -447,7 +417,7 @@
       "floor": "ground",
       "name": "basin",
       "x": 8,
-      "y": 4,
+      "y": 5,
       "w": 1,
       "d": 1,
       "h": 0.85,
@@ -456,8 +426,8 @@
     {
       "floor": "ground",
       "name": "washing machine",
-      "x": 10,
-      "y": 5,
+      "x": 9,
+      "y": 4,
       "w": 1,
       "d": 1,
       "h": 0.85,
@@ -474,35 +444,54 @@
       "colour": "#4f6b5a"
     },
     {
-      "floor": "first",
-      "name": "bed frame",
-      "x": 1,
-      "y": 0,
-      "w": 2,
-      "d": 3,
+      "floor": "ground",
+      "name": "stair step",
+      "x": 5,
+      "y": 1,
+      "w": 1,
+      "d": 1,
       "h": 0.7,
-      "colour": "#e9dfd0"
+      "colour": "#c8a97e"
+    },
+    {
+      "floor": "ground",
+      "name": "stair step",
+      "x": 5,
+      "y": 2,
+      "w": 1,
+      "d": 1,
+      "h": 1.4,
+      "colour": "#c8a97e"
+    },
+    {
+      "floor": "ground",
+      "name": "stair step",
+      "x": 5,
+      "y": 3,
+      "w": 1,
+      "d": 1,
+      "h": 2.0999999999999996,
+      "colour": "#c8a97e"
+    },
+    {
+      "floor": "ground",
+      "name": "stair step",
+      "x": 5,
+      "y": 4,
+      "w": 1,
+      "d": 1,
+      "h": 2.8,
+      "colour": "#c8a97e"
     },
     {
       "floor": "first",
-      "name": "mattress",
+      "name": "rug",
       "x": 1,
-      "y": 0,
-      "z": 0.5,
-      "w": 2,
-      "d": 3,
-      "h": 0.15,
-      "colour": "#fdfaf3"
-    },
-    {
-      "floor": "first",
-      "name": "headboard",
-      "x": 1,
-      "y": 0,
+      "y": 2,
       "w": 2,
       "d": 1,
-      "h": 1.0,
-      "colour": "#8b6b43"
+      "h": 0.02,
+      "colour": "#9bb7d4"
     },
     {
       "floor": "first",
@@ -516,6 +505,16 @@
     },
     {
       "floor": "first",
+      "name": "bed frame",
+      "x": 1,
+      "y": 0,
+      "w": 2,
+      "d": 2,
+      "h": 0.7,
+      "colour": "#e9dfd0"
+    },
+    {
+      "floor": "first",
       "name": "bedside table",
       "x": 3,
       "y": 0,
@@ -526,10 +525,21 @@
     },
     {
       "floor": "first",
-      "name": "wardrobe",
+      "name": "bedside lamp",
       "x": 3,
       "y": 0,
-      "w": 2,
+      "w": 1,
+      "d": 1,
+      "h": 0.45,
+      "colour": "#ffd166",
+      "z": 0.5
+    },
+    {
+      "floor": "first",
+      "name": "wardrobe",
+      "x": 4,
+      "y": 0,
+      "w": 1,
       "d": 1,
       "h": 2.1,
       "colour": "#c9b28e"
@@ -538,7 +548,7 @@
       "floor": "first",
       "name": "dresser",
       "x": 0,
-      "y": 4,
+      "y": 3,
       "w": 2,
       "d": 1,
       "h": 0.9,
@@ -546,30 +556,9 @@
     },
     {
       "floor": "first",
-      "name": "rug",
-      "x": 1,
-      "y": 2,
-      "w": 3,
-      "d": 2,
-      "h": 0.02,
-      "colour": "#9bb7d4"
-    },
-    {
-      "floor": "first",
-      "name": "landing plant pot",
-      "x": 5,
-      "y": 5,
-      "w": 1,
-      "d": 1,
-      "h": 0.6,
-      "colour": "#7a5a3a"
-    },
-    {
-      "floor": "first",
       "name": "landing plant",
-      "x": 5,
+      "x": 6,
       "y": 5,
-      "z": 0.6,
       "w": 1,
       "d": 1,
       "h": 1.0,
@@ -577,18 +566,28 @@
     },
     {
       "floor": "first",
-      "name": "bath",
-      "x": 7,
+      "name": "basin",
+      "x": 8,
       "y": 0,
-      "w": 3,
-      "d": 2,
+      "w": 1,
+      "d": 1,
+      "h": 0.85,
+      "colour": "#f5f5f5"
+    },
+    {
+      "floor": "first",
+      "name": "bath",
+      "x": 9,
+      "y": 0,
+      "w": 2,
+      "d": 1,
       "h": 0.6,
       "colour": "#f7f7f7"
     },
     {
       "floor": "first",
       "name": "shower",
-      "x": 10,
+      "x": 11,
       "y": 0,
       "w": 1,
       "d": 1,
@@ -598,7 +597,7 @@
     {
       "floor": "first",
       "name": "toilet",
-      "x": 8,
+      "x": 11,
       "y": 2,
       "w": 1,
       "d": 1,
@@ -607,28 +606,18 @@
     },
     {
       "floor": "first",
-      "name": "basin",
-      "x": 11,
-      "y": 1,
-      "w": 1,
-      "d": 1,
-      "h": 0.85,
-      "colour": "#f5f5f5"
-    },
-    {
-      "floor": "first",
       "name": "Oliver's bed",
-      "x": 7,
+      "x": 8,
       "y": 3,
-      "w": 2,
-      "d": 3,
+      "w": 1,
+      "d": 2,
       "h": 0.7,
       "colour": "#7fb3d5"
     },
     {
       "floor": "first",
       "name": "toy box",
-      "x": 7,
+      "x": 8,
       "y": 5,
       "w": 1,
       "d": 1,
@@ -637,39 +626,68 @@
     },
     {
       "floor": "first",
-      "name": "cot",
-      "x": 9,
-      "y": 3,
-      "w": 2,
-      "d": 3,
-      "h": 1.0,
-      "colour": "#f2d7a5"
-    },
-    {
-      "floor": "first",
-      "name": "cot mattress",
-      "x": 9,
-      "y": 3,
-      "z": 0.5,
-      "w": 2,
-      "d": 2,
-      "h": 0.1,
-      "colour": "#fdfaf3"
-    },
-    {
-      "floor": "first",
       "name": "toy box",
-      "x": 11,
-      "y": 5,
+      "x": 10,
+      "y": 3,
       "w": 1,
       "d": 1,
       "h": 0.5,
       "colour": "#e0c25a"
     },
     {
+      "floor": "first",
+      "name": "cot",
+      "x": 11,
+      "y": 3,
+      "w": 1,
+      "d": 2,
+      "h": 1.0,
+      "colour": "#f2d7a5"
+    },
+    {
+      "floor": "first",
+      "name": "stairwell step",
+      "x": 5,
+      "y": 1,
+      "w": 1,
+      "d": 1,
+      "h": 0.02,
+      "colour": "#8f7654"
+    },
+    {
+      "floor": "first",
+      "name": "stairwell step",
+      "x": 5,
+      "y": 2,
+      "w": 1,
+      "d": 1,
+      "h": 0.02,
+      "colour": "#a38865"
+    },
+    {
+      "floor": "first",
+      "name": "stairwell step",
+      "x": 5,
+      "y": 3,
+      "w": 1,
+      "d": 1,
+      "h": 0.02,
+      "colour": "#b79a73"
+    },
+    {
+      "floor": "first",
+      "name": "stairwell step",
+      "x": 5,
+      "y": 4,
+      "w": 1,
+      "d": 1,
+      "h": 0.02,
+      "colour": "#c8a97e"
+    },
+    {
       "floor": "garden",
       "name": "path",
-      "x": 5,
+      "x": 6,
       "y": 6,
       "w": 1,
       "d": 4,
@@ -736,78 +754,6 @@
       "d": 2,
       "h": 1.6,
       "colour": "#4f8a3c"
-    },
-    {
-      "floor": "ground",
-      "name": "stair step",
-      "x": 5,
-      "y": 1,
-      "w": 2,
-      "d": 1,
-      "h": 0.7,
-      "colour": "#c8a97e"
-    },
-    {
-      "floor": "ground",
-      "name": "stair step",
-      "x": 5,
-      "y": 2,
-      "w": 2,
-      "d": 1,
-      "h": 1.4,
-      "colour": "#c8a97e"
-    },
-    {
-      "floor": "ground",
-      "name": "stair step",
-      "x": 5,
-      "y": 3,
-      "w": 2,
-      "d": 1,
-      "h": 2.1,
-      "colour": "#c8a97e"
-    },
-    {
-      "floor": "ground",
-      "name": "stair step",
-      "x": 5,
-      "y": 4,
-      "w": 2,
-      "d": 1,
-      "h": 2.8,
-      "colour": "#c8a97e"
-    },
-    {
-      "floor": "ground",
-      "name": "lamp base",
-      "x": 4,
-      "y": 1,
-      "w": 1,
-      "d": 1,
-      "h": 0.3,
-      "colour": "#5a3d2b"
-    },
-    {
-      "floor": "ground",
-      "name": "lamp shade",
-      "x": 4,
-      "y": 1,
-      "z": 0.3,
-      "w": 1,
-      "d": 1,
-      "h": 0.7,
-      "colour": "#ffd166"
-    },
-    {
-      "floor": "first",
-      "name": "bedside lamp",
-      "x": 3,
-      "y": 0,
-      "z": 0.5,
-      "w": 1,
-      "d": 1,
-      "h": 0.45,
-      "colour": "#ffd166"
     }
   ]
 }

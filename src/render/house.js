@@ -1,40 +1,44 @@
-// Draws the 3D house scene onto a 2D canvas, in a pixel-art style:
-// flat shading bands, a limited colour palette and dark outlines.
-import { project, facesViewer, shade, UNITS_ACROSS_AT_ZOOM_1 } from './camera.js';
+// Draws the house from straight above, in a pixel-art style. Floors go down first, then rugs
+// and paths, then walls and furniture from the top of the screen to the bottom, so things
+// lower down overlap the things behind them. Everything is drawn pixel by pixel (no blur).
+import { project, UNIT_PX } from './camera.js';
 import { OUTLINE, BACKGROUND, nearestColour } from './palette.js';
-import { fillPolygon, outlinePolygon, blitSprite } from './raster.js';
-import { NAME_TO_SPRITE, PACK_HIDDEN } from './pack.js';
+import { blitSprite } from './raster.js';
+import { NAME_TO_SPRITE, FLOOR_TILE_PX } from './pack.js';
 
-// The furniture pack draws one house grid unit as about 16 sprite pixels.
-const PACK_UNIT_PX = 16;
+const FLAT_HEIGHT = 0.05; // items thinner than this (rugs, paths) lie on the floor
 
-// The five faces of a box that can ever face the viewer (the underside is never seen).
-function boxFaces(b) {
-  const { x0, y0, z0, x1, y1, z1 } = b;
-  return [
-    { n: [0, 0, 1], corners: [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]] },
-    { n: [0, -1, 0], corners: [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]] },
-    { n: [0, 1, 0], corners: [[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]] },
-    { n: [-1, 0, 0], corners: [[x0, y0, z0], [x0, y1, z0], [x0, y1, z1], [x0, y0, z1]] },
-    { n: [1, 0, 0], corners: [[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]] },
-  ];
-}
-
-// Four flat brightness steps, from darkest side to brightest top.
-const BRIGHTNESS = [0.7, 0.82, 0.92, 1];
-// Warm light: a little less blue and green everywhere, so the house feels cosy.
-const WARM = [1, 0.95, 0.84];
-
-// Multiply a #rrggbb colour by a light factor (0.6 to 1.0), in flat steps.
-function pixelColour(hex, factor) {
+function rgb(hex) {
   const n = parseInt(hex.slice(1), 16);
-  const t = Math.min(1, Math.max(0, (factor - 0.6) / 0.4));
-  const band = BRIGHTNESS[Math.round(t * (BRIGHTNESS.length - 1))];
-  const ch = (shift, warm) => Math.round(((n >> shift) & 255) * band * warm);
-  return [ch(16, WARM[0]), ch(8, WARM[1]), ch(0, WARM[2])];
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-// Snap every pixel of a w x h canvas to the palette, so no blurry in-between colours remain.
+// Fill a rectangle of whole pixels, with an optional 1-pixel outline inside its edge.
+function fillRect(buf, x0, y0, x1, y1, fill, outline = null) {
+  for (let y = Math.max(0, y0); y < Math.min(buf.height, y1); y++) {
+    for (let x = Math.max(0, x0); x < Math.min(buf.width, x1); x++) {
+      const edge = outline && (x === x0 || x === x1 - 1 || y === y0 || y === y1 - 1);
+      const c = edge ? outline : fill;
+      const i = (y * buf.width + x) * 4;
+      buf.data[i] = c[0];
+      buf.data[i + 1] = c[1];
+      buf.data[i + 2] = c[2];
+      buf.data[i + 3] = 255;
+    }
+  }
+}
+
+// The pixel rectangle a box covers, seen from above. Never thinner than 1 pixel.
+export function boxRect(b, cam, width, height) {
+  const a = project(cam, width, height, b.x0, b.y0);
+  const c = project(cam, width, height, b.x1, b.y1);
+  const x0 = Math.round(a.sx);
+  const y0 = Math.round(a.sy);
+  return { x0, y0, x1: Math.max(x0 + 1, Math.round(c.sx)), y1: Math.max(y0 + 1, Math.round(c.sy)) };
+}
+
+// Snap every pixel of a w x h canvas to the palette. Only used when there are no sprites:
+// the sprites have their own hand-picked colours, which must not be changed.
 export function snapFrame(ctx, w, h) {
   const img = ctx.getImageData(0, 0, w, h);
   const d = img.data;
@@ -48,45 +52,39 @@ export function snapFrame(ctx, w, h) {
   ctx.putImageData(img, 0, 0);
 }
 
-// Draw the whole scene. width and height are in the units of ctx (pixels of its canvas).
-// If a sprite pack is loaded (pack.js), floor tiles and furniture are drawn as sprites.
-// Everything is drawn pixel by pixel, so edges are never blurred.
+// Draw the whole scene. width and height are in art pixels (the size of ctx's canvas).
+// If a sprite pack is loaded (pack.js), floors and furniture use its sprites.
 export function drawScene(ctx, boxes, cam, width, height, pack = null) {
   const buf = ctx.createImageData(width, height);
-  const bg = BACKGROUND;
-  // Sprites scale with the zoom, relative to their drawn size.
-  const scale = ((width / UNITS_ACROSS_AT_ZOOM_1) * cam.zoomMul) / PACK_UNIT_PX;
-  for (let i = 0; i < buf.data.length; i += 4) {
-    buf.data[i] = bg[0];
-    buf.data[i + 1] = bg[1];
-    buf.data[i + 2] = bg[2];
-    buf.data[i + 3] = 255;
-  }
+  fillRect(buf, 0, 0, width, height, BACKGROUND);
 
-  const items = []; // far things first, so near things paint over them
+  const flat = [];
+  const standing = [];
   for (const b of boxes) {
-    if (pack && PACK_HIDDEN.has(b.name)) continue;
-    if (pack && b.name && NAME_TO_SPRITE[b.name] && pack.sprites[NAME_TO_SPRITE[b.name]]) {
-      // A furniture piece: the sprite is centred on the middle of its footprint, seen from above.
-      const sprite = pack.sprites[NAME_TO_SPRITE[b.name]];
-      const p = project(cam, width, height, (b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, b.z1);
-      const half = (sprite.height * scale) / 2; // blitSprite anchors at the bottom edge, so shift down by half
-      items.push({ depth: p.depth, draw: () => blitSprite(buf, sprite, p.sx, p.sy + half, scale) });
-      continue;
-    }
-    for (const face of boxFaces(b)) {
-      if (!facesViewer(cam, face.n)) continue;
-      const pts = face.corners.map(([x, y, z]) => project(cam, width, height, x, y, z));
-      const depth = pts.reduce((sum, p) => sum + p.depth, 0) / pts.length;
-      const fill = pixelColour(b.colour, shade(cam, face.n));
-      items.push({ depth, draw: () => {
-        fillPolygon(buf, pts.map((p) => ({ sx: p.sx, sy: p.sy })), fill);
-        outlinePolygon(buf, pts.map((p) => ({ sx: p.sx, sy: p.sy })), OUTLINE);
-      } });
+    if (b.kind === 'door') continue; // seen from above, a doorway is a gap in the wall
+    const r = boxRect(b, cam, width, height);
+    if (b.kind === 'slab') {
+      const tile = pack && b.tile ? pack.tiles[b.tile] : null;
+      if (!tile) { fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour)); continue; }
+      for (let ty = r.y0; ty < r.y1; ty += FLOOR_TILE_PX) {
+        for (let tx = r.x0; tx < r.x1; tx += FLOOR_TILE_PX) {
+          blitSprite(buf, tile, tx + FLOOR_TILE_PX / 2, ty + FLOOR_TILE_PX);
+        }
+      }
+    } else if (b.z1 - b.z0 < FLAT_HEIGHT) {
+      flat.push(() => fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour), OUTLINE));
+    } else {
+      const sprite = pack && b.name ? pack.sprites[NAME_TO_SPRITE[b.name]] : null;
+      const lift = Math.round((b.lift ?? 0) * UNIT_PX); // things on top of others sit higher up
+      const draw = sprite
+        // A sprite stands on the bottom edge of its floor squares, centred side to side.
+        ? () => blitSprite(buf, sprite, (r.x0 + r.x1) / 2, r.y1 - lift)
+        : () => fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour), OUTLINE);
+      standing.push({ row: r.y1, z: b.z0, draw });
     }
   }
-
-  items.sort((a, b) => b.depth - a.depth);
-  for (const it of items) it.draw();
+  for (const draw of flat) draw();
+  standing.sort((a, b) => a.row - b.row || a.z - b.z);
+  for (const s of standing) s.draw();
   ctx.putImageData(buf, 0, 0);
 }

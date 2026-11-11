@@ -1,11 +1,11 @@
-// Camera controls for the house view. The view is flat and front-on, so there are
+// Camera controls for the house view. The view is straight down, so there are
 // no turns: only pan and zoom.
 //   One finger or left-drag: move the view sideways.
 //   Pinch or mouse wheel: zoom.
 // The on-screen buttons call nudge().
 import { createCamera } from '../render/camera.js';
 
-const MIN_ZOOM = 0.4;
+const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 4;
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));

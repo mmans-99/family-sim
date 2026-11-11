@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { cutOpenings, buildScene, COLOURS } from '../src/render/scene.js';
-import { createCamera, project, facesViewer, TARGET } from '../src/render/camera.js';
+import { createCamera, project, TARGET, UNIT_PX } from '../src/render/camera.js';
+import { boxRect } from '../src/render/house.js';
+import { NAME_TO_SPRITE, SPRITE_RECTS, ROOM_TILE, FLOOR_TILES } from '../src/render/pack.js';
 
 const house = JSON.parse(readFileSync(new URL('../data/house.json', import.meta.url), 'utf8'));
 
@@ -35,64 +37,62 @@ test('the garden has no walls of its own, only fence', () => {
 });
 
 test('every box has a positive size', () => {
-  for (const b of buildScene(house, ['ground', 'first', 'garden'], { first: 1.2 })) {
+  for (const b of buildScene(house, ['ground', 'first', 'garden'])) {
     assert.ok(b.x1 > b.x0 && b.y1 > b.y0 && b.z1 > b.z0, JSON.stringify(b));
   }
 });
 
 test('the middle of the house lands in the middle of the screen', () => {
   const cam = createCamera();
-  const p = project(cam, 400, 300, TARGET.x, TARGET.y, TARGET.z);
+  const p = project(cam, 400, 300, TARGET.x, TARGET.y);
   assert.equal(p.sx, 200);
   assert.equal(p.sy, 150);
 });
 
-test('looking straight down, the top of a box faces the viewer and its sides do not', () => {
+test('one grid square is always UNIT_PX art pixels, so sprites are never stretched', () => {
   const cam = createCamera();
-  assert.equal(facesViewer(cam, [0, 0, 1]), true);
-  assert.equal(facesViewer(cam, [0, -1, 0]), false);
-  assert.equal(facesViewer(cam, [0, 0, -1]), false);
+  cam.zoomMul = 3; // zoom changes the size of an art pixel on screen, not this maths
+  const a = project(cam, 400, 300, 2, 2);
+  const b = project(cam, 400, 300, 3, 3);
+  assert.equal(b.sx - a.sx, UNIT_PX);
+  assert.equal(b.sy - a.sy, UNIT_PX);
 });
 
-test('looking straight down, higher things have a smaller depth (drawn last, on top)', () => {
+test('the back wall (y = 0) is at the top of the screen', () => {
   const cam = createCamera();
-  const floor = project(cam, 400, 300, 6, 5, 0);
-  const roof = project(cam, 400, 300, 6, 5, 2.6);
-  assert.ok(roof.depth < floor.depth);
+  assert.ok(project(cam, 400, 300, 6, 0).sy < project(cam, 400, 300, 6, 6).sy);
 });
 
-test('looking straight down, a point further along +y is higher up the screen', () => {
+test('higher things have a smaller depth, so they are drawn on top', () => {
   const cam = createCamera();
-  const near = project(cam, 400, 300, 6, 1, 0);
-  const far = project(cam, 400, 300, 6, 9, 0);
-  assert.ok(far.sy < near.sy);
+  assert.ok(project(cam, 400, 300, 6, 5, 2.6).depth < project(cam, 400, 300, 6, 5, 0).depth);
 });
 
-import { applyCutaway, CUT_HEIGHT } from '../src/render/scene.js';
-
-test('cutaway lowers the walls nearest the camera and keeps the far ones', () => {
-  const cam = createCamera();
-  cam.yaw = 0;
-  const cut = applyCutaway(buildScene(house, ['ground']), cam, true);
-  const front = cut.filter((b) => b.kind === 'wall' && Math.abs((b.y0 + b.y1) / 2) < 0.1);
-  const back = cut.filter((b) => b.kind === 'wall' && Math.abs((b.y0 + b.y1) / 2 - 6) < 0.1);
-  assert.ok(front.length > 0 && back.length > 0);
-  assert.ok(front.every((b) => Math.abs(b.z1 - b.z0 - CUT_HEIGHT) < 1e-9));
-  assert.ok(back.every((b) => Math.abs(b.z1 - b.z0 - 2.6) < 1e-9));
+test('a thin wall still covers at least one whole pixel', () => {
+  const r = boxRect({ x0: 5, y0: 0, x1: 5.01, y1: 6 }, createCamera(), 400, 300);
+  assert.equal(r.x1 - r.x0, 1);
+  assert.equal(r.y1 - r.y0, 6 * UNIT_PX);
 });
 
-test('cutaway also removes the doors and windows on the near walls', () => {
-  const cam = createCamera();
-  cam.yaw = 0;
-  const cut = applyCutaway(buildScene(house, ['ground']), cam, true);
-  const nearOpenings = cut.filter(
-    (b) => (b.kind === 'door' || b.kind === 'window') && Math.abs(b.mid.y) < 0.1,
-  );
-  assert.equal(nearOpenings.length, 0);
+test('every sprite and floor tile named in the maps exists', () => {
+  for (const sprite of Object.values(NAME_TO_SPRITE)) assert.ok(SPRITE_RECTS[sprite], sprite);
+  for (const tile of Object.values(ROOM_TILE)) assert.ok(FLOOR_TILES[tile], tile);
 });
 
-test('turning cutaway off leaves the scene untouched', () => {
-  const cam = createCamera();
-  const boxes = buildScene(house, ['ground']);
-  assert.equal(applyCutaway(boxes, cam, false), boxes);
+test('furniture stays inside its room and no two standing pieces share a square', () => {
+  const used = new Set();
+  for (const item of house.furniture) {
+    const floor = house.floors.find((f) => f.id === item.floor);
+    const inRoom = floor.rooms.some((r) => item.x >= r.x && item.y >= r.y
+      && item.x + item.w <= r.x + r.w && item.y + item.d <= r.y + r.h);
+    assert.ok(inRoom, `${item.name} is outside every room`);
+    if (item.h < 0.05 || item.z || item.name.startsWith('tree')) continue; // rugs, things on top of others
+    for (let x = item.x; x < item.x + item.w; x++) {
+      for (let y = item.y; y < item.y + item.d; y++) {
+        const key = `${item.floor}:${x}:${y}`;
+        assert.ok(!used.has(key), `${item.name} overlaps another piece at ${key}`);
+        used.add(key);
+      }
+    }
+  }
 });

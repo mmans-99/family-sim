@@ -10,7 +10,7 @@ Each phase ends with something you can open and watch.
 
 ## Phase 1 — The house and one person
 - [x] Clock with speed controls (pause / 1x / 2x / 4x)
-- [~] House map: 3D dollhouse of 3 floors and garden with walls, doors, windows, stairs, furniture, camera (pan, zoom), cutaway walls and a pixel-art rendering style. Next: floor tiles and walls from the Sierrassets pack, and the rest of the furniture sprites. Camera is now straight down (plan).
+- [x] House map: top-down pixel-art plan of the ground floor, first floor and garden, with walls, doorways, windows, stairs and furniture drawn from the Sierrassets sprite pack. Pan and zoom.
 - [ ] Objects: bed, fridge, cooker, toilet, shower, sofa, TV, table
 - [ ] One adult who walks (pathfinding) and uses objects
 - [ ] Needs that drop over time; picks actions to fix them
