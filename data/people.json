@@ -1,0 +1,10 @@
+{
+  "about": "Who lives in the house and is simulated. Only Sarah for now; the rest of the family (docs/FAMILY.md) join in Phase 2.",
+  "people": [
+    {
+      "id": "sarah", "name": "Sarah", "role": "Mum", "age": 34, "sprite": "sarah",
+      "start": { "floor": "first", "x": 3, "y": 1 },
+      "needs": { "hunger": 40, "energy": 85, "bladder": 30, "hygiene": 50, "fun": 70, "comfort": 70 }
+    }
+  ]
+}

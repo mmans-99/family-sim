@@ -211,6 +211,16 @@
       ]
     }
   ],
+  "stairs": [
+    {
+      "about": "One flight. The bottom step is entered from (x, y0 - 1) on 'floor'; the top step (x, y1) leads to (x, y1 + 1) on 'to'. The stairwell squares on 'to' are a hole.",
+      "floor": "ground",
+      "to": "first",
+      "x": 5,
+      "y0": 1,
+      "y1": 4
+    }
+  ],
   "furniture": [
     {
       "floor": "ground",

@@ -1,0 +1,11 @@
+{
+  "about": "Needs run 0 (desperate) to 100 (fully met). perHour is how much each drops per game hour for an adult while awake. Sleeping slows hunger and bladder (sleepFactor).",
+  "needs": {
+    "hunger":  { "label": "Hunger",  "perHour": 5,  "sleepFactor": 0.5 },
+    "energy":  { "label": "Energy",  "perHour": 4,  "sleepFactor": 0 },
+    "bladder": { "label": "Bladder", "perHour": 9,  "sleepFactor": 0.5 },
+    "hygiene": { "label": "Hygiene", "perHour": 3,  "sleepFactor": 0.5 },
+    "fun":     { "label": "Fun",     "perHour": 6,  "sleepFactor": 0 },
+    "comfort": { "label": "Comfort", "perHour": 4,  "sleepFactor": 0 }
+  }
+}

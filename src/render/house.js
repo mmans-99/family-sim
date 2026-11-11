@@ -145,7 +145,8 @@ export function snapFrame(ctx, w, h) {
 
 // Draw the whole scene. width and height are in art pixels (the size of ctx's canvas).
 // If a sprite pack is loaded (pack.js), floors and furniture use its sprites.
-export function drawScene(ctx, boxes, cam, width, height, pack = null) {
+// people: from peopleToDraw (people.js), sorted in among the furniture by their row.
+export function drawScene(ctx, boxes, cam, width, height, pack = null, people = []) {
   const buf = ctx.createImageData(width, height);
   fillRect(buf, 0, 0, width, height, BACKGROUND);
 
@@ -180,6 +181,15 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null) {
         : () => fillRect(buf, r.x0, r.y0, r.x1, r.y1, rgb(b.colour), OUTLINE);
       standing.push({ row: r.y1, z: b.z0, draw });
     }
+  }
+  for (const person of people) {
+    const at = project(cam, width, height, person.x, person.y);
+    const row = Math.round(project(cam, width, height, person.x, person.row).sy);
+    const sprite = pack?.sprites[person.sprite];
+    const draw = sprite
+      ? () => blitSprite(buf, sprite, at.sx, at.sy)
+      : () => fillRect(buf, Math.round(at.sx) - 4, Math.round(at.sy) - 16, Math.round(at.sx) + 4, Math.round(at.sy), [66, 156, 150], OUTLINE);
+    standing.push({ row: row + 0.5, z: 0, draw }); // after furniture on the same row
   }
   for (const draw of flat) draw();
   standing.sort((a, b) => a.row - b.row || a.z - b.z);

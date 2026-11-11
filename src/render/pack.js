@@ -1,6 +1,6 @@
 // Pixel-art sprites from the Sierrassets "Furniture pack" (top-down art, 16 pixels per grid square).
 // The sheets are in assets/furniture-pack/. The pack has no stairs, shed, tree, fence, lawn,
-// path or whole rugs, so those are on our own sheet, assets/extras/extras.png, drawn in the
+// path, whole rugs or people, so those are on our own sheet, assets/extras/extras.png, drawn in the
 // pack's colours by tools/make_extras.py. If the sheets cannot be loaded, the house is drawn
 // with plain coloured blocks instead, so the game still works.
 
@@ -20,10 +20,17 @@ export const EXTRA_RECTS = {
   rug_gold: [192, 0, 24, 24],
   wall_face: [218, 0, 16, 16],
   window_face: [236, 0, 16, 16],
+  sarah_stand: [254, 0, 12, 21],
+  sarah_walk: [268, 0, 12, 21],
+  sarah_sit: [282, 0, 12, 17],
+  sarah_lie: [296, 0, 10, 9],
 };
 
 // Extras that are sprites, standing on their squares like furniture.
-const EXTRA_SPRITES = ['stairs_up', 'stairs_down', 'shed', 'tree', 'wall_face', 'window_face'];
+const EXTRA_SPRITES = [
+  'stairs_up', 'stairs_down', 'shed', 'tree', 'wall_face', 'window_face',
+  'sarah_stand', 'sarah_walk', 'sarah_sit', 'sarah_lie',
+];
 // Extras that repeat over an area, one copy per grid square.
 const EXTRA_TILES = ['grass', 'paving'];
 // Rug templates: 24 x 24, cut into nine 8 x 8 pieces and stretched by repeating edges.

@@ -33,7 +33,10 @@ The art is the Sierrassets "Furniture pack". Two sheets are in `assets/furniture
 `assets/extras/extras.png` holds what the pack lacks: `stairs_up` and `stairs_down`
 (16 x 64, one flight), `shed` (32 x 40), `tree` (32 x 44), `grass` and `paving` (16 x 16
 repeating tiles), `rug_red`, `rug_blue`, `rug_gold` (24 x 24 templates, cut into nine 8 x 8
-pieces so a rug can be any size in whole squares), `wall_face` and `window_face` (16 x 16).
+pieces so a rug can be any size in whole squares), `wall_face` and `window_face` (16 x 16),
+and people: `sarah_stand`, `sarah_walk` (12 x 21), `sarah_sit` (12 x 17), `sarah_lie`
+(10 x 9, just the head). People are drawn from letter grids in the script, one letter per
+pixel, so a new person is a new colour table on the same grids.
 It is drawn pixel by pixel by `tools/make_extras.py` in the pack's colours: black outlines
 for objects (like the pack's furniture), dark grey (56, 56, 56) for floor-level things
 (like the pack's tiles). To change or add a piece: edit the script, run
@@ -150,12 +153,18 @@ Rules when expanding it:
    its own id, add its id to the `all` view's `floors`, give it a `place` so it does not
    overlap, add a label, and add a button entry if it should have its own view. Phones
    are tall and narrow, so stack new floors up or down the screen, not sideways.
-3. **To draw a person or anything else that moves**, use the same shift: its screen
-   position is its own floor coordinates plus `view.place[floorId]` (zero if the floor is
-   not placed), passed through `project()`. If the view does not include that floor, do
-   not draw it. Never store shifted coordinates in the simulation.
-4. **Someone on the stairs** changes floor at the top step. Draw them on whichever floor
-   the simulation says they are on; both floors show the stairs at x = 5, y = 1 to 4.
+3. **People are drawn this way** (`src/render/people.js`): position = own floor
+   coordinates plus `view.place[floorId]`, passed through `project()`. Not drawn if the
+   view does not include that floor. The simulation never stores shifted coordinates.
+   - Standing or walking: feet 0.8 down the square, centred. Walkers move smoothly using
+     the part of the game minute that has passed; the step sprite alternates every half
+     square.
+   - Sitting (`on: "sit"`): centred on the furniture, feet 0.3 above its bottom edge, so
+     the seat shows below them. Lying: head at the left end, near the top (pillow, bath).
+   - Sort row: their feet, except on furniture (just after the furniture) and on the stairs
+     (after the whole flight, which is one tall sprite, or they vanish behind it).
+4. **Someone on the stairs** is on the ground floor until they step off the top step onto
+   the landing (first floor, x 5, y 5). They swap floors halfway across that step.
 5. Tapping a person later should work in every view, so turn a tap back into grid squares
    by undoing `project()` and then subtracting the floor's `place`.
 
@@ -209,7 +218,8 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 | `src/render/camera.js` | `project()`: grid position -> art pixels. `UNIT_PX`, `TARGET` |
 | `src/render/pack.js` | `SPRITE_RECTS`, `EXTRA_RECTS`, `NAME_TO_SPRITE`, `NAME_TO_TILE`, `NAME_TO_RUG`, `FLOOR_TILES`, `ROOM_TILE`, loader |
 | `tools/make_extras.py` | Draws `assets/extras/extras.png` |
-| `src/render/house.js` | `drawScene()`: the drawing order in section 2 |
+| `src/render/house.js` | `drawScene()`: the drawing order in section 2, people sorted in |
+| `src/render/people.js` | Where to draw each person, from the simulation |
 | `src/render/raster.js` | `blitSprite()`: copies a sprite, skipping transparent pixels |
 | `src/main.js` | `VIEWS` (which floors, where placed), fitting a view to the screen, zoom as pixel size, pan, floor names, the frame loop |
 

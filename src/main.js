@@ -1,5 +1,8 @@
 // Entry point: clock, house view and camera controls, wired together.
-import { createClock, advance, setSpeed, readClock, SPEEDS } from './sim/clock.js';
+import { createClock, advance, setSpeed, readClock, SPEEDS, REAL_MS_PER_GAME_MINUTE } from './sim/clock.js';
+import { createWorld, step, roomName } from './sim/world.js';
+import { peopleToDraw } from './render/people.js';
+import { renderPanel, renderStatusLine } from './ui/panel.js';
 import { buildScene, sceneBounds } from './render/scene.js';
 import { drawScene, snapFrame } from './render/house.js';
 import { loadPack } from './render/pack.js';
@@ -11,13 +14,15 @@ import { attachCameraControls, nudge } from './ui/camera-controls.js';
 // of the view) is behind the tall sprites on that wall; the floor name sits above it.
 const MARGIN = { top: 1.1, side: 0.4, bottom: 0.4 };
 const LABEL_RISE = 1.3; // floor names are written this many squares above the floor's back wall
-const CONTROLS_HEIGHT = 230; // CSS pixels of the screen kept for the buttons around the canvas
+const CONTROLS_HEIGHT = 255; // CSS pixels of the screen kept for the buttons around the canvas
 
 const clock = createClock();
 const cam = createCamera();
 const canvas = document.getElementById('house');
 const ctx = canvas.getContext('2d');
 const clockEl = document.getElementById('clock');
+const statusEl = document.getElementById('status');
+const panelEl = document.getElementById('people');
 const speedBar = document.getElementById('speeds');
 const viewBar = document.getElementById('views');
 const cameraBar = document.getElementById('camera');
@@ -49,7 +54,10 @@ const CAMERA_BUTTONS = [
   ['reset', 'Reset view'],
 ];
 
+const SEED = 1; // fixed for now; it becomes part of the save in a later step
+
 let house = null;
+let world = null;  // the simulation (src/sim/world.js)
 let pack = null; // sprites, if the pack is present
 let scene = [];
 let view = null;   // the entry of VIEWS on screen
@@ -146,7 +154,10 @@ function drawFrame() {
     panX: Math.round((cam.panX * dpr) / pixel),
     panY: Math.round((cam.panY * dpr) / pixel),
   };
-  drawScene(lowCtx, scene, artCam, lw, lh, pack);
+  // How far through the current game minute we are, so walkers move smoothly.
+  const frac = clock.speed ? Math.min(1, clock.carryMs / REAL_MS_PER_GAME_MINUTE) : 0;
+  const people = peopleToDraw(world, view.floors, view.place, frac);
+  drawScene(lowCtx, scene, artCam, lw, lh, pack, people);
   if (!pack) snapFrame(lowCtx, lw, lh); // plain blocks only: keep to the fixed palette
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -170,11 +181,14 @@ function drawFrame() {
 }
 
 function frame(now) {
-  advance(clock, now - lastTime);
+  const minutes = advance(clock, now - lastTime);
   lastTime = now;
+  for (let i = 0; i < minutes; i++) step(world); // the family lives one game minute at a time
   if (clock.totalMinutes !== lastMinute) {
     lastMinute = clock.totalMinutes;
     renderClock();
+    renderStatusLine(statusEl, world, roomName);
+    renderPanel(panelEl, world, roomName);
   }
   drawFrame();
   updateButtons();
@@ -182,8 +196,14 @@ function frame(now) {
 }
 
 async function start() {
-  const res = await fetch('data/house.json');
-  house = await res.json();
+  const load = async (file) => (await fetch(`data/${file}`)).json();
+  const [actions, needs, people] = await Promise.all(['actions.json', 'needs.json', 'people.json'].map(load));
+  house = await load('house.json');
+  world = createWorld({ house, actions, needs, people, seed: SEED, time: clock.totalMinutes });
+  // Testing aid: index.html?minutes=600 starts the page 600 game minutes in, as if that time
+  // had already been lived (the same steps the clock would take).
+  const skip = Number(new URLSearchParams(window.location.search).get('minutes')) || 0;
+  for (let i = 0; i < Math.min(skip, 7 * 1440); i++) { clock.totalMinutes += 1; step(world); }
   pack = await loadPack(); // floor and furniture sprites, if the sheets are present
   buildControls();
   attachCameraControls(canvas, cam);

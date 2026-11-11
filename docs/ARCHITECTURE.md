@@ -5,7 +5,7 @@
 ## The big idea: separate layers
 1. **Simulation** (`src/sim/`) — pure logic. Knows time, and later people, needs, money. Never draws anything. Can run fast to catch up.
 2. **Scene and rendering** (`src/render/`) — turns the house data into boxes and draws them from above with pixel-art sprites.
-3. **UI** (`src/ui/`, `src/main.js`) — buttons, camera controls, clock display. Later: commentary feed, person panels, diary, family tree.
+3. **UI** (`src/ui/`, `src/main.js`) — buttons, camera controls, clock display, status line and person panel. Later: commentary feed, diary, family tree.
 
 ## Folder layout (as built)
 ```
@@ -21,33 +21,43 @@ simulator/
 ├── tools/
 │   └── make_extras.py      draws assets/extras/extras.png (Python + Pillow)
 ├── data/
-│   └── house.json          house: floors, rooms, doorways, fences, furniture
+│   ├── house.json          house: floors, rooms, doorways, fences, stairs, furniture
+│   ├── needs.json          needs and how fast they drop
+│   ├── actions.json        what people can do with furniture, and what it gives them
+│   └── people.json         who is simulated (Sarah for now) and where they start
 ├── src/
 │   ├── main.js             starts everything: clock, views, camera, drawing loop
 │   ├── sim/
 │   │   ├── clock.js        game time, speeds, day/season/year reading
-│   │   └── rng.js          seeded random numbers (mulberry32)
+│   │   ├── rng.js          seeded random numbers (mulberry32)
+│   │   ├── housemap.js     walking map from house.json: squares, steps, stairs, routes, where to stand to use furniture
+│   │   └── world.js        people, needs, the brain, walking, actions, log; step() = one game minute
 │   ├── render/
 │   │   ├── scene.js        house data -> list of boxes (floor squares, walls, windows, doors, furniture)
 │   │   ├── camera.js       plan camera: grid position -> art pixels (16 per square), pan
 │   │   ├── house.js        draws the scene from above: floor tiles, flat items, then walls and sprites top to bottom
 │   │   ├── raster.js       pixel-exact polygon fill, lines and sprite copying (no anti-aliasing)
 │   │   ├── pack.js         sprite pack: positions on the sheets, item-to-sprite map, room floor tiles, loader
+│   │   ├── people.js       where to draw each person (reads the sim, smooth walking between minutes)
 │   │   └── palette.js      fixed palette; only used to snap colours when the sprite pack is missing
 │   └── ui/
-│       └── camera-controls.js   drag, two-finger, pinch, wheel; button actions
+│       ├── camera-controls.js   drag, two-finger, pinch, wheel; button actions
+│       └── panel.js        watch-only status line and panel: doing, room, need bars, recent log
 └── tests/
     ├── sim.test.js         clock and random numbers
+    ├── world.test.js       routes, stairs, back door, scoring, chores, same-seed days, a two-day run
     ├── render.test.js      scene contents, plan camera, sprite maps, furniture layout, walking routes
     ├── palette.test.js     palette snapping
     └── raster.test.js      pixel-exact fills and lines
 ```
-Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.js`, `offsite.js`, `economy.js`, `weather.js`, `events.js`, `life.js`, `log.js`, and `src/save/store.js`. Also `manifest.json` and `sw.js` for offline use.
+Planned, not built yet: `schedule.js`, `offsite.js`, `economy.js`, `weather.js`, `events.js`, `life.js`, `log.js`, and `src/save/store.js`. Also `manifest.json` and `sw.js` for offline use.
 
 ## The tick
-- The sim steps in fixed game minutes (1 tick = 1 game minute at 1x).
-- Each tick: clock → (later) weather and economy → each person: needs decay, continue current action or ask brain for a new one → log events.
-- The drawing loop runs every screen frame and reads the latest state.
+- The sim steps in fixed game minutes: `step(world)` in `src/sim/world.js` is one game minute.
+- Each frame, `main.js` asks the clock how many whole game minutes passed and runs that many steps.
+- Each step: each person's needs drop → if free, the brain picks an action → walk along the route, or use the furniture (needs rise) → log. (Later: weather and economy before the people.)
+- The drawing loop runs every screen frame and reads the latest state. `people.js` moves walkers smoothly between minutes using the part of the minute that has passed; the sim itself never reads anything from the screen.
+- Testing aid: `index.html?minutes=N` starts the page N game minutes in (same steps as the clock).
 
 ## The house view
 (Step-by-step method, rules and checks: `docs/HOUSE_VIEW.md`.)

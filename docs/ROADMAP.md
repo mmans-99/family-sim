@@ -11,9 +11,10 @@ Each phase ends with something you can open and watch.
 ## Phase 1 — The house and one person
 - [x] Clock with speed controls (pause / 1x / 2x / 4x)
 - [x] House map: top-down pixel-art plan of the ground floor, first floor and garden, with walls, doorways, windows, stairs and furniture drawn from the Sierrassets sprite pack, plus our own extras (stairs, shed, tree, lawn, path, rugs, front wall face). UK 3-bed semi layout, every room checked as walkable. Whole-house view on one screen, plus one view per floor. Pan and zoom.
-- [ ] Objects: bed, fridge, cooker, toilet, shower, sofa, TV, table
-- [ ] One adult who walks (pathfinding) and uses objects
-- [ ] Needs that drop over time; picks actions to fix them
+- [x] Objects: bed, fridge, cooker, toilet, bath (shower over it), sofa, TV, armchair, basin, sink, washing machine, garden chairs (`data/actions.json`)
+- [x] One adult who walks (pathfinding, stairs, back door) and uses objects: Sarah
+- [x] Needs that drop over time; picks actions to fix them
+- [x] Watch-only status line and panel: what she is doing, where, need bars, recent log
 - [ ] Save/load
 
 ## Phase 2 — The family

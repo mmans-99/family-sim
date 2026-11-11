@@ -3,9 +3,33 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 — house view built: a top-down pixel-art plan of each floor (UK 3-bed semi layout), drawn with the Sierrassets sprite pack plus our own extras sheet. The clock is done. No people yet.
+Phase 1 — the house is lived in: Sarah (Mum) has needs, picks what to do, walks the house (stairs and garden included) and uses the furniture. A watch-only panel shows her needs and day. Still to do in Phase 1: save/load.
 
-## Last session (2026-11-11, afternoon)
+## Last session (2026-11-11, late afternoon)
+The user checked the new layout on the phone ("looks good") and asked for the next steps.
+- **Sarah lives in the house.** `src/sim/housemap.js` builds a walking map from
+  `house.json` (doors, stairs from their ends only, back door to the garden, furniture in
+  the way). `src/sim/world.js` runs one game minute per step: needs drop, the brain scores
+  the actions in `data/actions.json` and picks one, she walks there and uses it. Same
+  seed, same day. Details: `docs/SIMULATION.md` section 0.
+- A believable day (seed 1): toilet, breakfast, bath, washing up, reading, laundry, TV,
+  nap, garden, dinner, bed at 22:00, up at 06:00. Chores have rules (laundry once a day,
+  washing up after cooking) after the first run washed up ten times in a row.
+- **Drawn:** our own Sarah sprites (standing, walking, sitting, head on the pillow or in
+  the bath) on the extras sheet. She walks smoothly between squares, sits on the sofa,
+  armchair, garden chair and toilet, lies in bed and bath, and is drawn in front of the
+  stairs when climbing them.
+- **Status:** a line under the clock (what she is doing, where) and a panel below the
+  house: need bars (green, amber, red) and her last five log lines. Watch only.
+- Walking speed set to 8 squares per game minute after watching it at 2 (too slow).
+- Testing aid: `index.html?minutes=N` opens the page N game minutes in.
+- Tests: 47 passing (new `tests/world.test.js`: routes via the stairs, banister, back door,
+  every action has a usable piece, scoring, chores, same-seed days, a two-day run).
+- Checked: screenshots of her cooking, on the stairs, in the bath, reading, napping, in
+  the garden and asleep; whole house at phone size with the panel; a live run in a real
+  browser at 4x with no errors.
+
+## Earlier (2026-11-11, afternoon)
 The user asked for the leftover block art to be replaced and for the first floor to be a
 typical UK house, with every bedroom reached from the landing.
 - **First floor, UK 3-bed semi:** master bedroom front left (door at the front end of the
@@ -79,12 +103,18 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks the new layout and art on the phone (whole house and each floor).
-2. Phase 1 continued: the first adult walks between rooms (the layout is now checked as
-   walkable), with needs and simple actions. Then the status panel (watch only).
-3. Record the exact Sierrassets licence wording in DECISIONS.md.
+1. User watches Sarah on the phone for a while and says what feels wrong.
+2. Save/load (last Phase 1 item): save the world to the browser's storage, load it on open,
+   then catch up the time the page was closed (with a short "while you were away" summary).
+   The seed and the save version go in the save.
+3. Phase 2: Tom, Oliver and Ruby, with age-based abilities and childcare.
+4. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
+- Sarah potters about a lot between meals, because nothing else needs doing yet. Childcare (Phase 2) and later outings will fill the day.
+- Actions are never interrupted: a bath runs its full time even if she badly needs the toilet.
+- No thought bubbles or mood yet; the panel shows what she is doing.
+- The page always starts at 07:00 on Day 1 with the same seed. Reloading starts the day again (save/load is next).
 - The pack only has front views. The sofa faces the viewer, not the TV, and the lower dining chairs show their backs. A back-view sofa would need drawing.
 - The kitchen table has three chairs. Ruby needs a high chair (to draw on the extras sheet).
 - No pets or people sprites are used yet. The zip has a pets sheet; it is not in the repo.

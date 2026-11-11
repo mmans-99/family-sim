@@ -1,5 +1,32 @@
 # Simulation design — how the people "think"
 
+## 0. As built (Phase 1, one adult)
+Code: `src/sim/world.js` (people, needs, brain), `src/sim/housemap.js` (walking map).
+Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `data/house.json`.
+- **One step = one game minute** (`step(world)`). `main.js` runs as many steps as the
+  clock says have passed. Only seeded random numbers are used (on each decision), so the
+  same seed gives the same day. Tests check this.
+- **Needs built so far:** Hunger, Energy, Bladder, Hygiene, Fun, Comfort, 0–100. Each drops
+  by `perHour` (adult rates) while awake; asleep, `sleepFactor` scales it (hunger and
+  bladder at half, energy not at all). Social waits for Phase 2 (it needs other people).
+- **Actions** (`data/actions.json`): each is tied to a furniture name, lasts `minutes`, and
+  adds its `gain` to needs a little each minute. `on: sit/lie` draws the person on the
+  furniture. `hours` with `offHours` makes things fit the time of day (sleep 10pm–7am).
+  Chores have a small `base` score; `cooldown` stops repeats (laundry once a day) and
+  `after` ties one to another (washing up only after cooking).
+- **The brain, as built:** when free, score every allowed action:
+  `base + sum over needs of min(gain, 100 - need) × ((100 - need) / 100)²`, times
+  `offHours` outside its hours, minus 0.15 per square of walking to the nearest usable
+  piece. Keep actions scoring at least 1, take the best 3 and pick one weighted by
+  score². If nothing qualifies, walk to a random square and potter about for 5–15 minutes.
+  Actions are not interrupted once started.
+- **Walking:** shortest route over the walking map, 8 squares per game minute. The map
+  joins floors at the same height (ground floor and garden, through the back door) and
+  the floors through the stairs: a flight is entered only from its bottom end or from the
+  landing square above its top step, never over the banister. Furniture is used from a
+  free square beside it in the same room.
+- **Log:** each decision adds a line (`world.log`, last 50), shown in the status panel.
+
 ## 1. Needs (0–100, drop over time)
 Hunger, Energy, Bladder, Hygiene, Fun, Social, Comfort.
 Rates differ by age (toddlers tire fast, need help with most needs).

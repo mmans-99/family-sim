@@ -226,6 +226,77 @@ def window_face():
     return im
 
 
+# ---- People ---------------------------------------------------------------------------
+# Small front-view figures, about the height of a chair back (the pack's furniture scale).
+# Letters: K outline, H hair, h hair shade, S skin, s skin shade, E eye, M mouth,
+# T top, t top shade, J jeans, j jeans shade, B shoes, . clear.
+
+SARAH = {
+    'K': INK, 'H': (122, 76, 46, 255), 'h': (88, 52, 32, 255), 'S': (240, 198, 164, 255),
+    's': (216, 164, 132, 255), 'E': (52, 36, 36, 255), 'M': (204, 112, 104, 255),
+    'T': (66, 156, 150, 255), 't': (44, 112, 112, 255), 'J': (72, 92, 142, 255),
+    'j': (52, 66, 108, 255), 'B': (64, 46, 40, 255), '.': CLEAR,
+}
+
+HEAD = [
+    '...KKKKKK...',
+    '..KHHHHHHK..',
+    '.KHHHHHHHHK.',
+    '.KHhSSSShHK.',
+    '.KHSESSESHK.',
+    '.KHSSSSSSHK.',
+    '.KHhSMMShHK.',
+    '.KHHKsSKHHK.',
+]
+BODY = [
+    '..KKTTTTKK..',
+    '.KTTTTTTTTK.',
+    'KTKTTTTTTKTK',
+    'KTKTTTTTTKTK',
+    'KTKTTttTTKTK',
+    'KSKJJJJJJKSK',
+]
+STAND = HEAD + BODY + [
+    '..KJJJJJJK..',
+    '..KJJjjJJK..',
+    '..KJJKKJJK..',
+    '..KJJKKJJK..',
+    '..KJJKKJJK..',
+    '..KBBKKBBK..',
+    '..KKKKKKKK..',
+]
+WALK = HEAD + BODY + [
+    '..KJJJJJJK..',
+    '..KJJjjJJK..',
+    '..KJJKKJJK..',
+    '.KJJK..KJJK.',
+    '.KJJK..KJJK.',
+    '.KBBK..KBBK.',
+    '.KKKK..KKKK.',
+]
+SIT = HEAD + BODY[:4] + ['KSKTTttTTKSK', '..KJJJJJJK..', '..KJJKKJJK..', '..KBBKKBBK..', '..KKKKKKKK..']
+LIE = [  # just the head, on a pillow or above the bath water; eyes shut
+    '..KKKKKK..',
+    '.KHHHHHHK.',
+    'KHHHHHHHHK',
+    'KHhSSSShHK',
+    'KHSKSSKSHK',
+    'KHSSSSSSHK',
+    'KHHSssSHHK',
+    '.KKSSSSKK.',
+    '...KKKK...',
+]
+
+
+def figure(rows, colours):
+    im = Image.new('RGBA', (len(rows[0]), len(rows)), CLEAR)
+    for y, row in enumerate(rows):
+        assert len(row) == len(rows[0]), row
+        for x, ch in enumerate(row):
+            im.putpixel((x, y), colours[ch])
+    return im
+
+
 PIECES = [
     ('stairs_up', stairs_up()),
     ('stairs_down', stairs_down()),
@@ -238,6 +309,10 @@ PIECES = [
     ('rug_gold', rug(RUG_GOLD, RUG_GOLD_EDGE, RUG_GOLD_LINE)),
     ('wall_face', wall_face()),
     ('window_face', window_face()),
+    ('sarah_stand', figure(STAND, SARAH)),
+    ('sarah_walk', figure(WALK, SARAH)),
+    ('sarah_sit', figure(SIT, SARAH)),
+    ('sarah_lie', figure(LIE, SARAH)),
 ]
 
 

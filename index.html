@@ -13,15 +13,27 @@
     button[aria-pressed="true"] { background: #4a4036; color: #fff; }
     #house { display: block; width: 100%; border: 1px solid #4a4036; border-radius: 6px; background: #f7f4ee; }
     .help { font-size: 0.85rem; color: #5a5147; margin: 6px 0 0; }
+    #status { font-size: 0.9rem; margin-bottom: 8px; color: #3d352c; }
+    .person { border: 1px solid #4a4036; border-radius: 6px; background: #fff; padding: 8px 10px; margin-top: 8px; }
+    .who { margin-bottom: 6px; }
+    .needs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; }
+    .need { display: grid; grid-template-columns: 4.6em 1fr 2em; align-items: center; gap: 6px; font-size: 0.85rem; }
+    .track { height: 8px; background: #e8e1d6; border-radius: 4px; overflow: hidden; }
+    .fill { display: block; height: 100%; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; color: #5a5147; }
+    .log { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.85rem; color: #3d352c; }
+    .log .t { font-variant-numeric: tabular-nums; color: #7a6f62; margin-right: 4px; }
   </style>
 </head>
 <body>
   <h1>Family Simulator</h1>
   <div id="clock">Loading…</div>
+  <div id="status"></div>
   <div id="speeds" class="bar"></div>
   <div id="views" class="bar"></div>
   <canvas id="house"></canvas>
   <div id="camera" class="bar"></div>
+  <section id="people" aria-label="The family"></section>
   <p class="help">Drag to move the view. Pinch to zoom. On a computer: drag to move, scroll to zoom. Art: Sierrassets furniture pack.</p>
   <script type="module" src="src/main.js"></script>
 </body>
