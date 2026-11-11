@@ -7,6 +7,8 @@
 // furniture (shortest route, stairs included), use it for its minutes, and the action's
 // gains are added a little each minute.
 import { createRng, subRng } from './rng.js';
+import { MINUTES_PER_DAY } from './clock.js';
+import { dueOnGameDay, formatDate } from './calendar.js';
 import { buildMap, keyOf, parseKey } from './housemap.js';
 
 export const WALK_SQUARES_PER_MINUTE = 8; // about 1.3 squares a real second at 1x: easy to follow
@@ -44,12 +46,17 @@ export function inHours(hour, [from, to]) {
   return from <= to ? hour >= from && hour < to : hour >= from || hour < to;
 }
 
-export function createWorld({ house, actions, needs, people, seed = 1, time = 7 * 60 }) {
+const DEFAULT_CALENDAR = { start: { year: 2026, month: 3, day: 1 }, rules: [] };
+
+export function createWorld({ house, actions, needs, people, calendar = DEFAULT_CALENDAR, seed = 1, time = 7 * 60 }) {
   const map = buildMap(house);
   const world = {
     seed,
     time,
     rng: createRng(seed),
+    // Dated events (LIFE_SYSTEMS section 2). The rules and the start date come from data;
+    // the queue holds today's events not yet fired; fired counts each rule's firings.
+    calendar: { start: calendar.start, rules: calendar.rules, queue: [], fired: {} },
     house, map,
     actions: actions.actions,
     potter: actions.potter,
@@ -69,7 +76,34 @@ export function createWorld({ house, actions, needs, people, seed = 1, time = 7 
   for (const p of world.people) {
     if (!map.free(p.at)) throw new Error(`${p.name} starts on a square nobody can stand on: ${p.at}`);
   }
+  queueDay(world, true); // a game that starts mid-day does not fire the events that already passed
   return world;
+}
+
+// Queue the dated events of the current game day. skipPast leaves out events whose hour has
+// already gone (used when a game starts or is restored mid-day).
+export function queueDay(world, skipPast) {
+  const now = world.time % MINUTES_PER_DAY;
+  const gameDay = Math.floor(world.time / MINUTES_PER_DAY);
+  for (const e of dueOnGameDay(gameDay, world.calendar.rules, world.calendar.start)) {
+    if (skipPast && e.hour * 60 < now) continue;
+    world.calendar.queue.push(e);
+  }
+}
+
+// Fire the queued events whose hour has come. Nothing owns them yet, so each one writes a line
+// in the household log and is counted.
+function fireDue(world) {
+  const now = world.time % MINUTES_PER_DAY;
+  const cal = world.calendar;
+  const due = cal.queue.filter((e) => e.hour * 60 <= now);
+  if (due.length === 0) return;
+  cal.queue = cal.queue.filter((e) => e.hour * 60 > now);
+  for (const e of due) {
+    cal.fired[e.id] = (cal.fired[e.id] ?? 0) + 1;
+    world.log.push({ time: world.time, who: 'House', text: `${e.label} (${formatDate(e.date)})`, why: null });
+    if (world.log.length > LOG_LENGTH) world.log.shift();
+  }
 }
 
 function say(world, person, text, why = null) {
@@ -256,6 +290,8 @@ function stepPerson(world, person) {
 // Move the whole world on by one game minute.
 export function step(world) {
   world.time += 1;
+  if (world.time % MINUTES_PER_DAY === 0) queueDay(world, false);
+  fireDue(world);
   for (const person of world.people) stepPerson(world, person);
 }
 

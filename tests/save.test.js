@@ -7,7 +7,7 @@ import { createClock } from '../src/sim/clock.js';
 import { REAL_MS_PER_GAME_MINUTE, MINUTES_PER_YEAR } from '../src/sim/clock.js';
 
 const load = (f) => JSON.parse(readFileSync(new URL(`../data/${f}`, import.meta.url), 'utf8'));
-const data = () => ({ house: load('house.json'), actions: load('actions.json'), needs: load('needs.json'), people: load('people.json') });
+const data = () => ({ house: load("house.json"), actions: load("actions.json"), needs: load("needs.json"), people: load("people.json"), calendar: load("calendar.json") });
 
 test('a saved game carries on exactly as if it had never stopped', () => {
   const live = createWorld({ ...data(), seed: 5, time: 7 * 60 });
@@ -17,6 +17,7 @@ test('a saved game carries on exactly as if it had never stopped', () => {
   const back = fromSave(JSON.parse(text), data());
   for (let i = 0; i < 2000; i++) { step(live); step(back); }
   assert.deepEqual(back.log, live.log);
+  assert.deepEqual(back.calendar, live.calendar, 'the calendar queue and counts carry on too');
   assert.deepEqual(back.people[0].needs, live.people[0].needs);
   assert.deepEqual(back.people[0].at, live.people[0].at);
 });

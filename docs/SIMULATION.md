@@ -27,6 +27,7 @@ Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `d
   the floors through the stairs: a flight is entered only from its bottom end or from the
   landing square above its top step, never over the banister. Furniture is used from a
   free square beside it in the same room.
+- **Dated events:** each game day, `queueDay` queues the rules that fall in it (`src/sim/calendar.js`); `fireDue` fires each at its hour and writes a Household line. Nothing owns them yet, so no one reacts to them (L2 onwards).
 - **Log:** each decision adds a line (`world.log`, last 50), shown in the status panel.
 - **Why trace:** every decision also stores a `why` (on the log line and as `person.why`):
   the chosen action, the reason (`need`, or nothing scored high enough and she wanders), the

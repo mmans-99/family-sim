@@ -24,6 +24,7 @@ simulator/
 │   └── make_mum.py         builds assets/people/sarah.* from Eris Esra's 16x32 template (template not in repo)
 ├── data/
 │   ├── house.json          house: floors, rooms, doorways, fences, stairs, furniture
+│   ├── calendar.json       calendar start (1 Mar 2026) and dated rules: mortgage, payday, energy cap, Christmas
 │   ├── needs.json          needs and how fast they drop
 │   ├── actions.json        what people can do with furniture, and what it gives them
 │   └── people.json         who is simulated (Sarah for now) and where they start
@@ -31,6 +32,7 @@ simulator/
 │   ├── main.js             starts everything: clock, views, camera, drawing loop
 │   ├── sim/
 │   │   ├── clock.js        game time, speeds, day/season/year reading
+│   │   ├── calendar.js     real dates on the life clock: 365/28 calendar days per game day, dated rules, weekday (pure)
 │   │   ├── rng.js          seeded random numbers (mulberry32), saveable state, subRng for separate streams
 │   │   ├── housemap.js     walking map from house.json: squares, steps, stairs, routes, where to stand to use furniture
 │   │   ├── world.js        people, needs, the brain, walking, actions, personality, log; step() = one game minute
@@ -50,13 +52,14 @@ simulator/
 │       └── panel.js        watch-only status line and panel: doing, room, need bars, recent log
 └── tests/
     ├── sim.test.js         clock and random numbers
+    ├── calendar.test.js    dates, game-day spans, yearly counts (incl. leap year), no double firing, firing in the world
     ├── world.test.js       routes, stairs, back door, scoring, chores, same-seed days, a two-day run
     ├── save.test.js        save round trip, time away, catch-up, bath prelude, personality
     ├── render.test.js      scene contents, plan camera, sprite maps, furniture layout, walking routes
     ├── palette.test.js     palette snapping
     └── raster.test.js      pixel-exact fills and lines
 ```
-Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/random.js` (random helpers), `calendar.js` (calendar on the life clock), `stocks.js` (stocks, flows, ledgers, lags), `couplings.js`, `beliefs.js`, `household.js` (accounts, labour ledger, bargaining), `firms.js` (positions, firms, labour market), `places.js` (places, contacts, encounters), `economy.js`, `institutions.js`, `holidays.js`, `health.js`, `life.js`, `weather.js`, `commentary.js`, `src/save/store.js`, and `tools/replay.js` (headless multi-seed replay). Data to come: `data/calendar.json`, `stocks.json`, `flows.json`, `couplings.json`, `obligations.json`, `labour.json`, `agecurves.json`, `lifecourse.json`, `firms.json`, `positions.json`, `places.json`, `economy.json`, `institutions.json`, `holidays.json`, `text/*.json`. Also `manifest.json` and `sw.js` for offline use.
+Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/random.js` (random helpers), `stocks.js` (stocks, flows, ledgers, lags), `couplings.js`, `beliefs.js`, `household.js` (accounts, labour ledger, bargaining), `firms.js` (positions, firms, labour market), `places.js` (places, contacts, encounters), `economy.js`, `institutions.js`, `holidays.js`, `health.js`, `life.js`, `weather.js`, `commentary.js`, `src/save/store.js`, and `tools/replay.js` (headless multi-seed replay). Data to come: `stocks.json`, `flows.json`, `couplings.json`, `obligations.json`, `labour.json`, `agecurves.json`, `lifecourse.json`, `firms.json`, `positions.json`, `places.json`, `economy.json`, `institutions.json`, `holidays.json`, `text/*.json`. Also `manifest.json` and `sw.js` for offline use.
 
 ## The tick
 - The sim steps in fixed game minutes: `step(world)` in `src/sim/world.js` is one game minute.
@@ -86,10 +89,11 @@ Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/r
 - `main.js` draws into a small canvas and scales it up with hard edges. One art pixel is a whole number of device pixels. Zooming changes that number, so the art stays sharp at every zoom. Pan is turned into whole art pixels.
 - The sheets are `assets/furniture-pack/furniture.png` and `floors-walls.png`, plus our own `assets/extras/extras.png`. If the pack fails to load, everything is drawn as plain blocks and snapped to the palette. If only the extras fail, those pieces fall back to blocks.
 
-## Save format (version 1, as built)
-`src/sim/save.js` writes one plain JSON object: `{ version, savedAt, seed, clock: {totalMinutes, speed, carryMs}, time, rng, people[], log[] }`.
+## Save format (version 2, as built)
+`src/sim/save.js` writes one plain JSON object: `{ version, savedAt, seed, clock: {totalMinutes, speed, carryMs}, time, rng, people[], log[], calendar: {queue, fired} }`. Version 1 saves (no calendar) still load.
+- `calendar` holds the queue of dated events not yet fired and the count of each rule's firings. The rules come from `data/calendar.json`.
 - `savedAt` is real time in ms; the time away is the real time since then, at the saved speed, capped at one game year.
 - `rng` is the main random generator's position (`getState()`); `people[]` holds each person's `at`, `needs`, `personality`, `lastDone`, `why` and `activity`.
 - An activity stores its action as a copy and its furniture as an index in `data/house.json` (`furniture`). A loaded game must use the same house data.
-- A save from another version is refused. The file is stored by `src/save/store.js` under the key `family-sim.save`. Saves happen every 10 s, on `pagehide`, and when the page is hidden.
+- A save from a version this game does not read is refused. The file is stored by `src/save/store.js` under the key `family-sim.save`. Saves happen every 10 s, on `pagehide`, and when the page is hidden.
 - New systems add their state to the save as they are built (`stocks`, `flows`, `calendar`, `household`, `economy`, `contacts`, ...) and bump `version` when the shape changes.

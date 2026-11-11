@@ -22,6 +22,12 @@ Assumed bought in spring 2024 for **£265,000**, a typical Birmingham semi.
 - Birmingham semi-detached prices: an average of about £270,000 over July 2025 to June 2026 ([plumplot](https://www.plumplot.co.uk/City-Birmingham-house-prices.html)). Other data sources show about £282,000 ([Rightmove](https://www.rightmove.co.uk/house-prices/Birmingham.html)). Our £265,000 purchase is in that range.
 - Bank of England base rate: raised from 3.75% to **4%** on 5 November 2026, its first rise since 2023 ([Trustnet](https://www.trustnet.com/news/13487959/bank-of-england-raises-interest-rates-to-4-with-hints-of-more-to-come/)). Markets expect rates to keep moving, so the sim should include rate changes.
 
+## Payment dates (used by the calendar, `data/calendar.json`)
+- Mortgage: paid on the 1st of the month (tuning, not checked against the lender).
+- Pay: Tom's pay on the 28th (tuning).
+- Energy price cap: changes on 1 January, 1 April, 1 July and 1 October (Ofgem's quarterly cap).
+- Council tax months and school term dates: not yet set.
+
 ## Household bills (checked 9 Nov 2026)
 | Bill | Starting value | Source and notes |
 |---|---|---|

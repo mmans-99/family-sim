@@ -8,9 +8,10 @@ over, without needing the chat history.
 file's section 1 (rules) and the section for the step you are building. Read
 `docs/SIMULATION.md` section 0 to see what is already built.
 
-**Status of this plan:** written 2026-11-11. No code from it has been written yet. Each step
-below must be approved by the user before its code is written (CLAUDE.md rule). Tick the
-matching item in `docs/ROADMAP.md` when a step is finished.
+**Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
+(calendar), with the mapping approved by the user on 2026-11-11 and the refinements listed in
+the section 2 note below. Each later step must be approved by the user before its code is written
+(CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 
 ---
 
@@ -122,7 +123,14 @@ mortgage fix ending in spring 2029. If bills came every 30 *game* days, the fami
 the mortgage once a year. If they came every 30 *calendar* days on a 28-day year, nothing
 lines up with seasons or ageing.
 
-### The answer (proposed — see DECISIONS OPEN; confirm with the user before coding)
+### The answer (approved 2026-11-11; built in L1)
+
+> **Built version (refinements to the proposal below):** the date shown changes once per game day,
+> and the clock shows the whole game day's span as a range ("27 Mar 2026 – 8 Apr 2026"), so every
+> dated event that fires that day is inside it. Game days partition the calendar exactly: a
+> calendar day belongs to one game day only (`calendarSpan`). Weekdays are computed (`weekday`) but
+> not shown, because game-day weekdays would not match real weekdays. School terms and council tax
+> months are not in `data/calendar.json` yet (they need sourcing first).
 Keep the **day clock** (minutes and hours, as now) for what people do. Add a **calendar**
 that runs on the **life clock**: each game day stands for **365 / 28 ≈ 13.04 calendar days**.
 

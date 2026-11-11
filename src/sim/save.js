@@ -6,7 +6,10 @@ import { createWorld, step } from './world.js';
 import { createRng } from './rng.js';
 import { advance, MINUTES_PER_YEAR } from './clock.js';
 
-export const SAVE_VERSION = 1;
+// Version 2 added the calendar (queue and counts). Version 1 saves still load: their calendar
+// starts from the current game day, which createWorld already queues.
+export const SAVE_VERSION = 2;
+const READABLE_VERSIONS = [1, 2];
 
 const encodeActivity = (a, world) => ({
   action: { ...a.action },
@@ -50,14 +53,21 @@ export function toSave(world, clock, savedAt) {
       activity: p.activity ? encodeActivity(p.activity, world) : null,
     })),
     log: world.log.map((e) => ({ ...e })),
+    calendar: { queue: world.calendar.queue.map((e) => ({ ...e })), fired: { ...world.calendar.fired } },
   };
 }
 
 // Rebuild the world from a save. Throws if the save is from another version or does not fit
 // the house data.
-export function fromSave(save, { house, actions, needs, people }) {
-  if (save?.version !== SAVE_VERSION) throw new Error(`save version ${save?.version} is not ${SAVE_VERSION}`);
-  const world = createWorld({ house, actions, needs, people, seed: save.seed, time: save.time });
+export function fromSave(save, { house, actions, needs, people, calendar }) {
+  if (!READABLE_VERSIONS.includes(save?.version)) {
+    throw new Error(`save version ${save?.version} is not one this game reads (${READABLE_VERSIONS.join(', ')})`);
+  }
+  const world = createWorld({ house, actions, needs, people, calendar, seed: save.seed, time: save.time });
+  if (save.calendar) {
+    world.calendar.queue = save.calendar.queue.map((e) => ({ ...e }));
+    world.calendar.fired = { ...save.calendar.fired };
+  }
   world.rng = createRng(save.seed, save.rng);
   for (const s of save.people) {
     const p = world.people.find((x) => x.id === s.id);
