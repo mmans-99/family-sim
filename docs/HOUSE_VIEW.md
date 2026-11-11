@@ -193,6 +193,26 @@ Rules when expanding it:
 5. Tapping a person later should work in every view, so turn a tap back into grid squares
    by undoing `project()` and then subtracting the floor's `place`.
 
+### Privacy cover over the toilet and bath
+While someone is on the toilet or in the bath they are hidden under a moving frosted-glass
+mosaic (the user's reference: pale grey and white squares, some hatched or dotted). It is
+drawing only; the simulation does not know about it.
+- **Switch:** `"hide": true` on the action in `data/actions.json`. Any action can use it.
+- **Pieces:** `people.js` passes `hide` (real time) and `cover` (the furniture's footprint).
+  `house.js` paints `paintFrost` last, over the footprint plus the figure's visible pixels
+  (`opaqueBounds`), one pixel wider. The step-by-step method is in the comment above
+  `paintFrost`.
+- **What the user asked for, in order:** a blur over the whole figure (looked silly), then
+  the reference image instead, covering the whole toilet or bath so the person cannot be
+  seen at all, and never static. The first cover cycled 4 fixed frames and looked static;
+  the current one moves on real time, each tile at its own pace.
+- **To check it:** `node --test` (a test checks it moves and has no gaps), then take two
+  phone-size screenshots about 0.7 s apart with Playwright (headless Chrome's virtual time
+  does not run the animation): `index.html?minutes=52&view=first` (bath) and
+  `?minutes=3&view=first` (toilet, bottom right of the bathroom). Crop the bathroom,
+  enlarge, and look: no part of the person visible, the tiles differ between the two, and
+  the cover does not spill onto the walls.
+
 ## 6. How to check the result (always look, never assume)
 
 Run the tests, then look at real screenshots of all three floors and a phone size.

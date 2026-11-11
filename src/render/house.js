@@ -131,10 +131,28 @@ function paintStructure(buf, b, r) {
 // Snap every pixel of a w x h canvas to the palette. Only used when there are no sprites:
 // the sprites have their own hand-picked colours, which must not be changed.
 // Frosted cover (toilet, bath): a mosaic of pale tiles like frosted glass, after the user's
-// reference. Each tile drifts slowly through the greys at its own pace and some tiles carry
-// diagonal hatching or dots, so it shimmers all the time but never flickers. Every pixel inside
-// is opaque, so nothing underneath shows. The corners are rounded and the outer ring is
-// dithered, so it sits softly on the floor rather than as a hard box.
+// reference. Every pixel inside is opaque, so nothing underneath shows.
+//
+// How it works, step by step:
+//   1. Turning it on: an action in data/actions.json has "hide": true (toilet, bath).
+//      people.js then passes `hide` (real time in ms) and `cover` (the furniture's footprint
+//      in grid squares, with the floor's place shift added).
+//   2. Where it goes: drawScene paints it last, after people and steam, over the union of
+//      the furniture footprint and the figure's VISIBLE pixels (opaqueBounds below), one
+//      pixel wider. Not the figure's whole 32x32 frame: that spilled onto the wall.
+//   3. The tiles: the area is cut into FROST_CELL x FROST_CELL tiles. Each tile has a fixed
+//      number from its position (hash). That number sets its own speed and starting point
+//      on a sine wave over real time, and the wave picks one of the six FROST greys. So
+//      neighbours change at different moments: a slow shimmer, never a flicker or a fixed
+//      loop. (The first try cycled 4 fixed frames and looked static; don't go back to that.)
+//   4. Texture: another hash per tile makes a quarter of the tiles hatched (diagonal lines,
+//      sliding one step every 400 ms) and a quarter dotted, like the reference.
+//   5. Edge: corner pixels are skipped (rounded) and the outer ring is every other pixel
+//      (dithered), so it sits softly on the floor.
+//   To tune: FROST_CELL (tile size), FROST_PERIOD (speed), FROST (the greys).
+//   To check: tests/render.test.js asserts it moves and has no gaps; then look at
+//   screenshots of the bath (?minutes=52&view=first) and the toilet (?minutes=3&view=first)
+//   taken about 0.7 s apart, as docs/HOUSE_VIEW.md section 6 describes.
 const FROST = [
   [255, 255, 255], [247, 248, 250], [238, 240, 243], [228, 231, 236], [216, 221, 228], [204, 210, 219],
 ];

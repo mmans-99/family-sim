@@ -18,6 +18,8 @@ Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has n
   rounded, dithered edge; hugs the furniture and the figure's visible pixels, so it stays off the
   walls. Checked: bath and toilet at two moments (pattern moves, nobody visible), whole house,
   ground floor, garden, phone size.
+- How the cover works and how to check it are written in the comment above `paintFrost`
+  (`src/render/house.js`) and in `docs/HOUSE_VIEW.md` ("Privacy cover over the toilet and bath").
 - **Not done yet, as asked:** the bath's tap and filling steps; personality parameters (Mum
   first, then everyone). Tests: 55 passing.
 
