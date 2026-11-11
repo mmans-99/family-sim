@@ -12,12 +12,14 @@ Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has n
 - **Bath steam.** Actions marked `steam` (the bath) draw a dithered puff over her while she is
   in them. First pass: it is subtle, and it still touches the wall edge above the bath; tune
   on the phone.
-- **Frosted cover instead of blur.** The toilet and bath are covered in shuffling pale tiles
-  (from the reference the user sent) while in use, so the figure is not visible (`hide` flag in
-  `data/actions.json`). Checked in a browser: bath fully covered; toilet covered (crop cut short).
-  The cover reaches up over the wall above the bath; tune on the phone.
+- **Frosted cover instead of blur.** The toilet and bath are covered by a moving frosted-glass
+  mosaic (after the user's reference) while in use, so the figure is not visible (`hide` flag in
+  `data/actions.json`). Tiles drift through the greys at their own pace, some hatched or dotted;
+  rounded, dithered edge; hugs the furniture and the figure's visible pixels, so it stays off the
+  walls. Checked: bath and toilet at two moments (pattern moves, nobody visible), whole house,
+  ground floor, garden, phone size.
 - **Not done yet, as asked:** the bath's tap and filling steps; personality parameters (Mum
-  first, then everyone). Tests: 54 passing.
+  first, then everyone). Tests: 55 passing.
 
 ## Latest fix (2026-11-11, night)
 - **Teleport fixed.** The minute a walk was chosen, Sarah was already advanced 8 squares, so

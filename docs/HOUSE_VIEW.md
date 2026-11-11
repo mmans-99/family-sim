@@ -232,6 +232,7 @@ google-chrome --headless=new --no-sandbox --disable-gpu --window-size=1000,1000 
 | Dining chairs put in the walkway in front of the cooker and sink; a bed boxed in by a wardrobe | Run the walking tests after every layout change (section 4) |
 | Windows drawn twice on the front wall (face and wall line) | Front wall windows go on the face only |
 | Tried to cut rugs out of the pack's autotiles | They are autotiles; use the extras sheet |
+| Covered a person with their whole sprite frame, so the cover spilled onto the wall | Use the sprite's visible pixels (`opaqueBounds` in `house.js`) plus one pixel |
 | Described the pack's licence from the zip alone | The zip has no licence text; its readme says "Thanks for buying". Ask the user for the seller's wording |
 
 ## 8. Where things are

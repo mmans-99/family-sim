@@ -65,8 +65,10 @@ Planned, not built yet: `schedule.js`, `offsite.js`, `economy.js`, `weather.js`,
 - Drawing-only effects: an action's `steam` flag (`data/actions.json`) makes `people.js` pass a
   steam frame for that person; `house.js` draws the puff after the people. The sim never reads it.
 - Frosted cover: an action's `hide` flag (toilet, bath) makes `people.js` pass the furniture
-  footprint and an animation frame; `house.js` paints `paintFrost` tiles over the footprint and the
-  figure's sprite area after everything else, reshuffled each frame.
+  footprint and the real time; `house.js` paints `paintFrost` over the footprint plus the
+  figure's visible pixels (`opaqueBounds`), one pixel wider, after everything else. Each 4-pixel
+  tile drifts through six greys at its own pace (about 2.6 s a cycle), some tiles are hatched
+  (the hatching slides) or dotted, the corners are rounded and the edge is dithered.
 
 ## The house view
 (Step-by-step method, rules and checks: `docs/HOUSE_VIEW.md`.)

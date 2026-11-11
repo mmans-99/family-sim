@@ -130,33 +130,69 @@ function paintStructure(buf, b, r) {
 
 // Snap every pixel of a w x h canvas to the palette. Only used when there are no sprites:
 // the sprites have their own hand-picked colours, which must not be changed.
-// Frosted cover: a grid of pale tiles in the greys and whites of the frosted-glass reference,
-// shuffled every animation frame so it shimmers rather than sitting still. Every tile is opaque,
-// so nothing underneath (the furniture or the figure) shows through.
+// Frosted cover (toilet, bath): a mosaic of pale tiles like frosted glass, after the user's
+// reference. Each tile drifts slowly through the greys at its own pace and some tiles carry
+// diagonal hatching or dots, so it shimmers all the time but never flickers. Every pixel inside
+// is opaque, so nothing underneath shows. The corners are rounded and the outer ring is
+// dithered, so it sits softly on the floor rather than as a hard box.
 const FROST = [
-  [255, 255, 255], [246, 247, 249], [238, 240, 242], [226, 230, 235], [212, 217, 224], [200, 206, 214],
+  [255, 255, 255], [247, 248, 250], [238, 240, 243], [228, 231, 236], [216, 221, 228], [204, 210, 219],
 ];
-const FROST_CELL = 4; // art pixels per tile
-function paintFrost(buf, x0, y0, x1, y1, tick) {
+const FROST_CELL = 4;        // art pixels per tile
+const FROST_PERIOD = 2600;   // ms for a tile to drift through the greys and back (roughly)
+const hash = (a, b) => (((a * 73856093) ^ (b * 19349663)) >>> 0) % 1000;
+function frostShade(cx, cy, now) {
+  const h = hash(cx, cy);
+  const speed = 0.6 + (h % 7) / 10;                         // each tile its own pace
+  const wave = Math.sin((now / FROST_PERIOD) * Math.PI * 2 * speed + h);
+  const level = Math.round(((wave + 1) / 2) * (FROST.length - 1));
+  return level;
+}
+export function paintFrost(buf, x0, y0, x1, y1, now) {
   const left = Math.max(0, Math.floor(x0));
   const top = Math.max(0, Math.floor(y0));
   const right = Math.min(buf.width, Math.ceil(x1));
   const bottom = Math.min(buf.height, Math.ceil(y1));
+  const drift = Math.floor(now / 400);                      // hatching slides slowly
   for (let y = top; y < bottom; y++) {
     for (let x = left; x < right; x++) {
+      const ex = Math.min(x - left, right - 1 - x);       // distance to the nearest edge
+      const ey = Math.min(y - top, bottom - 1 - y);
+      if (ex + ey < 2) continue;                            // rounded corners
+      if ((ex === 0 || ey === 0) && (x + y) % 2) continue;  // dithered outer ring
       const cx = Math.floor((x - left) / FROST_CELL);
       const cy = Math.floor((y - top) / FROST_CELL);
-      // A simple hash of the tile position and the frame: a different shade each frame.
-      const h = ((cx * 73856093) ^ (cy * 19349663) ^ (tick * 83492791)) >>> 0;
-      let shade = FROST[h % FROST.length];
-      if (((x + y + tick) & 3) === 0 && (h >> 8) % 3 === 0) shade = FROST[(h % FROST.length + 1) % FROST.length]; // dotted accent
+      let level = frostShade(cx, cy, now);
+      const kind = hash(cy + 7, cx + 3) % 4;               // 0, 1 plain; 2 hatched; 3 dotted
+      if (kind === 2 && (x + y + drift) % 3 === 0) level = Math.min(FROST.length - 1, level + 2);
+      if (kind === 3 && x % 2 === 0 && y % 2 === 0) level = Math.min(FROST.length - 1, level + 1);
+      const c = FROST[level];
       const i = (y * buf.width + x) * 4;
-      buf.data[i] = shade[0];
-      buf.data[i + 1] = shade[1];
-      buf.data[i + 2] = shade[2];
+      buf.data[i] = c[0];
+      buf.data[i + 1] = c[1];
+      buf.data[i + 2] = c[2];
       buf.data[i + 3] = 255;
     }
   }
+}
+
+// The box around a sprite's visible (non-transparent) pixels, so a cover can hug the figure
+// instead of its whole frame. Cached per sprite.
+const opaqueCache = new WeakMap();
+function opaqueBounds(sprite) {
+  let b = opaqueCache.get(sprite);
+  if (b) return b;
+  b = { x0: sprite.width, y0: sprite.height, x1: 0, y1: 0 };
+  for (let y = 0; y < sprite.height; y++) {
+    for (let x = 0; x < sprite.width; x++) {
+      if (sprite.data[(y * sprite.width + x) * 4 + 3] === 0) continue;
+      b.x0 = Math.min(b.x0, x); b.y0 = Math.min(b.y0, y);
+      b.x1 = Math.max(b.x1, x + 1); b.y1 = Math.max(b.y1, y + 1);
+    }
+  }
+  if (b.x1 <= b.x0) b = { x0: 0, y0: 0, x1: sprite.width, y1: sprite.height };
+  opaqueCache.set(sprite, b);
+  return b;
 }
 
 // Steam: a few pale dotted puffs that rise and drift, one step per animation frame. The
@@ -256,18 +292,23 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null, people = 
   }
   for (const person of people) {
     if (person.hide === null || person.hide === undefined || !person.cover) continue;
-    // Cover the whole furniture footprint and everything the figure could show, from the
-    // sprite's own size, so nothing of the person is left visible.
+    // Cover the furniture's footprint and the figure's visible pixels (not its whole frame),
+    // plus one pixel, so nothing of the person shows and the cover stays off the walls.
     const sprite = pack?.sprites[person.sprite] ?? pack?.sprites[person.fallback];
-    const sw = sprite ? sprite.width : 16;
-    const sh = sprite ? sprite.height : 32;
     const at = project(cam, width, height, person.x, person.y);
     const a = project(cam, width, height, person.cover.x, person.cover.y);
     const b = project(cam, width, height, person.cover.x + person.cover.w, person.cover.y + person.cover.d);
-    const x0 = Math.min(a.sx, b.sx, at.sx - sw / 2) - 1;
-    const x1 = Math.max(a.sx, b.sx, at.sx + sw / 2) + 1;
-    const y0 = Math.min(a.sy, b.sy, at.sy - sh) - 1;
-    const y1 = Math.max(a.sy, b.sy, at.sy) + 1;
+    let fx0 = at.sx - 8; let fx1 = at.sx + 8; let fy0 = at.sy - 32; let fy1 = at.sy;
+    if (sprite) {
+      const o = opaqueBounds(sprite);
+      const left = Math.round(at.sx - sprite.width / 2);
+      const top = Math.round(at.sy) - sprite.height;
+      fx0 = left + o.x0; fx1 = left + o.x1; fy0 = top + o.y0; fy1 = top + o.y1;
+    }
+    const x0 = Math.min(a.sx, b.sx, fx0) - 1;
+    const x1 = Math.max(a.sx, b.sx, fx1) + 1;
+    const y0 = Math.min(a.sy, b.sy, fy0) - 1;
+    const y1 = Math.max(a.sy, b.sy, fy1) + 1;
     paintFrost(buf, x0, y0, x1, y1, person.hide);
   }
   ctx.putImageData(buf, 0, 0);

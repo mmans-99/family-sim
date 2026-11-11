@@ -235,3 +235,22 @@ test('toilet and bath are covered by the frosted cover; other actions are not', 
   }
   assert.ok(seen.has('toilet') && seen.has('bath'), 'the day has a toilet visit and a bath');
 });
+
+test('the frosted cover moves over time and leaves no gaps inside it', async () => {
+  const { paintFrost } = await import('../src/render/house.js');
+  const make = () => ({ width: 40, height: 40, data: new Uint8ClampedArray(40 * 40 * 4) });
+  const a = make();
+  const b = make();
+  paintFrost(a, 4, 4, 36, 36, 0);
+  paintFrost(b, 4, 4, 36, 36, 900);
+  let differ = 0;
+  for (let y = 6; y < 34; y++) {
+    for (let x = 6; x < 34; x++) {
+      const i = (y * 40 + x) * 4;
+      assert.equal(a.data[i + 3], 255, `inside pixel ${x},${y} is covered`);
+      assert.ok(a.data[i] >= 200, 'pale, like frosted glass');
+      if (a.data[i] !== b.data[i]) differ++;
+    }
+  }
+  assert.ok(differ > 50, `the pattern changes over time (${differ} pixels changed)`);
+});
