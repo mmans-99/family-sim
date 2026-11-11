@@ -12,6 +12,9 @@ source of truth — not chat history.
    - `docs/ARCHITECTURE.md` — code layout, tick loop, save format
    - `docs/SIMULATION.md` — how people, needs, emotions, time, life, economy work
    - `docs/FAMILY.md` — the starting family, home, mortgage and bills
+   - `docs/HOUSE_VIEW.md` — how the house view is drawn, how to pick sprites,
+     how to check it, and the mistakes to avoid. **Read it in full before
+     changing anything in `src/render/`, `data/house.json` or `assets/`.**
 4. Confirm with the user what this session is for before writing code.
 
 ## After every change (non-negotiable)
@@ -37,5 +40,7 @@ Do not leave a change without its docs updated, even a small one.
 - Phone-first: everything must work on a phone screen.
 - No paid AI services or subscriptions are required to run it.
 - Explain steps and terms fully when giving setup instructions.
+- Never say a visual change works until you have taken a screenshot of every
+  floor and looked at it (steps in `docs/HOUSE_VIEW.md`).
 - Camera and view controls are for looking only. The player never changes
   what the family does.

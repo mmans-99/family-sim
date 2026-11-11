@@ -45,6 +45,7 @@ Planned, not built yet: `src/sim/person.js`, `needs.js`, `brain.js`, `schedule.j
 - The drawing loop runs every screen frame and reads the latest state.
 
 ## The house view
+(Step-by-step method, rules and checks: `docs/HOUSE_VIEW.md`.)
 - The view is straight down. The back wall of the house (y = 0) is at the top of the screen, and y grows down the screen. One floor is shown at a time (Ground, First, Garden).
 - `scene.js` builds boxes for the chosen floor: one per floor square, walls from room edges with doorways cut out, windows on outside walls, and furniture straight from `data/house.json`.
 - `camera.js` turns a grid position into art pixels. One grid square is always 16 art pixels (`UNIT_PX`), the size the sprite pack is drawn at, so sprites are never stretched.

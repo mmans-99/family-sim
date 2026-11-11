@@ -14,6 +14,7 @@ The user asked for the project to be read and the house view fixed. The view was
 - **Layout** (`data/house.json`): rearranged for this view. Stairs are one square wide at x = 5, so the hall is walkable. Lounge and master doors moved to y 5-6; front and back doors to x 6-7. The second WC door (from the kitchen) is gone. Kitchen is now counter, cooker, sink, fridge along the back wall. Beds are 2x2 and 1x2. The landing has a floor. Walls are 0.25 thick (4 pixels).
 - **Removed:** the cutaway button and code (no near walls from above), the "All floors" view, the old 3D projection, face shading.
 - The page can open on a floor: `index.html?view=first` (or `ground`, `garden`).
+- Wrote `docs/HOUSE_VIEW.md`: the method, the rules, how to pick sprites and check the result, and the mistakes made. `CLAUDE.md` now tells every session to read it before touching the house view.
 - Tests: 31 passing, including a check that furniture stays in its room and no two pieces share a square.
 - Checked in screenshots at desktop size and at phone size (390 wide, 3x pixels). Not yet checked by the user on a real phone.
 
