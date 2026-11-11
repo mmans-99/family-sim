@@ -55,6 +55,28 @@ Assumed bought in spring 2024 for **£265,000**, a typical Birmingham semi.
 | Everyday spending (recreation and culture) | **£82.10 a week** (tuning) | ONS Family Spending, FYE 2025, per household (ONS table as shown in a UK Data Service slide deck; the release itself was not opened). **Understatement:** the absolute weekly figures for household goods, personal goods and clothing were not found, so they are left out. |
 | Savings interest | **2.53% a year**, paid monthly (tuning) | Moneyfacts average easy-access rate, September 2026 (Treasury report). |
 
+## Insurance and subscriptions (decided 11 Nov 2026, tuning)
+Chosen by Claude at the user's request ("you decide, make it realistic"). These are typical UK
+amounts, not yet checked against live prices or quotes. Every figure is `tuning` until checked
+at the start of the build.
+
+| Item | Amount | When | Decision and reason |
+|---|---|---|---|
+| Buildings insurance | **£260 a year** (tuning) | Annual, 1 June | Lenders usually require it, so it is included. Paid once a year. |
+| Home contents insurance | **£140 a year** (tuning) | Annual, 1 June | Included: a family with two children and a car-free home still has belongings to insure. |
+| Life cover (Tom, term to the mortgage's end) | **£20 a month** (tuning) | Monthly, 22nd | Included: Tom is the main earner and the mortgage is £1,339 a month. Sarah has no income, so cover for her is not included. Income protection is left out (costly, a choice for later). |
+| TV Licence (colour) | **£15 a month** (tuning) | Monthly, 22nd | Required by law for watching live TV or BBC iPlayer. Paid by monthly Direct Debit. |
+| Streaming (two services) | **£22 a month** (tuning) | Monthly, 22nd | A typical pair of services, shared by the family. |
+| Apps and cloud storage | **£4 a month** (tuning) | Monthly, 22nd | A family phone-storage plan. |
+| Oliver's after-school club | **£20 a month** (tuning) | Monthly, 3rd, not in August | One club during term time. Clubs follow school terms, which are not yet set (see calendar note). |
+| Household goods and clothing | **£35 a week** (tuning) | Every calendar week, 10:00 | Fills the gap noted under Household bills (ONS absolute figures not found). Clothing for two children and two adults. |
+
+Not included, on purpose: a car and car insurance (no car, Tom works from home); pets; a gym
+membership; boiler cover (optional, and not standard for a semi-detached house with a newer
+boiler); income protection; birthdays and Christmas gifts (they come with holidays in L13).
+Monthly add-on total: about **£260 a month**, which takes the surplus from about £1,700 to about
+£1,450 a month at the sourced figures.
+
 ## Choices made for L2 (2026-11-11, user approved; details in `docs/LIFE_SYSTEMS.md` 3a)
 - Council tax: **Band C**.
 - **No car.** Tom works from home.
