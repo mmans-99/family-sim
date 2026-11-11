@@ -152,9 +152,15 @@ function stepPerson(world, person) {
     person.needs[need] = clamp(person.needs[need] - rate / 60);
   }
 
-  if (!person.activity) decide(world, person);
+  let decidedNow = false;
+  if (!person.activity) {
+    decide(world, person);
+    decidedNow = true;
+  }
   const a = person.activity;
   if (a.phase === 'walk') {
+    // The minute a walk is chosen, she is still on the first square; the walk starts next minute.
+    if (decidedNow) return;
     a.pos = Math.min(a.path.length - 1, a.pos + WALK_SQUARES_PER_MINUTE);
     person.at = a.path[Math.floor(a.pos)];
     if (a.pos >= a.path.length - 1) a.phase = 'do';

@@ -64,3 +64,5 @@ Newest at the bottom. Format: date — decision — why.
 - Whether to add a car (affects bills and commuting).
 - Always-on option. Not possible on GitHub Pages alone (it only serves files). If wanted later: a free cloud service or the Chromebox. Catch-up mode covers the main need for now.
 - Hand-drawn pixel sprites, four angles each, replacing the block shapes one item at a time. Plan: sofa, bed and table first. Approved 2026-11-09. (Partly superseded: the pack covers most furniture; our own extras sheet covers the rest.)
+
+- 2026-11-11: Walks start on the first square. The minute a walk is chosen, nothing moves; then at most `WALK_SQUARES_PER_MINUTE` (8) squares a minute. Reason: the first walk minute was already 8 squares along, so she appeared to teleport. Test in `tests/world.test.js`.

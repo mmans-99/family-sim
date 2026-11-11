@@ -121,3 +121,27 @@ test('every frame people.js can ask for is on Mum\'s sheet', async () => {
   for (let f = 0; f < 4; f++) assert.ok(meta.rects[`sit_front_${f}`]);
   assert.ok(meta.rects.lie);
 });
+
+test('a walk starts on the first square and moves at most 8 squares a minute', () => {
+  const w = createWorld({ ...data(), seed: 7, time: 7 * 60 });
+  const p = w.people[0];
+  let walks = 0;
+  let lastAct = null;
+  let lastPos = 0;
+  for (let m = 0; m < 600; m++) {
+    const before = p.at;
+    step(w);
+    const a = p.activity;
+    if (a && a !== lastAct && a.phase === 'walk') {
+      walks++;
+      assert.equal(a.pos, 0, 'a new walk starts at pos 0');
+      assert.equal(p.at, before, 'still on the start square the minute it is chosen');
+      assert.equal(a.path[0], before);
+    } else if (a && a === lastAct && a.phase === 'walk') {
+      assert.ok(a.pos - lastPos <= 8, `moved ${a.pos - lastPos} squares in one minute`);
+    }
+    lastAct = a;
+    lastPos = a ? a.pos : 0;
+  }
+  assert.ok(walks > 0, 'Sarah walked somewhere in the test');
+});
