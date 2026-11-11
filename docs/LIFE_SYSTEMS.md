@@ -10,7 +10,7 @@ file's section 1 (rules) and the section for the step you are building. Read
 
 **Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
 (calendar). L2 is built (money, 2026-11-11; see 3a "as built"), with the mapping approved by the user on 2026-11-11 and the refinements listed in
-the section 2 note below. Each later step must be approved by the user before its code is written
+the section 2 note below. L3 (replay harness) has a detailed brief in 15a, not built yet. Each later step must be approved by the user before its code is written
 (CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 
 ---
@@ -821,6 +821,332 @@ Checks (`tests/replay.test.js`, run with a small N and Y so tests stay quick):
 
 Run it with `node tools/replay.js --seeds 20 --years 10` and put a line in `docs/STATUS.md`
 with the results after each step.
+
+### 15a. L3 build brief (written 2026-11-11; not built, waiting for the user's approval)
+
+This is the exact plan for step L3. It is written so another model can build it without the
+chat history. Where this brief and the general text of section 15 differ, **this brief wins**:
+section 15 lists checks for systems that do not exist yet (stress, health, contacts, moving
+house), and L3 builds only what can be measured now.
+
+**Words used here.**
+- *Headless*: run with no screen and no browser, in Node, from the command line.
+- *Seed*: the number that starts the random numbers. Same seed, same life (CLAUDE.md rule).
+- *Harness*: the program that creates worlds, runs them, watches them and writes a report.
+  It never changes what the family does.
+- *Probe*: one small watcher inside the harness (money, needs, actions...). Each probe adds one
+  block to the report. Later steps add probes; that is how the harness grows.
+- *Invariant*: a rule that must always be true (a balance is never `NaN`). If one fails, the
+  run fails.
+- *Warning*: something worth a human look that is not a bug (every seed has the same money).
+- *Turning point*: a game day on which a stock moved much more than usual (section 15).
+
+#### What exists now (checked 2026-11-11, so the brief matches the code)
+- `createWorld({ house, actions, needs, people, calendar, money, seed, time })` in
+  `src/sim/world.js`; `time` defaults to 07:00 (420). `step(world)` moves one game minute.
+  `money` is `{ stocks, tax, flows }` from `data/stocks.json`, `data/tax.json`, `data/flows.json`.
+  `tests/household.test.js` shows how to load every data file in Node (`readFileSync` + `new URL`).
+- One headless game year (28 × 1440 steps) takes about **0.55 s** in the build sandbox. So
+  `--seeds 20 --years 10` takes about two minutes. That is fine for the tool; tests stay small.
+- `world.log` keeps only the last **50** lines (`LOG_LENGTH` in `world.js`); a game day already
+  writes up to about 42 (measured, seed 1), and Tom and the children (L7) will push it past 50.
+  **The harness must read new log lines after every step**: the lines added by a
+  step are the entries at the end of `world.log` whose `time === world.time`.
+- Each stock keeps its last `ledgerKeep` (60) entries `{ t, amount, reason, ref }` and rolls older
+  ones into `ledgerTotals`. The harness reads new ledger entries (`t` greater than the last one it
+  saw) once per game day. A game day writes up to 11 entries to the joint account (measured), so 60 is
+  enough, but the harness must check it (invariant `ledgerComplete` below).
+- `world.calendar.fired[ruleId]` counts every firing. `matches(rule, date)`, `dateAt(index, start)`,
+  `calendarSpan(gameDay)` and `formatDate(d)` are exported from `src/sim/calendar.js`.
+- Money uses **no** random numbers, so every seed has identical money. Only Sarah's personality
+  (rolled from `subRng(seed, 'personality:sarah')`) and her choices (`world.rng`) differ by seed.
+  The report must say this plainly (a warning), not hide it.
+- **Money moves in a saw-tooth.** A game day covers about 13 calendar days, so Tom's pay (the
+  28th) lands on roughly every other game day: the joint account's daily change swings between
+  about +£2,200 to +£3,700 and −£650 to −£2,600 (seed 1, year 1; median size about £2,180). This is
+  correct, not a bug. With the thresholds below, **L2 money gives no turning points at all**; that
+  is expected until shocks and job changes exist.
+- Sarah is the only person. `person.needs` holds six needs from 0 to 100. `person.activity` is
+  `null` or `{ action, item, ... }`; a new object means she started something new.
+
+#### Rules for this step
+1. **Read only.** The harness never changes `world`, never calls `change()`, never moves time
+   except by calling `step()`. A test checks this (Step 6, test 2).
+2. **No change to `src/sim/`.** L3 adds no game behaviour. If the harness finds a bug in the
+   sim, stop, record it in DECISIONS and STATUS, and ask the user before fixing it.
+3. **No random numbers in the harness**, not even seeded ones. `Math.random()` is banned anyway.
+4. **Thresholds live in `data/replay.json`**, labelled `"tuning": true`, not in code.
+5. **Output files are not committed.** They go in `replay-out/` (add it to `.gitignore`).
+6. Plain Node ES modules, no packages to install (the sandbox has no network for npm).
+
+#### Step 1. `data/replay.json`
+```json
+{
+  "about": "Settings for the replay harness (tools/replay.js, LIFE_SYSTEMS 15a). All thresholds are tuning.",
+  "tuning": true,
+  "moneyStocks": ["acct.joint", "acct.savings", "debt.overdraft", "debt.mortgage"],
+  "turningPoints": {
+    "minChange": 1000,
+    "timesMedian": 3,
+    "bigCauseShare": 0.25,
+    "maxCauses": 3,
+    "warnSingleCauseShare": 0.8
+  },
+  "unpaidPrefix": "Could not pay",
+  "notYet": [
+    { "what": "stress and sleep debt per adult", "step": "L4" },
+    { "what": "beliefs against the truth", "step": "L5" },
+    { "what": "other family members", "step": "L7" },
+    { "what": "income with jumps or gaps (job changes)", "step": "L9" },
+    { "what": "contacts graph size by year", "step": "L10" },
+    { "what": "price changes and the 2029 remortgage", "step": "L11" },
+    { "what": "health curves and deaths", "step": "L15" },
+    { "what": "address history (moving house)", "step": "later" }
+  ]
+}
+```
+- `minChange` (£) and `timesMedian`: a game day is a turning point for a stock when its net
+  change is at least `minChange` **and** at least `timesMedian` × the median size of that stock's
+  daily change over the run.
+- `bigCauseShare`: a cause counts as *big* when it is at least this share of the day's total
+  movement for that stock (the sum of the sizes of every entry that day).
+- When a later step adds a probe, it removes its line from `notYet`.
+
+#### Step 2. Files
+```
+tools/replay.js            CLI only: reads arguments, loads data, runs seeds, writes files, sets the exit code
+tools/replay/load.js       loadData(rootDir) -> { house, actions, needs, people, calendar, money, replay } (uses fs)
+tools/replay/run.js        runSeed(data, opts) and runMany(data, opts): pure, no fs
+tools/replay/probes.js     the probes (DEFAULT_PROBES), each a plain object
+tools/replay/checks.js     the invariants, each a pure function
+tools/replay/turning.js    findTurningPoints(...): pure
+tools/replay/summary.js    textSummary(report) -> string
+tests/replay.test.js       the tests in Step 6
+```
+Put a comment block at the top of each file saying what it does and which section of this brief
+it follows.
+
+#### Step 3. The run (`tools/replay/run.js`)
+```js
+export function runSeed(data, { seed, years, probes = DEFAULT_PROBES, daily = false })  // -> seed report
+export function runMany(data, { seeds, years, from = 1, daily = false })               // -> whole report
+```
+`runSeed`:
+1. `world = createWorld({ ...data, seed })` (start 07:00 on 1 March 2026, the game's default).
+2. `ctx = { seed, years, cfg: data.replay, startTime: world.time, probe: {} }`; each probe gets its
+   own `ctx.probe[id]` object to keep its notes in.
+3. Call every probe's `start(world, ctx)`.
+4. Step until `world.time === years × MINUTES_PER_YEAR − 1` (23:59 on the last game day; import
+   `MINUTES_PER_YEAR` and `MINUTES_PER_DAY` from `src/sim/clock.js`). After **each** step call every
+   probe's `minute(world, ctx)` if it has one. When `world.time % MINUTES_PER_DAY === MINUTES_PER_DAY − 1`
+   (23:59) call `day(world, ctx, gameDay)` with `gameDay = Math.floor(world.time / MINUTES_PER_DAY)`
+   (0 = the first game day). When that game day is the last of a game year (`(gameDay + 1) % 28 === 0`)
+   call `year(world, ctx, yearIndex)` and keep what it returns.
+5. Call `end(world, ctx)` on every probe and keep what it returns.
+6. Run the invariants (Step 4) and the turning points (Step 5).
+7. Return:
+```json
+{
+  "seed": 1, "years": 1,
+  "dates": { "from": "1 Mar 2026", "to": "28 Feb 2027" },
+  "personality": { "sarah": { "outgoing": 4, "tidy": 7, "active": 3, "kind": 6, "anxious": 5 } },
+  "yearly": [ { "year": 1, "dates": { "from": "...", "to": "..." }, "money": {...}, "calendar": {...}, "needs": {...}, "actions": {...}, "log": {...} } ],
+  "run": { "money": {...}, "calendar": {...}, "needs": {...}, "actions": {...}, "log": {...} },
+  "turningPoints": [ ... ],
+  "invariants": [ { "id": "finite", "ok": true, "detail": "" } ],
+  "warnings": [ "..." ],
+  "notYet": [ ... copied from data/replay.json ... ],
+  "daily": null
+}
+```
+`daily` holds each money stock's end-of-day value per game day only when `daily: true`
+(`--daily` on the command line); otherwise `null`, to keep the file small.
+
+`runMany` runs `runSeed` for `from … from + seeds − 1`, then compares the seeds:
+```json
+{
+  "generatedBy": "tools/replay.js", "reportVersion": 1,
+  "args": { "seeds": 20, "years": 10, "from": 1 },
+  "seconds": 112.4,
+  "seeds": [ ...seed reports... ],
+  "across": {
+    "moneyIdentical": true,
+    "actionsDistinct": 17,
+    "singleCauseShare": null,
+    "turningPoints": 0
+  },
+  "warnings": [ "..." ],
+  "ok": true
+}
+```
+- `moneyIdentical`: every seed's end-of-run money balances are equal to the penny. When true, add
+  the warning *"Every seed has the same money: nothing random touches money yet (expected until L9/L11)."*
+- `actionsDistinct`: how many seeds have a different action-count table from every other seed.
+  If it is 1 with more than one seed, warn *"Every seed lived the same day: the seed has no effect."*
+- `singleCauseShare`: the share of all turning points that have exactly one big cause, or `null`
+  when there are none. When there are none, warn *"No turning points: money follows the same
+  pattern every month (expected until shocks and job changes exist)."* If it is at least
+  `warnSingleCauseShare`, warn *"Most turning points have a single cause: the world is still a
+  stage (section 15)."* Either warning is **expected** with L2 money; they are the reason later steps exist.
+- `ok` is false if any invariant failed in any seed.
+- `seconds` is measured with `performance.now()` in the CLI and passed in, so `runMany` stays pure
+  and its report is identical between two runs except for `seconds`. (Tests compare reports with
+  `seconds` removed.)
+
+#### Step 4. Probes (`tools/replay/probes.js`)
+A probe is a plain object:
+```js
+{
+  id: 'money',           // the key of its block in "yearly" and "run"
+  since: 'L3',           // the step that added it
+  start(world, ctx) {},  // optional: before the first step
+  minute(world, ctx) {}, // optional: after every step; keep it cheap
+  day(world, ctx, gameDay) {},      // optional: at 23:59 of each game day
+  year(world, ctx, yearIndex) {},   // optional: returns this year's block
+  end(world, ctx) {},               // optional: returns the run block
+}
+```
+`DEFAULT_PROBES = [money, calendar, needs, actions, log]`. Build these five:
+
+1. **money** (reads `world.stocks` only).
+   - `start`: record each money stock's value, and the newest ledger `t` per stock (or −1).
+   - `day`: for each money stock, take the ledger entries with `t` greater than the last seen
+     `t`, add them to this day's list (keep `{ t, amount, reason }`), remember the newest `t`, and
+     record the end-of-day value. Keep, per game day and stock: `net` (sum of amounts), `gross`
+     (sum of absolute amounts) and the entries grouped by `reason` (sum per reason). These feed
+     the turning points.
+   - `year`: per stock, `start`, `end`, `in` (object: reason → total of positive amounts),
+     `out` (reason → total of negative amounts), all to the penny (`Math.round(x * 100) / 100`).
+   - `end`: per stock `start` and `end` for the whole run, and the lowest end-of-day value of
+     `acct.joint` with its date.
+2. **calendar**: `year` returns how many times each rule fired that year (the difference in
+   `world.calendar.fired` since the previous year); `end` returns the totals.
+3. **needs**: `minute` adds each need of each person to a running sum and keeps the minimum;
+   `year` returns per person and need `{ min, mean }` (mean to one decimal place) and the number of
+   game minutes any need was below 10 (`lowMinutes`); `end` the same for the run.
+4. **actions**: `minute` notes, per person, when `person.activity` is a different object from the
+   one seen the minute before and is not `null`; it counts `activity.action.id`. `year` returns
+   per person the counts (sorted by count, highest first) and `end` the totals.
+5. **log**: `minute` reads the lines added this step (the entries at the end of `world.log` with
+   `time === world.time`); it counts lines per `who`, and counts House lines starting with
+   `cfg.unpaidPrefix` (unpaid bills), keeping the first five such lines with their date. `year` and
+   `end` return the counts.
+
+Dates: a single date for a game time is `formatDate(calendarDate(time, world.calendar.start))`
+(the first calendar date of that game day); a game day's range is
+`gameDayDates(time, world.calendar.start)` ("27 Mar 2026 – 8 Apr 2026", the clock's own text). The
+last date of a run or year is `formatDate(dateAt(calendarSpan(lastGameDay)[1], start))`. All four
+helpers are exported from `src/sim/calendar.js`; do not write new date arithmetic.
+
+#### Step 5. Invariants and turning points
+`tools/replay/checks.js` exports one pure function per invariant. Each takes the plain numbers it
+needs (not the world) and returns `{ id, ok, detail }`, so a test can feed it bad numbers.
+1. `finite`: every money stock's end-of-day value is a finite number (no `NaN`, no `Infinity`).
+2. `limits`: every money stock stays within its `min` and `max` from `data/stocks.json` (a `null`
+   max means no ceiling) at every end of day.
+3. `reconciles`: for each money stock, `end − start` equals the sum of every ledger entry the
+   money probe captured, to the penny. This proves the engine and the capture agree.
+4. `ledgerComplete`: on no day did a stock's ledger drop an entry the probe had not yet read
+   (the oldest entry still in the ledger is older than, or equal to, the newest entry already
+   read, or the ledger is shorter than `ledgerKeep`). If it fails, say which stock and day.
+5. `mortgageFalls`: `debt.mortgage` never rises from one day to the next (true while the rate is
+   fixed; L11 changes this check when remortgaging arrives).
+6. `calendarExact`: each rule fired exactly as many times as there are matching dates in the
+   run, worked out independently: walk every calendar-day index from the first game day's span to
+   the last game day's span (`calendarSpan`), turn it into a date (`dateAt`) and count
+   `matches(rule, date)`; then subtract the rules due on the first game day whose
+   `hour × 60` is before the start time (a game started at 07:00 does not fire the 06:00
+   mortgage). The harness count must equal `world.calendar.fired[rule.id]` for every rule.
+7. `needsInRange`: every need stays between 0 and 100.
+
+`tools/replay/turning.js`:
+```js
+export function findTurningPoints(days, cfg)
+// days: [{ gameDay, date, stock, net, gross, byReason: { reason: amount } }]  (from the money probe)
+// -> [{ gameDay, date, stock, change, causes: [{ reason, amount, big }], bigCauses }]
+```
+For each stock: work out the median of `|net|` over all its days. A day is a turning point when
+`|net| ≥ cfg.minChange` and `|net| ≥ cfg.timesMedian × median`. Its causes are the reasons sorted
+by `|amount|`, largest first, at most `cfg.maxCauses`; a cause is `big` when
+`|amount| ≥ cfg.bigCauseShare × gross`. `bigCauses` is how many are big. Sort the turning points by
+game day, then stock id.
+
+#### Step 6. Tests (`tests/replay.test.js`)
+Keep the whole file under about 10 seconds: use one game year and seeds 1 and 2, and build the
+two seed reports once at the top of the file for the tests that only read them.
+1. **Same seed, same report.** `runSeed(seed 1, 1 year)` twice gives deep-equal reports.
+2. **Read only.** Run seed 1 for one game year with the harness, and a second world with plain
+   `step()` calls for the same number of minutes. `JSON.stringify` of `stocks`, `people`,
+   `calendar.fired` and `log` is the same for both worlds.
+3. **Invariants pass** for seeds 1 and 2 (every `ok` is true), and the year's money matches the
+   L2 hand sum: joint account ends at **£19,862.96** at 23:59 on the last game day (the figure in
+   `tests/household.test.js`; checked: stopping at 23:59 gives the same value). Seed 1, one year,
+   has **no** turning points and `singleCauseShare` is `null`.
+4. **Each invariant can fail.** Call each function in `checks.js` with a hand-made bad input (a
+   `NaN` balance, a value under `min`, a sum £0.01 out, a dropped ledger entry, a mortgage that
+   rises, a rule fired once too often, a need of 101) and check `ok` is false with a useful
+   `detail`.
+5. **Seeds differ where they should.** Seeds 1 and 2: Sarah's personality or action counts differ;
+   money is identical, and `runMany` gives `moneyIdentical: true` with the expected warning.
+6. **Turning points on made-up numbers.** Feed `findTurningPoints` a hand-made series: 20 quiet
+   days of ±£50 and one day of −£2,000 made of −£1,500 "Insurance" and −£500 "Food". It returns
+   one point on that day, causes in that order, `bigCauses` 2. A day of −£900 is not a point
+   (`minChange`).
+7. **Year boundary.** Seed 1 for two game years: `yearly` has two entries, and year 2's `start`
+   for every money stock equals year 1's `end`. The `calendarExact` invariant passes across
+   1 March 2027.
+8. **Command line.** Run `node tools/replay.js --seeds 1 --years 1 --out <a temp folder>` with
+   `child_process.execFileSync`: exit code 0, `replay-report.json` and `replay-summary.txt` exist,
+   and the JSON parses with `ok: true`.
+
+All old tests must still pass unchanged (Sarah's same-seed day, calendar counts, L2 money).
+
+#### Step 7. The command line (`tools/replay.js`)
+```
+node tools/replay.js [--seeds 20] [--years 10] [--from 1] [--out replay-out] [--daily] [--quiet]
+```
+- Defaults: 20 seeds, 10 years, from seed 1, folder `replay-out/`.
+- Writes `<out>/replay-report.json` (two-space indents) and `<out>/replay-summary.txt`, and prints
+  the summary unless `--quiet`. Prints a progress line per seed to stderr (`seed 3/20 … 5.4 s`).
+- Exit code **1** if any invariant failed, **2** for bad arguments (with a usage line), else 0.
+  Warnings never change the exit code.
+- Wrong or missing arguments: say what was wrong and show the usage line. No other options.
+
+`textSummary(report)` (in `summary.js`) gives at most about 15 lines, for example:
+```
+Replay: 20 seeds × 10 game years (1 Mar 2026 – 28 Feb 2036), 112 s
+Invariants: all passed (7 checks × 20 seeds)
+Seed 1 money: joint £2,500.00 → £…; savings £8,000.00 → £…; mortgage £228,302.03 → £…
+Unpaid bills: none
+Seeds: money identical; Sarah's days differ (17 of 20 seeds distinct)
+Turning points: none
+Warnings:
+- Every seed has the same money: nothing random touches money yet (expected until L9/L11).
+- No turning points: money follows the same pattern every month (expected until shocks and job changes exist).
+Not measured yet: stress (L4), beliefs (L5), family (L7), job changes (L9), contacts (L10), prices and remortgage (L11), health (L15), moving house (later)
+```
+The figures above are an example of the layout, not expected values.
+
+#### Step 8. Check and docs
+1. `npm test`: everything passes.
+2. Run `node tools/replay.js --seeds 20 --years 10`. Read the summary. Expect: all invariants
+   pass; the two warnings above (same money, no turning points); no unpaid bills (the family has a surplus of about £1,450 a
+   month). If anything else shows up, stop and tell the user before changing code.
+3. Note the run time; if 20 × 10 takes more than about 5 minutes, say so in STATUS (a coarse
+   daily mode for Sarah is a later step, not L3).
+4. Docs (CLAUDE.md "After every change"): STATUS (what was built, the summary's first six lines,
+   next step), DECISIONS (anything decided while building, with the reason), ROADMAP (tick L3),
+   ARCHITECTURE (the new `tools/replay/` files, `data/replay.json`, `replay-out/` ignored), this
+   section's heading to "built" with an "As built" note, and section 16's "What a session on one
+   step looks like" item 5 stays as it is (run the harness after every step).
+5. Commit and push to `main` (no branches), then copy the changed docs to the Project.
+
+#### What later steps do with the harness
+Each later step that adds a system adds one probe (with `since` set to that step), removes its
+line from `notYet`, and adds any invariant its system needs (L4: stress stays in range; L11: the
+mortgage payment changes only on the remortgage date, and `mortgageFalls` allows that one day).
+Then it runs `node tools/replay.js --seeds 20 --years 10` and puts the summary's first lines in
+STATUS.
 
 ---
 

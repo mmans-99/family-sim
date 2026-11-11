@@ -5,6 +5,11 @@
 ## Current phase
 Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) is built. Next is L3 (replay harness).
 
+## Latest (2026-11-11, evening) — L3 brief written (docs only)
+- **L3 replay harness brief** is in `docs/LIFE_SYSTEMS.md` 15a, written for another model to code: `data/replay.json`, `tools/replay.js` and `tools/replay/` (run, probes, checks, turning points, summary), seven invariants, eight tests, the command line and the docs to update. **No code written.**
+- It measures what exists now (money, calendar, needs, Sarah's actions, the log) and lists the rest as "not yet" with the step that adds it. Expected first result: all invariants pass, two warnings (every seed has the same money; no turning points).
+- **Decided by the user:** the 23 start repayments stay (the start time will be reset before the final simulation); prices stay as tuning figures, unchecked for now.
+
 ## Latest (2026-11-11, insurance and subscriptions built; broadband £32)
 - **Built on approval:** the insurance and subscription flows and rules are in `data/flows.json` and `data/calendar.json`; broadband is £32 a month. One game year totals £19,862.96 in the joint account (checked by hand in `tests/household.test.js`). Tests: 112 passing.
 - Chosen at the user's request ("you decide, make it realistic"): buildings and contents insurance, life cover for Tom, TV Licence, streaming, apps and cloud storage, Oliver's club, and household goods and clothing. Full list, amounts and reasons in `docs/FAMILY.md` ("Insurance and subscriptions"); decision in DECISIONS 2026-11-11; plan in LIFE_SYSTEMS 3a addendum.
@@ -247,9 +252,9 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User checks the Household block on a real phone (sideways and upright) and confirms the 23-repayment start (DECISIONS 2026-11-11).
-2. Check the insurance, subscription and broadband figures against live prices (all tuning, FAMILY.md). The surplus is about £1,450 a month.
-3. L3, the replay harness (LIFE_SYSTEMS section 15): a headless multi-seed run, so every later step is checked. Needs a brief and the user's approval before coding (CLAUDE.md).
+1. User approves the L3 brief (LIFE_SYSTEMS 15a); then build it (any model can follow the brief).
+2. User checks the Household block on a real phone (sideways and upright).
+3. After L3: L4 (couplings, stress, sleep debt, interruption rule) needs a brief and approval.
 4. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
 5. Source the school term dates (needed before L6/L7).
 6. Record the exact Sierrassets licence wording in DECISIONS.md.

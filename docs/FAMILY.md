@@ -57,8 +57,8 @@ Assumed bought in spring 2024 for **£265,000**, a typical Birmingham semi.
 
 ## Insurance and subscriptions (decided and built 11 Nov 2026, tuning)
 Chosen by Claude at the user's request ("you decide, make it realistic"). These are typical UK
-amounts, not yet checked against live prices or quotes. Every figure is `tuning` until checked
-at the start of the build.
+amounts, not yet checked against live prices or quotes. Every figure stays `tuning`; the user chose
+to keep them unchecked for now (11 Nov 2026).
 
 | Item | Amount | When | Decision and reason |
 |---|---|---|---|
