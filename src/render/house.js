@@ -185,7 +185,7 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null, people = 
   for (const person of people) {
     const at = project(cam, width, height, person.x, person.y);
     const row = Math.round(project(cam, width, height, person.x, person.row).sy);
-    const sprite = pack?.sprites[person.sprite];
+    const sprite = pack?.sprites[person.sprite] ?? pack?.sprites[person.fallback];
     const draw = sprite
       ? () => blitSprite(buf, sprite, at.sx, at.sy)
       : () => fillRect(buf, Math.round(at.sx) - 4, Math.round(at.sy) - 16, Math.round(at.sx) + 4, Math.round(at.sy), [66, 156, 150], OUTLINE);

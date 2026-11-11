@@ -156,7 +156,7 @@ function drawFrame() {
   };
   // How far through the current game minute we are, so walkers move smoothly.
   const frac = clock.speed ? Math.min(1, clock.carryMs / REAL_MS_PER_GAME_MINUTE) : 0;
-  const people = peopleToDraw(world, view.floors, view.place, frac);
+  const people = peopleToDraw(world, view.floors, view.place, frac, performance.now());
   drawScene(lowCtx, scene, artCam, lw, lh, pack, people);
   if (!pack) snapFrame(lowCtx, lw, lh); // plain blocks only: keep to the fixed palette
 
@@ -204,7 +204,8 @@ async function start() {
   // had already been lived (the same steps the clock would take).
   const skip = Number(new URLSearchParams(window.location.search).get('minutes')) || 0;
   for (let i = 0; i < Math.min(skip, 7 * 1440); i++) { clock.totalMinutes += 1; step(world); }
-  pack = await loadPack(); // floor and furniture sprites, if the sheets are present
+  // Floor, furniture and people sprites, if the sheets are present.
+  pack = await loadPack(undefined, world.people.map((p) => p.sprite));
   buildControls();
   attachCameraControls(canvas, cam);
   window.addEventListener('resize', resizeCanvas);

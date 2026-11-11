@@ -43,6 +43,27 @@ for objects (like the pack's furniture), dark grey (56, 56, 56) for floor-level 
 `python3 tools/make_extras.py` from the repo root, paste the printed rectangles into
 `EXTRA_RECTS` in `pack.js`, and look at the sheet enlarged before using it.
 
+### People: Mum's animated sheet
+`assets/people/sarah.png` (+ `sarah.json`, frame name -> rectangle) is made by
+`tools/make_mum.py` from Eris Esra's 16x32 character template (32 x 32 frames, figure about
+16 x 25 pixels, feet on the bottom row). Frames are named `anim_direction_frame[_face]`:
+- anim: `idle`, `walk`, `interact` (4 frames each), `sit` (front only), and `lie` (the head,
+  eyes shut, for bed and bath);
+- direction: `front`, `front_right`, `right`, `back_right`, `back`, and the mirrored
+  `front_left`, `left`, `back_left`;
+- face (front frames only): none (content), `_happy`, `_tired`, `_uneasy`.
+The script paints by rules from each frame's own pixels (the head squashes and tilts
+between frames, so a fixed hair image does not fit): hair from the head's outline per
+direction, skin above the neck, top down to the hips, jeans below, shoes on each leg's
+lowest pixel, hands wherever the arms reach past the hips. Then it outlines any hair that
+sticks out past the old outline. To make another person: copy the script, change the
+colours and the hair rules, run it, look at every frame enlarged.
+- **Licence:** the template may be used in games; a free game must credit and link it (in
+  the page footer); the template itself must not be redistributed, so it is not in the
+  repo. Download it from https://erisesra.itch.io/character-templates-pack to re-run.
+- The old simple Sarah sprites on the extras sheet remain as a fallback if the sheet
+  fails to load.
+
 ## 2. The rules that make it look right
 
 Break any one of these and the view looks wrong.
@@ -163,6 +184,10 @@ Rules when expanding it:
      the seat shows below them. Lying: head at the left end, near the top (pillow, bath).
    - Sort row: their feet, except on furniture (just after the furniture) and on the stairs
      (after the whole flight, which is one tall sprite, or they vanish behind it).
+   - Frame choice: walking uses `walk` facing the step (down the screen = front), a full
+     cycle per square. Using something while standing uses `interact` facing it (so she has
+     her back to you at the cooker). Pottering uses `idle` facing front. Idle and interact
+     step a frame every 220 ms of real time; that is display only.
 4. **Someone on the stairs** is on the ground floor until they step off the top step onto
    the landing (first floor, x 5, y 5). They swap floors halfway across that step.
 5. Tapping a person later should work in every view, so turn a tap back into grid squares

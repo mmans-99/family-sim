@@ -3,9 +3,26 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 — the house is lived in: Sarah (Mum) has needs, picks what to do, walks the house (stairs and garden included) and uses the furniture. A watch-only panel shows her needs and day. Still to do in Phase 1: save/load.
+Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has needs, picks what to do, walks the house (stairs and garden included) and uses the furniture. A watch-only panel shows her needs and day. Still to do in Phase 1: save/load.
 
-## Last session (2026-11-11, late afternoon)
+## Last session (2026-11-11, evening)
+The user supplied Eris Esra's character template pack and an expression sheet pack, and
+asked for them to be made into Mum.
+- **Mum is animated now.** `tools/make_mum.py` paints Sarah (shoulder-length brown hair,
+  teal top, jeans) over every frame of the template's idle, walk and interact animations
+  in all 8 directions, plus a sitting pose and a sleeping head: 149 frames in
+  `assets/people/sarah.png`. She walks with a walk cycle facing where she is going, works
+  facing what she uses (back to you at the cooker), sits, and sleeps with eyes shut.
+- **Faces:** the expression pack is a blank practice sheet (all 18 boxes hold the same empty
+  face, checked in every .aseprite layer), so nothing from it is used. I drew content,
+  happy, tired, uneasy and asleep faces; the face follows her needs (display only).
+- **Licence:** the template may be used in games; a free game must credit and link it, so
+  the footer now does. The template files are not in the repo (no repackaging allowed).
+- Tests: 50 passing (facing, faces, every frame the renderer asks for is on the sheet).
+- Checked: enlarged frames in every direction; screenshots of her waking, cooking, reading,
+  pottering and asleep; phone size; a live run with no errors.
+
+## Earlier (2026-11-11, late afternoon)
 The user checked the new layout on the phone ("looks good") and asked for the next steps.
 - **Sarah lives in the house.** `src/sim/housemap.js` builds a walking map from
   `house.json` (doors, stairs from their ends only, back door to the garden, furniture in
@@ -113,7 +130,9 @@ The user asked for the project to be read and the house view fixed. The view was
 ## Known issues
 - Sarah potters about a lot between meals, because nothing else needs doing yet. Childcare (Phase 2) and later outings will fill the day.
 - Actions are never interrupted: a bath runs its full time even if she badly needs the toilet.
-- No thought bubbles or mood yet; the panel shows what she is doing.
+- No thought bubbles or real mood yet; her face follows her needs as a stand-in.
+- Her face only shows on front-facing frames; from the side or back it is the plain template face.
+- The sleeping head is slightly wider than one pillow on the double bed.
 - The page always starts at 07:00 on Day 1 with the same seed. Reloading starts the day again (save/load is next).
 - The pack only has front views. The sofa faces the viewer, not the TV, and the lower dining chairs show their backs. A back-view sofa would need drawing.
 - The kitchen table has three chairs. Ruby needs a high chair (to draw on the extras sheet).

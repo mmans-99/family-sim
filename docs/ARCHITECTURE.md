@@ -17,9 +17,11 @@ simulator/
 ├── docs/                   project memory (see CLAUDE.md)
 ├── assets/
 │   ├── furniture-pack/     Sierrassets sheets: furniture.png, floors-walls.png
-│   └── extras/extras.png   our own pieces the pack lacks (stairs, shed, tree, lawn, path, rugs, front wall face)
+│   ├── extras/extras.png   our own pieces the pack lacks (stairs, shed, tree, lawn, path, rugs, front wall face)
+│   └── people/sarah.png    Mum: every animation frame (+ sarah.json listing where each frame is)
 ├── tools/
-│   └── make_extras.py      draws assets/extras/extras.png (Python + Pillow)
+│   ├── make_extras.py      draws assets/extras/extras.png (Python + Pillow)
+│   └── make_mum.py         builds assets/people/sarah.* from Eris Esra's 16x32 template (template not in repo)
 ├── data/
 │   ├── house.json          house: floors, rooms, doorways, fences, stairs, furniture
 │   ├── needs.json          needs and how fast they drop
@@ -38,7 +40,7 @@ simulator/
 │   │   ├── house.js        draws the scene from above: floor tiles, flat items, then walls and sprites top to bottom
 │   │   ├── raster.js       pixel-exact polygon fill, lines and sprite copying (no anti-aliasing)
 │   │   ├── pack.js         sprite pack: positions on the sheets, item-to-sprite map, room floor tiles, loader
-│   │   ├── people.js       where to draw each person (reads the sim, smooth walking between minutes)
+│   │   ├── people.js       where to draw each person and which frame: walk/idle/interact/sit/lie, facing, face from needs
 │   │   └── palette.js      fixed palette; only used to snap colours when the sprite pack is missing
 │   └── ui/
 │       ├── camera-controls.js   drag, two-finger, pinch, wheel; button actions

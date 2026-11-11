@@ -93,3 +93,31 @@ test('someone on the stairs is drawn after the flight, so they are not hidden by
   const [d] = peopleToDraw(w, ['ground']);
   assert.ok(d.row > 5, `row ${d.row}`);
 });
+
+test('people face the way they move: down the screen shows their front', async () => {
+  const { facing } = await import('../src/render/people.js');
+  assert.equal(facing(0, 1), 'front');
+  assert.equal(facing(0, -1), 'back');
+  assert.equal(facing(1, 0), 'right');
+  assert.equal(facing(-1, 0), 'left');
+  assert.equal(facing(-1, -1), 'back_left');
+});
+
+test('the face follows the needs', async () => {
+  const { mood } = await import('../src/render/people.js');
+  assert.equal(mood({ hunger: 90, energy: 90, fun: 90 }), 'happy');
+  assert.equal(mood({ hunger: 90, energy: 25, fun: 90 }), 'tired');
+  assert.equal(mood({ hunger: 10, energy: 90, fun: 90 }), 'uneasy');
+  assert.equal(mood({ hunger: 60, energy: 60, fun: 60 }), 'content');
+});
+
+test('every frame people.js can ask for is on Mum\'s sheet', async () => {
+  const meta = JSON.parse(readFileSync(new URL('../assets/people/sarah.json', import.meta.url), 'utf8'));
+  const dirs = ['front', 'front_right', 'right', 'back_right', 'back', 'back_left', 'left', 'front_left'];
+  for (const anim of ['idle', 'walk', 'interact']) {
+    for (const d of dirs) for (let f = 0; f < 4; f++) assert.ok(meta.rects[`${anim}_${d}_${f}`], `${anim}_${d}_${f}`);
+    for (const m of ['happy', 'tired', 'uneasy']) for (let f = 0; f < 4; f++) assert.ok(meta.rects[`${anim}_front_${f}_${m}`]);
+  }
+  for (let f = 0; f < 4; f++) assert.ok(meta.rects[`sit_front_${f}`]);
+  assert.ok(meta.rects.lie);
+});

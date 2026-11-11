@@ -165,8 +165,16 @@ export function makePack(furniture, floors, extras = null) {
   return { sprites, tiles, rugs };
 }
 
+// Animated people sheets: assets/people/<id>.png with <id>.json listing each frame.
+export const PEOPLE_FOLDER = 'assets/people/';
+
+export function addPersonFrames(pack, id, sheet, meta) {
+  for (const [name, rect] of Object.entries(meta.rects)) pack.sprites[`${id}:${name}`] = crop(sheet, rect);
+}
+
 // Load the pack in a browser. Resolves to null if the images are not there.
-export async function loadPack(folder = PACK_FOLDER) {
+// people: ids of animated people sheets to load as well (e.g. ['sarah']).
+export async function loadPack(folder = PACK_FOLDER, people = []) {
   const load = (file) => new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -185,7 +193,16 @@ export async function loadPack(folder = PACK_FOLDER) {
   try {
     const [furniture, floors] = await Promise.all([load(folder + 'furniture.png'), load(folder + 'floors-walls.png')]);
     const extras = await load(EXTRAS_FILE).catch(() => null);
-    return makePack(toPixels(furniture), toPixels(floors), extras && toPixels(extras));
+    const pack = makePack(toPixels(furniture), toPixels(floors), extras && toPixels(extras));
+    for (const id of people) {
+      // Animated people (tools/make_mum.py): every frame becomes a sprite named "id:frame".
+      try {
+        const meta = await (await fetch(`${PEOPLE_FOLDER}${id}.json`)).json();
+        const sheet = toPixels(await load(`${PEOPLE_FOLDER}${id}.png`));
+        addPersonFrames(pack, id, sheet, meta);
+      } catch { /* no sheet: the simple extras sprites are used instead */ }
+    }
+    return pack;
   } catch {
     return null;
   }
