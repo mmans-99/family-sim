@@ -60,6 +60,10 @@ Planned, not built yet: `schedule.js`, `offsite.js`, `economy.js`, `weather.js`,
 - Each step: each person's needs drop → if free, the brain picks an action → walk along the route, or use the furniture (needs rise) → log. (Later: weather and economy before the people.)
 - The drawing loop runs every screen frame and reads the latest state. `people.js` moves walkers smoothly between minutes using the part of the minute that has passed; the sim itself never reads anything from the screen.
 - Testing aid: `index.html?minutes=N` starts the page N game minutes in (same steps as the clock).
+- Build-time views: `SHOW_WHY` in `src/ui/panel.js` shows each person's latest decision
+  (`person.why`). Set it to `false` before the finished full-screen view.
+- Drawing-only effects: an action's `steam` flag (`data/actions.json`) makes `people.js` pass a
+  steam frame for that person; `house.js` draws the puff after the people. The sim never reads it.
 
 ## The house view
 (Step-by-step method, rules and checks: `docs/HOUSE_VIEW.md`.)

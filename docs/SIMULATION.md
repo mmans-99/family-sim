@@ -26,6 +26,13 @@ Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `d
   landing square above its top step, never over the banister. Furniture is used from a
   free square beside it in the same room.
 - **Log:** each decision adds a line (`world.log`, last 50), shown in the status panel.
+- **Why trace:** every decision also stores a `why` (on the log line and as `person.why`):
+  the chosen action, the reason (`need`, or nothing scored high enough and she wanders), the
+  lowest need and its value (chores are `routine`, they have no need), the score, the squares
+  to walk, the habit (never done, or minutes since last), the two next-best options, and a
+  snapshot of all needs. Shown in the panel while `SHOW_WHY` is on (`src/ui/panel.js`).
+- **Steam:** actions marked `"steam": true` in `data/actions.json` (the bath) draw a dithered
+  steam puff over the person while they are in them. Drawing only, no effect on the sim.
 
 ## 1. Needs (0–100, drop over time)
 Hunger, Energy, Bladder, Hygiene, Fun, Social, Comfort.

@@ -101,6 +101,8 @@ export function peopleToDraw(world, floors, place = {}, frac = 0, now = 0) {
       sprite: `${p.sprite}:${spot.frame}`,
       fallback: `${p.sprite}_${spot.fallback}`,
       x: spot.x + (shift.x ?? 0), y: spot.y + (shift.y ?? 0), row: spot.row + (shift.y ?? 0),
+      // Steam (from actions marked "steam" in the data): the animation frame to draw, else null.
+      steam: a?.phase === 'do' && a.action.steam ? tick : null,
     });
   }
   return out;

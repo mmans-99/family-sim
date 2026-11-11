@@ -5,11 +5,21 @@
 ## Current phase
 Phase 1 — the house is lived in: Sarah (Mum), now an animated character, has needs, picks what to do, walks the house (stairs and garden included) and uses the furniture. A watch-only panel shows her needs and day. Still to do in Phase 1: save/load.
 
+## Latest (2026-11-11, afternoon)
+- **Why trace.** Every decision records why: the lowest need, score, squares, habit and the
+  two next-best options (`person.why` and the log line). Shown under each person in the panel
+  while `SHOW_WHY` (in `src/ui/panel.js`) is on. Turn it off before the finished view.
+- **Bath steam.** Actions marked `steam` (the bath) draw a dithered puff over her while she is
+  in them. First pass: it is subtle, and it still touches the wall edge above the bath; tune
+  on the phone.
+- **Not done yet, as asked:** the bath's tap and filling steps; personality parameters (Mum
+  first, then everyone). Tests: 53 passing.
+
 ## Latest fix (2026-11-11, night)
 - **Teleport fixed.** The minute a walk was chosen, Sarah was already advanced 8 squares, so
   she appeared to jump. Now the walk starts on her first square and moves at most 8 squares
   a minute from the next minute. Test added (51 passing).
-- Still to do in Phase 1: save/load, then a screenshot check of the first walk on the phone.
+- Still to do in Phase 1: tap and bath-filling steps, personality parameters, save/load.
 
 ## Last session (2026-11-11, evening)
 The user supplied Eris Esra's character template pack and an expression sheet pack, and

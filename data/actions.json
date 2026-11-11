@@ -6,7 +6,7 @@
     { "id": "cook",    "label": "Cooking a meal",           "object": "cooker",          "minutes": 35,  "gain": { "hunger": 70, "fun": 5 },        "hours": [7, 21], "offHours": 0.2 },
     { "id": "snack",   "label": "Grabbing a snack",         "object": "fridge",          "minutes": 8,   "gain": { "hunger": 25 } },
     { "id": "toilet",  "label": "Using the toilet",         "object": "toilet",          "minutes": 5,   "gain": { "bladder": 100 },                "on": "sit" },
-    { "id": "bath",    "label": "Having a bath",            "object": "bath",            "minutes": 30,  "gain": { "hygiene": 100, "comfort": 15 }, "on": "lie" },
+    { "id": "bath",    "label": "Having a bath",            "object": "bath",            "minutes": 30,  "gain": { "hygiene": 100, "comfort": 15 }, "on": "lie", "steam": true },
     { "id": "wash",    "label": "Washing at the basin",     "object": "basin",           "minutes": 5,   "gain": { "hygiene": 20 } },
     { "id": "tv",      "label": "Watching TV",              "object": "sofa",            "minutes": 45,  "gain": { "fun": 40, "comfort": 25 },      "on": "sit" },
     { "id": "read",    "label": "Reading in the armchair",  "object": "armchair",        "minutes": 40,  "gain": { "fun": 30, "comfort": 20 },      "on": "sit" },

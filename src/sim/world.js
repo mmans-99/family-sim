@@ -50,8 +50,8 @@ export function createWorld({ house, actions, needs, people, seed = 1, time = 7 
   return world;
 }
 
-function say(world, person, text) {
-  world.log.push({ time: world.time, who: person.name, text });
+function say(world, person, text, why = null) {
+  world.log.push({ time: world.time, who: person.name, text, why });
   if (world.log.length > LOG_LENGTH) world.log.shift();
 }
 
@@ -79,6 +79,22 @@ export function scoreAction(person, action, hour) {
   if (action.hours && !inHours(hour, action.hours)) score *= action.offHours ?? 0;
   return score;
 }
+
+// The need that makes an action worth doing most, for the "why" trace.
+function dominantNeed(person, action) {
+  let best = null;
+  let bestValue = -1;
+  for (const [need, gain] of Object.entries(action.gain)) {
+    const now = person.needs[need] ?? 100;
+    const value = Math.min(gain, 100 - now) * ((100 - now) / 100) ** 2;
+    if (value > bestValue) { best = need; bestValue = value; }
+  }
+  return best;
+}
+
+const snapshotNeeds = (person) => Object.fromEntries(
+  Object.entries(person.needs).map(([k, v]) => [k, Math.round(v)]),
+);
 
 // Choose what to do next and set off.
 function decide(world, person) {
@@ -121,8 +137,21 @@ function decide(world, person) {
       phase: path.length > 1 ? 'walk' : 'do',
       minutesLeft: pick.action.minutes,
     };
+    const last = person.lastDone[pick.action.id];
+    const why = {
+      chosen: pick.action.label,
+      reason: 'need',
+      need: dominantNeed(person, pick.action) ?? 'routine', // chores have no need, only a base score
+      needs: snapshotNeeds(person),
+      score: Math.round(pick.score * 10) / 10,
+      squares: pick.d,
+      habit: last === undefined ? 'never done' : `last done ${world.time - last} min ago`,
+      next: top.filter((o) => o !== pick).slice(0, 2)
+        .map((o) => ({ label: o.action.label, score: Math.round(o.score * 10) / 10 })),
+    };
     person.lastDone[pick.action.id] = world.time;
-    say(world, person, pick.action.label);
+    person.why = why;
+    say(world, person, pick.action.label, why);
     return;
   }
 
@@ -136,8 +165,13 @@ function decide(world, person) {
     action: { id: 'potter', label, minutes, gain: {} }, item: null, path, pos: 0,
     phase: path.length > 1 ? 'walk' : 'do', minutesLeft: minutes,
   };
+  const why = {
+    chosen: label, reason: `nothing scored at least ${MIN_SCORE}`,
+    needs: snapshotNeeds(person), squares: path.length - 1, habit: null, next: [],
+  };
+  person.why = why;
   const last = world.log.findLast((e) => e.who === person.name);
-  if (last?.text !== label) say(world, person, label); // one line for a spell of pottering
+  if (last?.text !== label) say(world, person, label, why); // one line for a spell of pottering
 }
 
 function stepPerson(world, person) {

@@ -145,3 +145,27 @@ test('a walk starts on the first square and moves at most 8 squares a minute', (
   }
   assert.ok(walks > 0, 'Sarah walked somewhere in the test');
 });
+
+test('every decision leaves a why trace: the need, the score, the habit and the runners-up', () => {
+  const w = createWorld({ ...data(), seed: 3, time: 7 * 60 });
+  const p = w.people[0];
+  let checked = 0;
+  for (let m = 0; m < 300 && checked < 5; m++) {
+    const before = p.activity;
+    step(w);
+    if (p.activity && p.activity !== before) {
+      const why = p.why;
+      assert.equal(why.chosen, p.activity.action.label);
+      assert.ok(why.needs && typeof why.needs === 'object', 'needs snapshot kept');
+      assert.ok(why.next.length <= 2, 'at most two runners-up');
+      if (why.reason === 'need') {
+        assert.ok(why.need === 'routine' || w.needDefs[why.need], 'dominant need is a real need, or a routine chore');
+        assert.equal(typeof why.score, 'number');
+      }
+      const entry = w.log.findLast((e) => e.who === p.name);
+      assert.equal(entry.why, why, 'the log line carries the same trace');
+      checked++;
+    }
+  }
+  assert.equal(checked, 5);
+});

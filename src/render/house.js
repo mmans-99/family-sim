@@ -130,6 +130,30 @@ function paintStructure(buf, b, r) {
 
 // Snap every pixel of a w x h canvas to the palette. Only used when there are no sprites:
 // the sprites have their own hand-picked colours, which must not be changed.
+// Steam: a few pale dotted puffs that rise and drift, one step per animation frame. The
+// dots are alternate pixels, so it reads as a soft blur rather than a solid shape.
+const STEAM = [226, 234, 240];
+function paintSteam(buf, x, y, tick) {
+  for (let k = 0; k < 3; k++) {
+    const rise = (tick + k * 3) % 8;
+    const cx = x + (k - 1) * 6;
+    const cy = y - 15 - rise; // over the bath, clear of the head, and not up into the next room
+    for (let dy = -2; dy <= 0; dy++) {
+      for (let dx = -3; dx <= 3; dx++) {
+        if ((dx + dy + tick + k) % 2 !== 0) continue; // dither: every other pixel
+        const px = cx + dx;
+        const py = cy + dy;
+        if (px < 0 || py < 0 || px >= buf.width || py >= buf.height) continue;
+        const i = (py * buf.width + px) * 4;
+        buf.data[i] = STEAM[0];
+        buf.data[i + 1] = STEAM[1];
+        buf.data[i + 2] = STEAM[2];
+        buf.data[i + 3] = 255;
+      }
+    }
+  }
+}
+
 export function snapFrame(ctx, w, h) {
   const img = ctx.getImageData(0, 0, w, h);
   const d = img.data;
@@ -194,5 +218,10 @@ export function drawScene(ctx, boxes, cam, width, height, pack = null, people = 
   for (const draw of flat) draw();
   standing.sort((a, b) => a.row - b.row || a.z - b.z);
   for (const s of standing) s.draw();
+  for (const person of people) {
+    if (person.steam === null || person.steam === undefined) continue;
+    const at = project(cam, width, height, person.x, person.y);
+    paintSteam(buf, Math.round(at.sx), Math.round(at.sy), person.steam);
+  }
   ctx.putImageData(buf, 0, 0);
 }

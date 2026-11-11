@@ -66,3 +66,6 @@ Newest at the bottom. Format: date — decision — why.
 - Hand-drawn pixel sprites, four angles each, replacing the block shapes one item at a time. Plan: sofa, bed and table first. Approved 2026-11-09. (Partly superseded: the pack covers most furniture; our own extras sheet covers the rest.)
 
 - 2026-11-11: Walks start on the first square. The minute a walk is chosen, nothing moves; then at most `WALK_SQUARES_PER_MINUTE` (8) squares a minute. Reason: the first walk minute was already 8 squares along, so she appeared to teleport. Test in `tests/world.test.js`.
+- 2026-11-11: Every decision records a "why" trace (need, score, habit, next-best options), kept on the log line and shown in the panel while `SHOW_WHY` is on. Build-time only: to be switched off before the finished full-screen view. — The user wants to see the reasons while building, and a hidden view at the end.
+- 2026-11-11: Personality parameters go in the people's data and apply to all characters, but are tested on Mum first. — The user wants the personality to apply to everyone once built, with Mum as the test case.
+- 2026-11-11: The bathroom gets a steam effect while the bath is in use (read as the "blur" the user asked for). It is drawing only, controlled by a `steam` flag on the action. — The user asked for a blur animation in the bathroom; steam fits a bath. Reading to confirm on the phone.
