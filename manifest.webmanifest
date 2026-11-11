@@ -1,0 +1,10 @@
+{
+  "name": "Family Simulator",
+  "short_name": "Family Sim",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#2b2620",
+  "theme_color": "#2b2620"
+}

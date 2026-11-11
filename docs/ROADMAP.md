@@ -29,14 +29,14 @@ Build these before Phase 2: everything after rests on them. Step numbers match L
 - [ ] L5 Beliefs: people act on what they think, not the true values
 
 ## Landscape view (UI step, before L2)
-Design agreed 2026-11-11: `docs/HOUSE_VIEW.md` section 10. Code waits for the user's approval.
-- [ ] Full-screen landscape layout: menus float over the house; side panel holds needs, log, Household
-- [ ] Follow camera: glides with a person, looks ahead, stops at the world's edge; tap a face to follow
-- [ ] Snap zoom levels: Close, Room, Whole house
-- [ ] Minimap with people dots and the view box; tap to move the camera
+Design agreed 2026-11-11: `docs/HOUSE_VIEW.md` section 10. Built 2026-11-11 after the user approved it (branch `landscape-view`).
+- [x] Full-screen landscape layout: menus float over the house; side panel holds needs, log, Household
+- [x] Follow camera: glides with a person, looks ahead, stops at the world's edge; tap a face to follow
+- [x] Snap zoom levels: Close, Room, Whole house
+- [x] Minimap with people dots and the view box; tap to move the camera
 - [ ] Edge scenery: front garden, pavement, road, the other half of the semi, fences (drawing only)
-- [ ] Portrait still works; full-screen button; web app manifest for "Add to Home Screen"
-- [ ] Auto-hide of buttons (if the user keeps that default)
+- [x] Portrait still works; full-screen button; web app manifest for "Add to Home Screen" (no icon file yet)
+- [x] Auto-hide of buttons after 5 s (default approved)
 
 ## Phase 2 — The family
 - [ ] L6 Obligations in the brain (school run, appointments, deadlines)

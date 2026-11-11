@@ -1,26 +1,28 @@
-// Camera controls for the house view. The view is straight down, so there are
-// no turns: only pan and zoom.
-//   One finger or left-drag: move the view sideways.
-//   Pinch or mouse wheel: zoom.
-// The on-screen buttons call nudge().
-import { createCamera } from '../render/camera.js';
+// Touch and mouse controls for the house view. The player only looks: nothing here changes
+// what the family does (docs/HOUSE_VIEW.md section 10).
+//   One finger or left-drag: move the view. This stops following (hooks.manual).
+//   Pinch or mouse wheel: step between the zoom levels (hooks.zoom).
+// hooks = { pixel(): art pixel size in device pixels, dpr(): device pixels per CSS pixel,
+//           zoom(zoomIn: boolean), manual() }
+// The view's centre is cam.x, cam.y in grid squares.
+import { UNIT_PX } from '../render/camera.js';
 
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 4;
+const PINCH_STEP = 1.3;  // a pinch this much bigger or smaller steps one zoom level
+const WHEEL_STEP = 100;  // this much wheel movement steps one zoom level
 
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-
-export function attachCameraControls(canvas, cam) {
+export function attachCameraControls(canvas, cam, hooks) {
   canvas.style.touchAction = 'none'; // stop the phone scrolling the page while you drag
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
   const pointers = new Map();
   let pinch = null;
+  let wheel = 0;
 
   canvas.addEventListener('pointerdown', (e) => {
     canvas.setPointerCapture(e.pointerId);
-    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey });
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     pinch = null;
+    hooks.touched?.();
   });
 
   canvas.addEventListener('pointermove', (e) => {
@@ -30,20 +32,25 @@ export function attachCameraControls(canvas, cam) {
     const dy = e.clientY - p.y;
     p.x = e.clientX;
     p.y = e.clientY;
+    hooks.touched?.();
 
     if (pointers.size === 1) {
-      cam.panX += dx;
-      cam.panY += dy;
+      if (dx === 0 && dy === 0) return;
+      hooks.manual();
+      // Screen pixels -> art pixels -> grid squares. Dragging right moves the view left.
+      const perSquare = hooks.pixel() * UNIT_PX;
+      cam.x -= (dx * hooks.dpr()) / perSquare;
+      cam.y -= (dy * hooks.dpr()) / perSquare;
     } else if (pointers.size === 2) {
       const [a, b] = [...pointers.values()];
       const dist = Math.hypot(a.x - b.x, a.y - b.y);
-      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
       if (pinch) {
-        cam.zoomMul = clamp(cam.zoomMul * (dist / pinch.dist), MIN_ZOOM, MAX_ZOOM);
-        cam.panX += mid.x - pinch.mid.x;
-        cam.panY += mid.y - pinch.mid.y;
+        const r = dist / pinch.dist;
+        if (r > PINCH_STEP) { hooks.zoom(true); pinch.dist = dist; }
+        else if (r < 1 / PINCH_STEP) { hooks.zoom(false); pinch.dist = dist; }
+      } else {
+        pinch = { dist };
       }
-      pinch = { dist, mid };
     }
   });
 
@@ -56,16 +63,11 @@ export function attachCameraControls(canvas, cam) {
 
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    cam.zoomMul = clamp(cam.zoomMul * Math.exp(-e.deltaY * 0.001), MIN_ZOOM, MAX_ZOOM);
+    hooks.touched?.();
+    wheel += e.deltaY;
+    if (Math.abs(wheel) >= WHEEL_STEP) {
+      hooks.zoom(wheel < 0); // scrolling up zooms in
+      wheel = 0;
+    }
   }, { passive: false });
-}
-
-// Button actions: zoom in and out, reset the view.
-export function nudge(cam, action) {
-  switch (action) {
-    case 'in': cam.zoomMul = clamp(cam.zoomMul * 1.25, MIN_ZOOM, MAX_ZOOM); break;
-    case 'out': cam.zoomMul = clamp(cam.zoomMul / 1.25, MIN_ZOOM, MAX_ZOOM); break;
-    case 'reset': Object.assign(cam, createCamera()); break;
-    default: break;
-  }
 }

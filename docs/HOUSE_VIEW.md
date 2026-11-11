@@ -144,9 +144,9 @@ and the pixel just outside it is transparent.
 
 ## 5. Views: the whole house on one screen
 
-> **Planned change (agreed 2026-11-11, not built yet):** the fixed views become a landscape,
-> full-screen view with a follow camera, snap zoom levels and a minimap. The whole-house
-> layout below stays as the world the camera moves over. See section 10 before building it.
+> **Changed 2026-11-11 (built):** the fixed views are now the landscape, full-screen view of
+> section 10. The whole-house layout below is the world the camera moves over (`WORLD` in
+> `main.js`). The floor buttons are gone; `?view=first|ground|garden` still opens a floor.
 
 The page opens on **Whole house**: every floor on one screen, so people can be followed
 without changing view. The other buttons show one floor, bigger.
@@ -279,11 +279,11 @@ Follow "After every change" in `CLAUDE.md`: update STATUS, DECISIONS, ROADMAP an
 ARCHITECTURE as needed, update this file if the method changed, commit, push, and copy
 the changed docs to the Project.
 
-## 10. Planned: landscape full-screen view and follow camera (agreed, not built)
+## 10. Landscape full-screen view and follow camera (built 2026-11-11, except 10.5)
 
-Agreed with the user on 2026-11-11 as the design. **No code yet.** Two small choices are still
-open (DECISIONS, OPEN); the defaults below apply unless the user changes them. Build only after
-the user approves the step (CLAUDE.md).
+Designed with the user on 2026-11-11 and approved to build. The two open choices were approved
+at the proposed defaults (DECISIONS). Built as described below, except edge scenery (10.5),
+which is not built yet. Where the build differs, DECISIONS (2026-11-11) says how.
 
 **Reference:** *Shakedown: Hawaii* (Vblank, 2019): a top-down 16-bit open world where the camera
 travels with the character. We keep our top-down art (it already matches) and borrow the camera
@@ -375,7 +375,7 @@ the phone sideways.
 `src/sim/`, the save format, the drawing order and art rules (section 2), sprites, and the test links
 `?view=`, `?minutes=` and `?fresh=` (`?view=` opens that floor at the Room zoom with following off).
 
-### 10.8 How to check it
+### 10.8 How to check it (done 2026-11-11, see STATUS)
 - `node --test`, with new tests for: glide and look ahead, edge clamp, zoom level sizes (whole
   pixels only), minimap scale, tap to grid squares.
 - Screenshots at 844 x 390 (sideways) and 390 x 844 (upright), both with

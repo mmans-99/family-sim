@@ -89,12 +89,8 @@ Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/r
 - `main.js` draws into a small canvas and scales it up with hard edges. One art pixel is a whole number of device pixels. Zooming changes that number, so the art stays sharp at every zoom. Pan is turned into whole art pixels.
 - The sheets are `assets/furniture-pack/furniture.png` and `floors-walls.png`, plus our own `assets/extras/extras.png`. If the pack fails to load, everything is drawn as plain blocks and snapped to the palette. If only the extras fail, those pieces fall back to blocks.
 
-### Planned: landscape view (agreed 2026-11-11, not built)
-Design in `docs/HOUSE_VIEW.md` section 10. Planned new files: `src/render/follow.js` (pure follow-camera
-maths: aim, look ahead, glide, edge clamp, zoom levels), `src/render/minimap.js` (minimap canvas),
-`src/ui/hud.js` (floating menus, side panel, auto-hide), `manifest.webmanifest` (Add to Home Screen,
-full screen, landscape). `index.html` becomes a full-screen canvas with overlays; `VIEWS` in `main.js`
-keeps the whole-house layout as the world the camera moves over. `src/sim/` and the save format do not change.
+### Landscape view (as built 2026-11-11)
+Design in `docs/HOUSE_VIEW.md` section 10. `src/render/follow.js` is the pure follow-camera maths (aim with look-ahead, glide, edge clamp, zoom levels, minimap mapping; tested in `tests/follow.test.js`). `src/render/minimap.js` draws the minimap canvas. `src/ui/camera-controls.js` handles drag, pinch and wheel through hooks. `src/main.js` holds `WORLD` (the floors and their placement, which the camera moves over), the camera state, the frame loop and the panel and face controls. The floating overlays and the side panel are HTML and CSS in `index.html`. There is no separate `hud.js`. `manifest.webmanifest` sets full screen, with orientation "any" so portrait still works. `src/sim/` and the save format do not change.
 
 ## Save format (version 2, as built)
 `src/sim/save.js` writes one plain JSON object: `{ version, savedAt, seed, clock: {totalMinutes, speed, carryMs}, time, rng, people[], log[], calendar: {queue, fired} }`. Version 1 saves (no calendar) still load.

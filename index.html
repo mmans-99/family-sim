@@ -2,19 +2,50 @@
 <html lang="en-GB">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2b2620">
+  <link rel="manifest" href="manifest.webmanifest">
   <title>Family Simulator</title>
   <style>
-    body { font-family: system-ui, sans-serif; margin: 0; padding: 12px; background: #f7f4ee; color: #2b2620; }
-    h1 { font-size: 1.2rem; margin: 0 0 8px; }
-    #clock { font-variant-numeric: tabular-nums; margin-bottom: 8px; }
-    .bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-    button { font: inherit; padding: 8px 12px; border: 1px solid #4a4036; border-radius: 6px; background: #fff; cursor: pointer; }
-    button[aria-pressed="true"] { background: #4a4036; color: #fff; }
-    #house { display: block; width: 100%; border: 1px solid #4a4036; border-radius: 6px; background: #f7f4ee; }
-    .help { font-size: 0.85rem; color: #5a5147; margin: 6px 0 0; }
-    #status { font-size: 0.9rem; margin-bottom: 8px; color: #3d352c; }
-    .person { border: 1px solid #4a4036; border-radius: 6px; background: #fff; padding: 8px 10px; margin-top: 8px; }
+    :root { --ink: #2b2620; --paper: #f7f4ee; --line: #4a4036; --glass: rgba(43, 38, 32, 0.78); }
+    html, body { height: 100%; margin: 0; overflow: hidden; background: #2b2620; color: var(--ink); font-family: system-ui, sans-serif; }
+    [hidden] { display: none !important; }
+
+    /* The house fills the screen; everything else floats over it (docs/HOUSE_VIEW.md section 10). */
+    #stage { position: fixed; inset: 0; }
+    #house { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .glass { position: absolute; background: var(--glass); color: #fff; border-radius: 8px; padding: 6px 8px; box-sizing: border-box; transition: opacity 0.6s; }
+    body.idle .fade { opacity: 0.25; }
+    button { font: inherit; min-height: 36px; padding: 6px 10px; border: 1px solid #8a7b68; border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
+    .glass button { background: rgba(255, 255, 255, 0.12); color: #fff; border-color: rgba(255, 255, 255, 0.35); }
+    .glass button[aria-pressed="true"] { background: #fff; color: var(--ink); }
+
+    #topleft { top: 8px; left: 8px; max-width: 62vw; pointer-events: none; }    #clock { font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #status { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+    #topright { top: 8px; right: 8px; display: flex; gap: 4px; align-items: center; }
+    #speeds { display: flex; gap: 4px; }
+    #speeds button { min-width: 44px; padding: 6px 6px; }
+    #menu { font-size: 18px; min-width: 44px; }
+
+    #bottomleft { left: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 6px; }
+    #faces { display: flex; gap: 6px; }
+    .face { width: 40px; height: 40px; min-height: 0; padding: 0; border-radius: 50%; border: 2px solid #fff; color: var(--ink); font-weight: 700; }
+    .face[aria-pressed="true"] { outline: 3px solid #fff; outline-offset: 2px; }
+    #zoom { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    #zoom-level { font-size: 12px; opacity: 0.9; padding: 0 4px; }
+    #zoom button { padding: 6px 8px; }
+
+    #minimap { position: absolute; right: 8px; bottom: 8px; width: 120px; border: 1px solid rgba(255, 255, 255, 0.5); border-radius: 6px; background: #2b2620; }
+
+    /* The family panel: from the right in landscape, a sheet from the bottom in portrait. */
+    #scrim { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.25); z-index: 14; }
+    #panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(36vw, 360px); min-width: 260px; box-sizing: border-box; padding: 12px; overflow: auto; background: var(--paper); z-index: 15; transform: translateX(100%); transition: transform 0.3s ease; box-shadow: -4px 0 12px rgba(0, 0, 0, 0.25); }
+    #panel.open { transform: none; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .panel-head h2 { font-size: 1.1rem; margin: 0; }
+    #people { font-size: 0.95rem; }
+    .panel-foot { margin-top: 12px; font-size: 0.8rem; color: #5a5147; }
+    .person { border: 1px solid var(--line); border-radius: 6px; background: #fff; padding: 8px 10px; margin-top: 8px; }
     .who { margin-bottom: 6px; }
     .needs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; }
     .need { display: grid; grid-template-columns: 4.6em 1fr 2em; align-items: center; gap: 6px; font-size: 0.85rem; }
@@ -23,28 +54,76 @@
     .num { text-align: right; font-variant-numeric: tabular-nums; color: #5a5147; }
     .log { list-style: none; padding: 0; margin: 8px 0 0; font-size: 0.85rem; color: #3d352c; }
     .log .t { font-variant-numeric: tabular-nums; color: #7a6f62; margin-right: 4px; }
-    #away { border: 1px solid #4a4036; border-radius: 6px; background: #fff; padding: 8px 10px; margin-bottom: 8px; font-size: 0.9rem; }
-    #away p { margin: 0 0 4px; }
-    #away ol { margin: 0 0 6px; padding-left: 1.2em; color: #3d352c; font-size: 0.85rem; }
     .traits { font-size: 0.8rem; color: #5a5147; margin-bottom: 6px; }
     .why { margin: 6px 0 0; font-size: 0.8rem; color: #5b4f40; background: #f3ead8; border-radius: 4px; padding: 4px 6px; }
+
+    /* The away card: what happened while the page was closed. */
+    #away { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(92vw, 420px); max-height: 80vh; overflow: auto; box-sizing: border-box; padding: 12px 14px; background: #fff; color: var(--ink); border-radius: 10px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); z-index: 20; font-size: 0.9rem; }
+    #away p { margin: 0 0 6px; }
+    #away ol { margin: 0 0 8px; padding-left: 1.2em; color: #3d352c; font-size: 0.85rem; }
+
+    #turn-hint { top: 52px; left: 8px; right: 8px; display: none; align-items: center; justify-content: space-between; gap: 8px; font-size: 0.85rem; }
+
+    /* Portrait: the house still fills the screen; the panel comes up as a sheet. */
+    @media (orientation: portrait) {
+      #panel { top: auto; left: 0; right: 0; width: auto; max-height: 72vh; border-radius: 12px 12px 0 0; transform: translateY(100%); box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25); }
+      #panel.open { transform: none; }
+      #topright { top: 96px; }
+      #turn-hint { display: flex; top: 150px; }
+      #minimap { width: 96px; }
+    }
+    @media (orientation: landscape) and (max-height: 500px) {
+      #topleft { max-width: 50vw; }
+    }
   </style>
 </head>
 <body>
-  <h1>Family Simulator</h1>
-  <div id="clock">Loading…</div>
-  <div id="status"></div>
+  <div id="stage">
+    <canvas id="house" aria-label="The house seen from above"></canvas>
+
+    <div id="topleft" class="glass">
+      <div id="clock">Loading…</div>
+      <div id="status"></div>
+    </div>
+
+    <div id="topright" class="glass fade">
+      <div id="speeds" role="group" aria-label="Speed"></div>
+      <button id="menu" type="button" aria-label="Open the family panel" aria-controls="panel">☰</button>
+    </div>
+
+    <div id="bottomleft" class="glass fade">
+      <div id="faces" role="group" aria-label="Follow a person"></div>
+      <div id="zoom" role="group" aria-label="Zoom and follow">
+        <span id="zoom-level"></span>
+      </div>
+    </div>
+
+    <canvas id="minimap" aria-label="Plan of the house. Tap a place to go there."></canvas>
+
+    <div id="turn-hint" class="glass">
+      <span>For the full view, turn your phone sideways.</span>
+      <button id="turn-close" type="button">Close</button>
+    </div>
+  </div>
+
+  <div id="scrim" hidden></div>
+
+  <aside id="panel" aria-label="The family">
+    <div class="panel-head">
+      <h2>The family</h2>
+      <button id="panel-close" type="button">Close</button>
+    </div>
+    <section id="people"></section>
+    <p><button id="fullscreen" type="button">Full screen</button></p>
+    <p class="panel-foot">Drag to look around. Pinch or scroll to zoom. Tap a face to follow someone; tap the plan to go there. Art: Sierrassets furniture pack. Original character template created by Eris Esra: <a href="https://erisesra.itch.io/character-templates-pack">erisesra.itch.io/character-templates-pack</a>.</p>
+  </aside>
+
   <section id="away" hidden aria-live="polite">
     <p id="away-text"></p>
     <ol id="away-log"></ol>
     <button id="away-close" type="button">Close</button>
   </section>
-  <div id="speeds" class="bar"></div>
-  <div id="views" class="bar"></div>
-  <canvas id="house"></canvas>
-  <div id="camera" class="bar"></div>
-  <section id="people" aria-label="The family"></section>
-  <p class="help">Drag to move the view. Pinch to zoom. On a computer: drag to move, scroll to zoom. Art: Sierrassets furniture pack. Original character template created by Eris Esra: <a href="https://erisesra.itch.io/character-templates-pack">erisesra.itch.io/character-templates-pack</a>.</p>
+
   <script type="module" src="src/main.js"></script>
 </body>
 </html>

@@ -59,8 +59,6 @@ Newest at the bottom. Format: date — decision — why.
 
 ## OPEN
 - 2026-11-11 — (Settled: the calendar mapping was approved and L1 is built; see the entry near the bottom.)
-- 2026-11-11 — Landscape view: auto-hide the floating buttons after 5 seconds with no touch (proposed default), or keep them always visible? Ask the user.
-- 2026-11-11 — Landscape view: keep portrait working with a "turn your phone" hint (proposed default), or make the game sideways only? Ask the user.
 - Which holidays and festivals the family keeps, and who the off-screen relatives are (grandparents etc.). Needed for L13 and L15. Ask the user.
 - Figures still to source before L2/L9/L15: broadband, phones, food, transport, Birmingham school term dates, council tax instalments, ONS life tables edition.
 - The "Pixelart Study - Expression Sheets" zip has no licence text. Not used, so nothing to settle unless it is used later.
@@ -94,3 +92,9 @@ Newest at the bottom. Format: date — decision — why.
 - 2026-11-11: The art stays top-down; no three-quarter view. Reaffirms 2026-11-10 and 2026-11-11. — *Shakedown: Hawaii* is itself top-down, and the Sierrassets pack is top-down.
 - 2026-11-11: Zoom snaps between whole-pixel sizes rather than sliding smoothly; only the camera's position glides. — Keeps HOUSE_VIEW rule 2 (one art pixel = a whole number of device pixels), so sprites stay sharp.
 - 2026-11-11: The outside is shown only as edge scenery around the house (front garden, pavement, kerb, part of the road, the other half of the semi, fences). Drawing only: not walkable, unknown to the simulation. The 2026-11-09 rule "the house is the whole visual world; outside is text only" still holds for everything beyond that edge. A visible street or neighbourhood is planned for Phase 3, and `VISION.md` changes at that point. — A town would sit empty until people have jobs, school and shops to go to (Phase 3); the edge stops the house floating on blank space now.
+
+- 2026-11-11: Landscape view: the floating buttons auto-hide after 5 seconds with no touch (the clock and minimap stay). The user approved the proposed default. — Keeps the house uncovered while the family is watched.
+- 2026-11-11: Portrait keeps working, with a dismissible "turn your phone sideways" hint, and the family panel comes up as a sheet. The user approved the proposed default. — Phone-first rule.
+- 2026-11-11: Built the landscape view with these choices: the camera opens at Room zoom following Sarah; the house canvas fills the whole screen in both orientations (the sheet overlays the bottom in portrait, rather than the house being cut to the top); floor buttons (Ground, First, Garden) are removed in favour of zoom levels and faces, and `?view=first|ground|garden` still opens a floor; the minimap is the only way to glide to a place by tap. — Follows HOUSE_VIEW section 10; the floor buttons were not in the agreed design.
+- 2026-11-11: The web app manifest uses `orientation: any`, not `landscape` as section 10.1 planned. — A landscape lock would stop the portrait layout the user approved. The sideways lock is requested only from the Full screen button.
+- 2026-11-11: Edge scenery (section 10.5) is NOT built yet. It needs new pieces drawn in `tools/make_extras.py` and a visual check. — Kept out of this step to keep it reviewable; to do next.

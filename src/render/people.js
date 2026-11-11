@@ -65,6 +65,7 @@ export function peopleToDraw(world, floors, place = {}, frac = 0, now = 0) {
         spot = { floor: t < 0.5 ? from.floor : to.floor, x: from.x + 0.5 + (to.x - from.x) * t, y: from.y + FEET + (to.y - from.y) * t };
       }
       const dir = facing(to.x - from.x, to.y - from.y);
+      spot.step = [to.x - from.x, to.y - from.y]; // the way they are heading (the camera looks ahead)
       spot.frame = frameName('walk', dir, Math.floor(along * FRAMES_PER_SQUARE) % 4, face);
       spot.fallback = Math.floor(along * 2) % 2 ? 'walk' : 'stand';
       spot.row = spot.y;
@@ -98,6 +99,8 @@ export function peopleToDraw(world, floors, place = {}, frac = 0, now = 0) {
     const shift = place[spot.floor] ?? { x: 0, y: 0 };
     out.push({
       id: p.id,
+      name: p.name,
+      dir: spot.step ?? [0, 0], // heading in squares, [0, 0] when standing, sitting or lying
       sprite: `${p.sprite}:${spot.frame}`,
       fallback: `${p.sprite}_${spot.fallback}`,
       x: spot.x + (shift.x ?? 0), y: spot.y + (shift.y ?? 0), row: spot.row + (shift.y ?? 0),

@@ -5,7 +5,23 @@
 ## Current phase
 Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. Next is the landscape full-screen view (design agreed, waiting for approval to build), then L2 (stock engine and household money).
 
-## Latest (2026-11-11, evening) — landscape view design agreed (docs only)
+## Latest (2026-11-11, night) — landscape view built (branch `landscape-view`)
+- The user approved the two open choices (auto-hide after 5 s; portrait kept with a hint) and the build.
+- Built HOUSE_VIEW section 10 except edge scenery (10.5): follow camera with look-ahead and glide, edge clamp,
+  zoom levels Close / Room (default) / Whole house, minimap with people dots and view box (tap to glide there),
+  full-screen canvas with floating clock, speeds, faces and zoom buttons, side panel (sheet in portrait),
+  auto-hide, dismissible portrait hint, away card, Full screen button, `manifest.webmanifest`.
+- Floor buttons are gone; `?view=first|ground|garden` still opens a floor, `?view=all` the whole house.
+- Tests: 86 passing (new `tests/follow.test.js`).
+- Checked in headless Chrome at 844x390 and 390x844 (3x): room, close, whole, panel, first floor, garden,
+  portrait room and sheet. No console errors except a 404 (the missing favicon, harmless).
+- Fixed in the check: the portrait clock overlapped the speed buttons; the whole-house label was under
+  the clock box; the zoom label and the button both said "Whole house".
+- **Not done:** edge scenery (10.5); a home-screen icon; the minimap glide is checked by reasoning, not by a
+  screenshot mid-glide; the auto-hide and the drag/pinch/wheel controls are untested on a real phone.
+- **Not committed to main:** branch `landscape-view`. The sandbox cannot reach the user's phone or Pages.
+
+## Earlier (2026-11-11, evening) — landscape view design agreed (docs only)
 - The user asked for the house full screen in landscape, with the menus in the background, and an
   "open world" feel like *Shakedown: Hawaii*. The design is written up in `docs/HOUSE_VIEW.md`
   section 10: floating menus and a side panel, a follow camera that looks ahead, snap zoom levels,
@@ -190,9 +206,8 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User answers the two open choices (auto-hide, portrait) and approves the landscape view step.
-2. Build the landscape view (`docs/HOUSE_VIEW.md` section 10), screenshots of every zoom level and
-   floor, sideways and upright, before saying it works.
+1. User checks the landscape view on a real phone (sideways and upright), and the Full screen button.
+2. Build edge scenery (`docs/HOUSE_VIEW.md` section 10.5), then screenshot it.
 3. User checks the calendar on the phone (the date range on the clock and the Household section).
 4. L2 (stock engine and household money: accounts, bills, mortgage as ledgers), `docs/LIFE_SYSTEMS.md` section 3. Show the user the plan and wait for approval before coding.
 5. Source the council tax months and school term dates (needed before L6/L7).
