@@ -5,10 +5,10 @@
 ## Current phase
 Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) is built. Next is L3 (replay harness).
 
-## Latest (2026-11-11, insurance and subscriptions decided, docs only)
+## Latest (2026-11-11, insurance and subscriptions built; broadband £32)
+- **Built on approval:** the insurance and subscription flows and rules are in `data/flows.json` and `data/calendar.json`; broadband is £32 a month. One game year totals £19,862.96 in the joint account (checked by hand in `tests/household.test.js`). Tests: 112 passing.
 - Chosen at the user's request ("you decide, make it realistic"): buildings and contents insurance, life cover for Tom, TV Licence, streaming, apps and cloud storage, Oliver's club, and household goods and clothing. Full list, amounts and reasons in `docs/FAMILY.md` ("Insurance and subscriptions"); decision in DECISIONS 2026-11-11; plan in LIFE_SYSTEMS 3a addendum.
 - All are tuning figures, not yet checked against live prices. About £260 a month in total.
-- **No code or data changed.** `data/flows.json` and `data/calendar.json` get these rules and flows when the user approves the build.
 
 ## Latest (2026-11-11, L2 money built)
 - **L2 built** (LIFE_SYSTEMS 3a, "as built"). Tom's take-home pay is £4,317.28 a month (2026/27 income tax, NI, 5% net-pay pension on £75,000). The mortgage is an amortising loan: £1,339.23 a month, interest and capital split, £228,302.03 at the start.
@@ -248,7 +248,7 @@ The user asked for the project to be read and the house view fixed. The view was
 
 ## Next step
 1. User checks the Household block on a real phone (sideways and upright) and confirms the 23-repayment start (DECISIONS 2026-11-11).
-2. Approve the insurance and subscriptions build (FAMILY.md; about £260 a month, tuning). After that, the surplus is about £1,450 a month. Check the figures against live prices at the start of the build.
+2. Check the insurance, subscription and broadband figures against live prices (all tuning, FAMILY.md). The surplus is about £1,450 a month.
 3. L3, the replay harness (LIFE_SYSTEMS section 15): a headless multi-seed run, so every later step is checked. Needs a brief and the user's approval before coding (CLAUDE.md).
 4. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
 5. Source the school term dates (needed before L6/L7).

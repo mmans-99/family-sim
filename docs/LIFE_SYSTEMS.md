@@ -288,13 +288,12 @@ Terms: a *stock* is a number that rises and falls (a balance); a *flow* moves it
 bill out); a *ledger* is the list of changes with reasons. Money is in pounds, kept to the
 penny (round with `Math.round(x * 100) / 100` after each change).
 
-**Addendum (decided 2026-11-11, not built yet):** insurance and subscriptions are added as
+**Addendum (decided and built 2026-11-11):** insurance and subscriptions are added as
 flows, using the items and tuning figures in `docs/FAMILY.md` ("Insurance and subscriptions").
 They need: annual flows with `{ "perYear", "over": 1 }` on a new yearly rule (`insurance`, 1 June,
 07:00); a monthly rule `subs` (22nd, 07:00) for life cover, TV Licence, streaming and apps; a
 monthly club flow on the 3rd, using `months` to skip August; and a weekly flow `clothing` for
-household goods and clothing (£35 a week). Build these as a separate, reviewed change after
-the user approves it.
+household goods and clothing (£35 a week). Built on the user's approval the same day (tests: 112 passing).
 
 #### Step 0. Source the figures (web search, before any code)
 Write each figure, its date and its link into `docs/FAMILY.md` (Household bills table, or a new

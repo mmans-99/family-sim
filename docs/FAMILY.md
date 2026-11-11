@@ -49,13 +49,13 @@ Assumed bought in spring 2024 for **£265,000**, a typical Birmingham semi.
 | Council tax (Birmingham, **Band C**) | **£2,100.36 a year**: 10 instalments of £210.04, April to January | 2026/27 Band C ([uktax.tools](https://uktax.tools/council-tax-birmingham), also paychecktaxcalculator.net and salarytax.uk), which agree and equal 8/9 of the Band D figure below. **Conflict:** the Birmingham budget booklet gives Band D (City, Fire and PCC) as £2,353.17 excluding parish precepts, which would make Band C about £6 a year lower. The instalment months are tuning. |
 | Council tax, Band D (for reference) | £2,363 a year | 2026/27 Band D including all precepts ([MHCLG figure via paychecktaxcalculator](https://paychecktaxcalculator.net/council-tax-by-borough/birmingham)). |
 | Water and sewerage (Severn Trent) | **£587 a year** (about £48.92 a month) | 2026/27 average, up 10% from April 2026 ([Severn Trent](https://www.stwater.co.uk/my-account/why-is-my-bill-going-up/)). |
-| Broadband | **£35.90 a month** (tuning) | Uswitch 2026 average, via [phonearena.com](https://www.phonearena.com). **Conflict:** Broadband Genie gives £22.86 and broadbandswitch.uk, citing Ofcom, about £26. The higher figure is used on purpose. |
+| Broadband | **£32.00 a month** (tuning, decided 11 Nov 2026) | A typical standard fibre contract. The mid-contract range is £22 to £35 a month; the MoneySuperMarket survey average is £34.50; Ofcom research (Feb 2026) shows prices fell 6% in real terms in 2025. Sources conflict because they measure different things: Broadband Genie's £22.86 is the average across all contracts. April rises of £2 to £4 a year are modelled in L11. |
 | Mobile phones (two adults) | **£37.20 a month**: £18.60 each (tuning) | Uswitch 2026 average per user, via phonearena.com. |
 | Food and non-alcoholic drink at home | **£134.52 a week** for four (tuning) | gov.uk Family Food survey, FYE 2025 (statistics release): £33.63 a person a week at home, × 4. An average for all ages, so a tuning figure. Eating out is left out. |
 | Everyday spending (recreation and culture) | **£82.10 a week** (tuning) | ONS Family Spending, FYE 2025, per household (ONS table as shown in a UK Data Service slide deck; the release itself was not opened). **Understatement:** the absolute weekly figures for household goods, personal goods and clothing were not found, so they are left out. |
 | Savings interest | **2.53% a year**, paid monthly (tuning) | Moneyfacts average easy-access rate, September 2026 (Treasury report). |
 
-## Insurance and subscriptions (decided 11 Nov 2026, tuning)
+## Insurance and subscriptions (decided and built 11 Nov 2026, tuning)
 Chosen by Claude at the user's request ("you decide, make it realistic"). These are typical UK
 amounts, not yet checked against live prices or quotes. Every figure is `tuning` until checked
 at the start of the build.

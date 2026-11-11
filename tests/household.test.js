@@ -74,9 +74,9 @@ test('the start: the money is set up from the data', () => {
   assert.equal(w.loans.mortgage.payment, 1339.23);
 });
 
-test('the next money event from the start is the energy bill on 10 March 2026', () => {
+test('the next money event from the start is Oliver\'s club on 3 March 2026', () => {
   const w = createWorld({ ...data(), seed: 1, time: 7 * 60 });
-  assert.deepEqual(nextMoneyEvent(w), { label: 'Energy bill', date: '10 Mar 2026' });
+  assert.deepEqual(nextMoneyEvent(w), { label: "Oliver's club", date: '3 Mar 2026' });
 });
 
 test('one game year from 1 March 2026: every bill once, the money as a hand sum', () => {
@@ -89,21 +89,26 @@ test('one game year from 1 March 2026: every bill once, the money as a hand sum'
   }
   assert.deepEqual(w.calendar.fired, {
     mortgage: 11, payday: 12, councilTax: 10, water: 12, energy: 12, bills20: 12, interest: 12,
-    energyCap: 4, christmas: 1,
+    subs: 12, clubs: 11, insurance: 1, energyCap: 4, christmas: 1,
   });
   assert.equal(lines.some((t) => t.startsWith('Could not pay')), false, 'nothing went unpaid');
   assert.equal(read(w, 'debt.overdraft'), 0, 'the surplus never reaches the overdraft');
   // Hand sum (pounds): 2,500.00 start
-  //   + 12 × 4,317.28 pay             = 51,807.36
+  //   + 12 × 4,317.28 pay              = 51,807.36
   //   − 11 × 1,339.23 mortgage         = 14,731.53
   //   − 10 × 210.04 council tax (£2,100.36 ÷ 10, rounded) = 2,100.40
   //   − 12 × 48.92 water (£587 ÷ 12)   =   587.04
   //   − 12 × 143.58 energy (£1,723 ÷ 12) = 1,722.96
-  //   − 12 × 35.90 broadband           =   430.80
+  //   − 12 × 32.00 broadband           =   384.00
   //   − 12 × 37.20 phones              =   446.40
   //   − food and everyday, £216.62 a week over 365 days, rounded each game day = 11,295.07
-  //   = 22,993.16
-  assert.equal(read(w, 'acct.joint'), 22993.16);
+  //   − insurance £260 + £140 (1 June) =   400.00
+  //   − 12 × 20.00 life cover + 12 × 15.00 TV Licence + 12 × 22.00 streaming
+  //     + 12 × 4.00 apps               =   742.00
+  //   − 11 × 20.00 Oliver's club (not August) = 220.00
+  //   − household goods and clothing, £35 a week over 365 days, rounded each game day = 1,825.00
+  //   = 19,862.96
+  assert.equal(read(w, 'acct.joint'), 19862.96);
   // Savings: £8,000 with 2.53% a year, paid monthly on the last day of the month, rounded each month.
   let savings = 8000;
   for (let k = 0; k < 12; k++) savings = cents(savings + cents((savings * 0.0253) / 12));

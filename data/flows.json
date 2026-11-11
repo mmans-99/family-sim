@@ -1,15 +1,199 @@
 {
   "about": "The household's money flows (docs/LIFE_SYSTEMS.md 3a, Step 1). Negative amounts are money out. A flow fires either on a dated calendar rule (rule, from data/calendar.json) or every calendar week (every), at its hour. amount is a number (per payment), or 'net' (Tom's take-home pay), 'mortgage' (the fixed repayment), 'interest' (balance × annualRate ÷ 12), or { perYear, over } (a yearly bill split into equal payments). name is the ledger and shortfall text; log is the house log line. Sources: docs/FAMILY.md for the bills, Step 0 figures for the rest (see each 'source').",
   "flows": [
-    { "id": "pay.tom", "stock": "acct.joint", "amount": "net", "rule": "payday", "name": "Tom's pay", "log": "Tom was paid", "source": "data/tax.json and data/stocks.json (salary)" },
-    { "id": "mortgage", "stock": "acct.joint", "amount": "mortgage", "rule": "mortgage", "name": "Mortgage payment", "log": "Paid the mortgage", "source": "data/stocks.json (loan): fixed repayment over 300 months at 4.6%" },
-    { "id": "counciltax", "stock": "acct.joint", "amount": { "perYear": -2100.36, "over": 10 }, "rule": "councilTax", "name": "Council tax", "log": "Paid council tax", "source": "Birmingham 2026/27 Band C £2,100.36 a year (uktax.tools; conflict noted in docs/FAMILY.md). Band C chosen 2026-11-11." },
-    { "id": "water", "stock": "acct.joint", "amount": { "perYear": -587, "over": 12 }, "rule": "water", "name": "Water", "log": "Paid the water bill", "source": "docs/FAMILY.md: Severn Trent 2026/27 average £587 a year" },
-    { "id": "energy", "stock": "acct.joint", "amount": { "perYear": -1723, "over": 12 }, "rule": "energy", "name": "Energy", "log": "Paid the energy bill", "source": "docs/FAMILY.md: Ofgem cap £1,723 a year (flat in L2; the cap changes from L11)" },
-    { "id": "broadband", "stock": "acct.joint", "amount": -35.90, "rule": "bills20", "name": "Broadband", "log": "Paid broadband", "tuning": true, "source": "Uswitch 2026 average £35.90 a month (via phonearena.com). Other sources give £22.86 to about £26 (Broadband Genie; broadbandswitch.uk citing Ofcom). The higher figure is used on purpose." },
-    { "id": "phones", "stock": "acct.joint", "amount": -37.20, "rule": "bills20", "name": "Mobile phones", "log": "Paid the phone bills", "tuning": true, "source": "Uswitch 2026 average £18.60 a month per phone (via phonearena.com), two phones" },
-    { "id": "savings.interest", "stock": "acct.savings", "amount": "interest", "annualRate": 0.0253, "rule": "interest", "name": "Interest", "log": "Savings interest added", "tuning": true, "source": "Moneyfacts average easy-access rate 2.53% AER, September 2026 (Treasury report)" },
-    { "id": "food", "stock": "acct.joint", "amount": -134.52, "every": "calendarWeek", "hour": 10, "name": "Food shopping", "log": "Food shopping", "tuning": true, "source": "ONS Family Food, FYE 2025: £33.63 a person a week at home (gov.uk) × 4 people. Averages all ages, so it is a tuning figure. Eating out is left out." },
-    { "id": "everyday", "stock": "acct.joint", "amount": -82.10, "every": "calendarWeek", "hour": 10, "name": "Everyday spending", "log": "Everyday spending", "tuning": true, "source": "ONS Family Spending, FYE 2025: recreation and culture £82.10 a week per household. Household goods, personal goods and clothing were not found as absolute figures, so this is an understatement." }
+    {
+      "id": "pay.tom",
+      "stock": "acct.joint",
+      "amount": "net",
+      "rule": "payday",
+      "name": "Tom's pay",
+      "log": "Tom was paid",
+      "source": "data/tax.json and data/stocks.json (salary)"
+    },
+    {
+      "id": "mortgage",
+      "stock": "acct.joint",
+      "amount": "mortgage",
+      "rule": "mortgage",
+      "name": "Mortgage payment",
+      "log": "Paid the mortgage",
+      "source": "data/stocks.json (loan): fixed repayment over 300 months at 4.6%"
+    },
+    {
+      "id": "counciltax",
+      "stock": "acct.joint",
+      "amount": {
+        "perYear": -2100.36,
+        "over": 10
+      },
+      "rule": "councilTax",
+      "name": "Council tax",
+      "log": "Paid council tax",
+      "source": "Birmingham 2026/27 Band C £2,100.36 a year (uktax.tools; conflict noted in docs/FAMILY.md). Band C chosen 2026-11-11."
+    },
+    {
+      "id": "water",
+      "stock": "acct.joint",
+      "amount": {
+        "perYear": -587,
+        "over": 12
+      },
+      "rule": "water",
+      "name": "Water",
+      "log": "Paid the water bill",
+      "source": "docs/FAMILY.md: Severn Trent 2026/27 average £587 a year"
+    },
+    {
+      "id": "energy",
+      "stock": "acct.joint",
+      "amount": {
+        "perYear": -1723,
+        "over": 12
+      },
+      "rule": "energy",
+      "name": "Energy",
+      "log": "Paid the energy bill",
+      "source": "docs/FAMILY.md: Ofgem cap £1,723 a year (flat in L2; the cap changes from L11)"
+    },
+    {
+      "id": "broadband",
+      "stock": "acct.joint",
+      "amount": -32.0,
+      "rule": "bills20",
+      "name": "Broadband",
+      "log": "Paid broadband",
+      "tuning": true,
+      "source": "Decided 11 Nov 2026 (tuning): £32 a month for a typical standard fibre contract, between the mid-contract range (£22-£35) and the survey average (£34.50). Sources: Ofcom Feb 2026 research; MoneySuperMarket 2026 via broadbandswitch.uk; Broadband Genie (£22.86, all contracts). April rises (£2-£4 a year) are modelled in L11."
+    },
+    {
+      "id": "phones",
+      "stock": "acct.joint",
+      "amount": -37.2,
+      "rule": "bills20",
+      "name": "Mobile phones",
+      "log": "Paid the phone bills",
+      "tuning": true,
+      "source": "Uswitch 2026 average £18.60 a month per phone (via phonearena.com), two phones"
+    },
+    {
+      "id": "savings.interest",
+      "stock": "acct.savings",
+      "amount": "interest",
+      "annualRate": 0.0253,
+      "rule": "interest",
+      "name": "Interest",
+      "log": "Savings interest added",
+      "tuning": true,
+      "source": "Moneyfacts average easy-access rate 2.53% AER, September 2026 (Treasury report)"
+    },
+    {
+      "id": "food",
+      "stock": "acct.joint",
+      "amount": -134.52,
+      "every": "calendarWeek",
+      "hour": 10,
+      "name": "Food shopping",
+      "log": "Food shopping",
+      "tuning": true,
+      "source": "ONS Family Food, FYE 2025: £33.63 a person a week at home (gov.uk) × 4 people. Averages all ages, so it is a tuning figure. Eating out is left out."
+    },
+    {
+      "id": "everyday",
+      "stock": "acct.joint",
+      "amount": -82.1,
+      "every": "calendarWeek",
+      "hour": 10,
+      "name": "Everyday spending",
+      "log": "Everyday spending",
+      "tuning": true,
+      "source": "ONS Family Spending, FYE 2025: recreation and culture £82.10 a week per household. Household goods, personal goods and clothing were not found as absolute figures, so this is an understatement."
+    },
+    {
+      "id": "insurance.buildings",
+      "stock": "acct.joint",
+      "amount": {
+        "perYear": -260,
+        "over": 1
+      },
+      "rule": "insurance",
+      "name": "Buildings insurance",
+      "log": "Paid buildings insurance",
+      "tuning": true,
+      "source": "Typical UK buildings cover for a semi (tuning, FAMILY.md)"
+    },
+    {
+      "id": "insurance.contents",
+      "stock": "acct.joint",
+      "amount": {
+        "perYear": -140,
+        "over": 1
+      },
+      "rule": "insurance",
+      "name": "Contents insurance",
+      "log": "Paid contents insurance",
+      "tuning": true,
+      "source": "Typical UK contents cover (tuning, FAMILY.md)"
+    },
+    {
+      "id": "lifecover",
+      "stock": "acct.joint",
+      "amount": -20,
+      "rule": "subs",
+      "name": "Life cover",
+      "log": "Paid life cover",
+      "tuning": true,
+      "source": "Term life cover for Tom (tuning, FAMILY.md)"
+    },
+    {
+      "id": "tvlicence",
+      "stock": "acct.joint",
+      "amount": -15,
+      "rule": "subs",
+      "name": "TV Licence",
+      "log": "Paid the TV Licence",
+      "tuning": true,
+      "source": "Colour TV Licence by monthly Direct Debit (tuning, FAMILY.md)"
+    },
+    {
+      "id": "streaming",
+      "stock": "acct.joint",
+      "amount": -22,
+      "rule": "subs",
+      "name": "Streaming",
+      "log": "Paid streaming",
+      "tuning": true,
+      "source": "Two streaming services (tuning, FAMILY.md)"
+    },
+    {
+      "id": "apps",
+      "stock": "acct.joint",
+      "amount": -4,
+      "rule": "subs",
+      "name": "Apps and cloud storage",
+      "log": "Paid apps and cloud storage",
+      "tuning": true,
+      "source": "Family phone storage plan (tuning, FAMILY.md)"
+    },
+    {
+      "id": "club",
+      "stock": "acct.joint",
+      "amount": -20,
+      "rule": "clubs",
+      "name": "Oliver's club",
+      "log": "Paid Oliver's club",
+      "tuning": true,
+      "source": "One after-school club in term time (tuning, FAMILY.md)"
+    },
+    {
+      "id": "clothing",
+      "stock": "acct.joint",
+      "amount": -35,
+      "every": "calendarWeek",
+      "hour": 10,
+      "name": "Household goods and clothing",
+      "log": "Household goods and clothing",
+      "tuning": true,
+      "source": "Fills the ONS gap (tuning, FAMILY.md): £35 a week"
+    }
   ]
 }
