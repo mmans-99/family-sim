@@ -321,12 +321,13 @@ function setPanel(open) {
 
 async function start() {
   const load = async (file) => (await fetch(`data/${file}`)).json();
-  const [actions, needs, people, calendar, stocks, tax, flows] = await Promise.all(
-    ['actions.json', 'needs.json', 'people.json', 'calendar.json', 'stocks.json', 'tax.json', 'flows.json'].map(load),
+  const [actions, needs, people, calendar, stocks, tax, flows, wellbeing, couplings] = await Promise.all(
+    ['actions.json', 'needs.json', 'people.json', 'calendar.json', 'stocks.json', 'tax.json', 'flows.json',
+      'wellbeing.json', 'couplings.json'].map(load),
   );
   house = await load('house.json');
   const money = { stocks, tax, flows };
-  const data = { house, actions, needs, people, calendar, money };
+  const data = { house, actions, needs, people, calendar, money, wellbeing, couplings };
   const params = new URLSearchParams(window.location.search);
   // Testing aid: index.html?fresh=1 forgets the saved game and starts a new one.
   if (params.has('fresh')) clearSave();

@@ -2,7 +2,11 @@
 // hooks: start, minute, day, year, end. Probes only READ the world. Each keeps its notes in
 // ctx.probe[id], which run.js creates empty for every seed. Later steps add probes with `since`.
 import { calendarDate, formatDate, gameDayDates } from '../../src/sim/calendar.js';
-import { checkFinite, checkLedgerComplete, checkMortgageFalls } from './checks.js';
+import {
+  checkFinite, checkLedgerComplete, checkMortgageFalls, checkLagNoOvershoot,
+  checkStressInRange, checkSleepDebtInRange, checkWellbeingReconciles,
+} from './checks.js';
+import { stressId, sleepId } from '../../src/sim/wellbeing.js';
 
 const cents = (x) => Math.round(x * 100) / 100;
 const r1 = (x) => Math.round(x * 10) / 10;
@@ -278,4 +282,153 @@ const log = {
   },
 };
 
-export const DEFAULT_PROBES = [money, calendar, needs, actions, log];
+// 6. wellbeing (since L4): stress and sleep debt per person, interruptions, and how often each
+// coupling held. Read only. The range and reconciling checks are made in end().
+const wellbeingStock = () => ({
+  start: null, last: null, lastT: -1, captured: 0, low: null, high: null, sum: 0, n: 0, minutesHigh: 0,
+  yStart: null, yLow: null, yHigh: null, ySum: 0, yN: 0, yMinutesHigh: 0,
+  dayMax: null, dayAbove4: 0, dayN: 0, daySum: 0,
+});
+const fmt = (x) => (x === null ? null : r1(x));
+const wbBlock = (st, ws) => ({ start: fmt(st.start), end: fmt(ws.value), min: fmt(st.low), mean: st.n ? r1(st.sum / st.n) : null, max: fmt(st.high), minutesHigh: st.minutesHigh });
+
+const wellbeing = {
+  id: 'wellbeing',
+  since: 'L4',
+  start(world, ctx) {
+    const cfg = world.wellbeing;
+    if (!cfg) return;
+    const st = (ctx.probe.wellbeing = { people: {}, results: [], fired: { ...world.couplings.fired }, interruptions: {}, yInterruptions: {}, yFired: { ...world.couplings.fired } });
+    for (const p of world.people) {
+      const stress = wellbeingStock();
+      const sleep = wellbeingStock();
+      stress.start = stress.last = world.stocks[stressId(cfg, p.id)].value;
+      sleep.start = sleep.last = world.stocks[sleepId(cfg, p.id)].value;
+      stress.lastT = sleep.lastT = world.time;
+      st.people[p.id] = { stress, sleep };
+      st.interruptions[p.id] = 0;
+      st.yInterruptions[p.id] = 0;
+    }
+  },
+  minute(world, ctx) {
+    const st = ctx.probe.wellbeing;
+    if (!st) return;
+    const cfg = world.wellbeing;
+    for (const p of world.people) {
+      const rec = st.people[p.id];
+      const sv = world.stocks[stressId(cfg, p.id)].value;
+      for (const [s, v] of [[rec.stress, sv], [rec.sleep, world.stocks[sleepId(cfg, p.id)].value]]) {
+        s.low = s.low === null ? v : Math.min(s.low, v);
+        s.high = s.high === null ? v : Math.max(s.high, v);
+        s.sum += v;
+        s.n += 1;
+        s.yLow = s.yLow === null ? v : Math.min(s.yLow, v);
+        s.yHigh = s.yHigh === null ? v : Math.max(s.yHigh, v);
+        s.ySum += v;
+        s.yN += 1;
+      }
+      if (sv >= cfg.high) { rec.stress.minutesHigh += 1; rec.stress.yMinutesHigh += 1; }
+    }
+    // Lines written this step that say a need stopped the person's action.
+    for (let i = world.log.length - 1; i >= 0 && world.log[i].time === world.time; i--) {
+      const e = world.log[i];
+      if (e.text.startsWith(world.wellbeing.interrupt.logPrefix) && e.who !== 'House') {
+        const pid = world.people.find((p) => p.name === e.who)?.id;
+        if (pid) { st.interruptions[pid] += 1; st.yInterruptions[pid] += 1; }
+      }
+    }
+  },
+  day(world, ctx, gameDay) {
+    const st = ctx.probe.wellbeing;
+    if (!st) return;
+    const cfg = world.wellbeing;
+    for (const p of world.people) {
+      const rec = st.people[p.id];
+      for (const [kind, id, ws] of [['stress', stressId(cfg, p.id), rec.stress], ['sleep', sleepId(cfg, p.id), rec.sleep]]) {
+        const s = world.stocks[id];
+        const fresh = s.ledger.filter((e) => e.t > ws.lastT);
+        st.results.push(checkLedgerComplete({
+          stock: id, day: gameDay, ledgerKeep: s.ledgerKeep, length: s.ledger.length,
+          oldestKeptT: s.ledger.length ? s.ledger[0].t : null, newestReadT: ws.lastT,
+        }));
+        for (const e of fresh) {
+          ws.captured = cents(ws.captured + e.amount);
+          if (e.reason === 'Drift' && e.ref) {
+            st.results.push(checkLagNoOvershoot({ stock: id, t: e.t, before: e.ref.before, amount: e.amount, target: e.ref.target }));
+          }
+        }
+        if (fresh.length) ws.lastT = fresh[fresh.length - 1].t;
+        ws.last = s.value;
+        if (kind === 'sleep') {
+          ws.dayMax = ws.dayMax === null ? s.value : Math.max(ws.dayMax, s.value);
+          ws.daySum += s.value;
+          ws.dayN += 1;
+          if (s.value > 4) ws.dayAbove4 += 1;
+        }
+      }
+    }
+  },
+  year(world, ctx) {
+    const st = ctx.probe.wellbeing;
+    if (!st) return undefined;
+    const out = { people: {}, couplings: {} };
+    for (const p of world.people) {
+      const rec = st.people[p.id];
+      const sleepBlock = {
+        mean: rec.sleep.dayN ? r1(rec.sleep.daySum / rec.sleep.dayN) : null,
+        max: fmt(rec.sleep.dayMax),
+        daysAbove4: rec.sleep.dayAbove4,
+      };
+      out.people[p.id] = {
+        stress: {
+          start: fmt(rec.stress.yStart ?? rec.stress.start),
+          end: fmt(world.stocks[stressId(world.wellbeing, p.id)].value),
+          min: fmt(rec.stress.yLow), mean: rec.stress.yN ? r1(rec.stress.ySum / rec.stress.yN) : null,
+          max: fmt(rec.stress.yHigh), minutesHigh: rec.stress.yMinutesHigh,
+        },
+        sleepDebt: sleepBlock,
+        interruptions: st.yInterruptions[p.id],
+      };
+      rec.stress.yStart = world.stocks[stressId(world.wellbeing, p.id)].value;
+      rec.stress.yLow = rec.stress.yHigh = null;
+      rec.stress.ySum = 0; rec.stress.yN = 0; rec.stress.yMinutesHigh = 0;
+      rec.sleep.yLow = rec.sleep.yHigh = null; rec.sleep.ySum = 0; rec.sleep.yN = 0;
+      rec.sleep.dayMax = null; rec.sleep.dayAbove4 = 0; rec.sleep.dayN = 0; rec.sleep.daySum = 0;
+      st.yInterruptions[p.id] = 0;
+    }
+    for (const id of Object.keys(world.couplings.fired).sort()) {
+      out.couplings[id] = (world.couplings.fired[id] ?? 0) - (st.yFired[id] ?? 0);
+    }
+    st.yFired = { ...world.couplings.fired };
+    return out;
+  },
+  end(world, ctx) {
+    const st = ctx.probe.wellbeing;
+    if (!st) return undefined;
+    const cfg = world.wellbeing;
+    const people = {};
+    for (const p of world.people) {
+      const rec = st.people[p.id];
+      const ss = world.stocks[stressId(cfg, p.id)];
+      const sl = world.stocks[sleepId(cfg, p.id)];
+      const stressBlock = wbBlock(rec.stress, ss);
+      const sleepBlock = {
+        end: fmt(sl.value), min: fmt(rec.sleep.low), max: fmt(rec.sleep.high),
+        mean: rec.sleep.n ? r1(rec.sleep.sum / rec.sleep.n) : null,
+      };
+      people[p.id] = { stress: stressBlock, sleepDebt: sleepBlock, interruptions: st.interruptions[p.id] };
+      // Whole-run checks: the values stay in range, and the stock moved by what its ledger says.
+      st.results.push(checkStressInRange({ stock: ss.id, low: rec.stress.low, high: rec.stress.high, min: ss.min, max: ss.max }));
+      st.results.push(checkSleepDebtInRange({ stock: sl.id, low: rec.sleep.low, high: rec.sleep.high, min: sl.min, max: sl.max }));
+      st.results.push(checkWellbeingReconciles({ stock: ss.id, start: rec.stress.start, end: ss.value, total: rec.stress.captured }));
+      st.results.push(checkWellbeingReconciles({ stock: sl.id, start: rec.sleep.start, end: sl.value, total: rec.sleep.captured }));
+    }
+    const couplings = {};
+    for (const id of Object.keys(world.couplings.fired).sort()) {
+      couplings[id] = world.couplings.fired[id] ?? 0;
+    }
+    return { people, couplings };
+  },
+};
+
+export const DEFAULT_PROBES = [money, calendar, needs, actions, log, wellbeing];

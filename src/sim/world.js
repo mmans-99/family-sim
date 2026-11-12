@@ -11,6 +11,10 @@ import { MINUTES_PER_DAY } from './clock.js';
 import { dueOnGameDay, formatDate } from './calendar.js';
 import { runFlowsForRule, runWeeklyFlows, setupMoney } from './household.js';
 import { buildMap, keyOf, parseKey } from './housemap.js';
+import { stepStocks } from './stocks.js';
+import {
+  setupWellbeing, applyCouplings, settleSleep, moodFactor, stressPenalty, stressId,
+} from './wellbeing.js';
 
 export const WALK_SQUARES_PER_MINUTE = 8; // about 1.3 squares a real second at 1x: easy to follow
 const TOP_CHOICES = 3;    // pick among this many best-scoring actions
@@ -49,7 +53,10 @@ export function inHours(hour, [from, to]) {
 
 const DEFAULT_CALENDAR = { start: { year: 2026, month: 3, day: 1 }, rules: [] };
 
-export function createWorld({ house, actions, needs, people, calendar = DEFAULT_CALENDAR, money = null, seed = 1, time = 7 * 60 }) {
+export function createWorld({
+  house, actions, needs, people, calendar = DEFAULT_CALENDAR, money = null, seed = 1, time = 7 * 60,
+  wellbeing = null, couplings = null,
+}) {
   const map = buildMap(house);
   const world = {
     seed,
@@ -80,6 +87,11 @@ export function createWorld({ house, actions, needs, people, calendar = DEFAULT_
     if (!map.free(p.at)) throw new Error(`${p.name} starts on a square nobody can stand on: ${p.at}`);
   }
   if (money) setupMoney(world, money);
+  // Stress, sleep debt and couplings (LIFE_SYSTEMS 4d): opt-in, both files or neither.
+  if (wellbeing || couplings) {
+    if (!wellbeing || !couplings) throw new Error('wellbeing and couplings must be given together');
+    setupWellbeing(world, wellbeing, couplings);
+  }
   queueDay(world, true); // a game that starts mid-day does not fire the events that already passed
   return world;
 }
@@ -135,7 +147,7 @@ export function allowed(person, action, time) {
 }
 
 // How much an action is worth to this person right now, before travel.
-export function scoreAction(person, action, hour) {
+export function scoreAction(person, action, hour, stress = 0, cfg = null) {
   let score = action.base ?? 0;
   for (const [need, gain] of Object.entries(action.gain)) {
     const now = person.needs[need] ?? 100;
@@ -145,6 +157,9 @@ export function scoreAction(person, action, hour) {
   }
   score *= traitFit(person.personality, action.likes);
   if (action.hours && !inHours(hour, action.hours)) score *= action.offHours ?? 0;
+  // Stress (LIFE_SYSTEMS 4b): stressed people enjoy fun less and chores slide. Only with cfg.
+  score *= moodFactor(stress, action, cfg);
+  if (cfg) score -= stressPenalty(stress, action, cfg);
   return score;
 }
 
@@ -164,16 +179,21 @@ const snapshotNeeds = (person) => Object.fromEntries(
   Object.entries(person.needs).map(([k, v]) => [k, Math.round(v)]),
 );
 
-// Choose what to do next and set off.
-function decide(world, person) {
+// Choose what to do next and set off. With onlyFor set (an interruption), only actions that fill
+// that need are considered, and if none qualifies it returns false without drawing any random
+// number or pottering. Returns true when a new activity was set.
+function decide(world, person, onlyFor = null) {
   const { map } = world;
   const hour = hourOf(world.time);
   const { dist, prev } = map.distances(person.at);
+  const cfg = world.wellbeing ?? null;
+  const stress = cfg ? (world.stocks[stressId(cfg, person.id)]?.value ?? 0) : 0;
 
   const options = [];
   for (const action of world.actions) {
+    if (onlyFor && !(action.gain[onlyFor] > 0)) continue;
     if (!allowed(person, action, world.time)) continue;
-    const base = scoreAction(person, action, hour);
+    const base = scoreAction(person, action, hour, stress, cfg);
     if (base <= 0) continue;
     // The nearest piece of furniture of the right kind that can be reached.
     let best = null;
@@ -186,7 +206,12 @@ function decide(world, person) {
     }
     if (!best) continue;
     const score = base - best.d * TRAVEL_COST;
-    if (score >= MIN_SCORE) options.push({ action, ...best, score, fit: traitFit(person.personality, action.likes) });
+    if (score >= MIN_SCORE) {
+      options.push({
+        action, ...best, score, fit: traitFit(person.personality, action.likes),
+        mood: moodFactor(stress, action, cfg), penalty: cfg ? stressPenalty(stress, action, cfg) : 0,
+      });
+    }
   }
 
   options.sort((a, b) => b.score - a.score || a.action.id.localeCompare(b.action.id));
@@ -230,11 +255,17 @@ function decide(world, person) {
       next: top.filter((o) => o !== pick).slice(0, 2)
         .map((o) => ({ label: o.action.label, score: Math.round(o.score * 10) / 10 })),
     };
+    if (cfg) {
+      why.stress = Math.round(stress);
+      if (pick.mood !== 1) why.mood = Math.round(pick.mood * 100) / 100;
+      if (pick.penalty > 0) why.penalty = Math.round(pick.penalty * 10) / 10;
+    }
     person.lastDone[pick.action.id] = world.time;
     person.why = why;
     say(world, person, pick.action.label, why);
-    return;
+    return true;
   }
+  if (onlyFor) return false;
 
   // Nothing needs doing: wander to a random square and potter about there.
   const reachable = map.walkable.filter((k) => dist.has(k) && k !== person.at);
@@ -253,6 +284,39 @@ function decide(world, person) {
   person.why = why;
   const last = world.log.findLast((e) => e.who === person.name);
   if (last?.text !== label) say(world, person, label, why); // one line for a spell of pottering
+  return true;
+}
+
+// A need under the interrupt level stops what the person is doing, so they can deal with it
+// (LIFE_SYSTEMS 4d). Not while asleep, not when the current action (or the next one) fills that
+// need, and not again for retryMinutes after nothing could fill it. Returns true when the activity
+// was replaced. The stopped line is written just before the new choice's line.
+function interrupt(world, person) {
+  const cfg = world.wellbeing.interrupt;
+  const act = person.activity;
+  const current = act.action;
+  if (current.sleep || act.next?.action.sleep) return false;
+  if (world.time < person.noInterruptBefore) return false;
+  let worst = null;
+  for (const need of Object.keys(world.needDefs)) {
+    const v = person.needs[need];
+    if (v >= cfg.below) continue;
+    if (current.gain[need] > 0 || act.next?.action.gain[need] > 0) continue;
+    if (!worst || v < worst.value) worst = { need, value: v };
+  }
+  if (!worst) return false;
+  const value = Math.round(worst.value);
+  if (!decide(world, person, worst.need)) {
+    person.noInterruptBefore = world.time + cfg.retryMinutes;
+    return false;
+  }
+  const text = `${cfg.logPrefix} ${current.label.toLowerCase()}: ${world.needDefs[worst.need].label.toLowerCase()} too low (${value})`;
+  let at = world.log.length - 1;
+  while (at > 0 && !(world.log[at].who === person.name && world.log[at].time === world.time)) at -= 1;
+  world.log.splice(at, 0, { time: world.time, who: person.name, text, why: null });
+  while (world.log.length > LOG_LENGTH) world.log.shift();
+  person.why.interrupted = { action: current.id, need: worst.need, value };
+  return true;
 }
 
 function stepPerson(world, person) {
@@ -263,11 +327,12 @@ function stepPerson(world, person) {
   // Needs drop, except the ones the current action is filling.
   for (const [need, def] of Object.entries(world.needDefs)) {
     if (doing && doing.gain[need]) continue;
-    const rate = def.perHour * (asleep ? def.sleepFactor : 1);
+    const rate = def.perHour * (asleep ? def.sleepFactor : 1) * (person.rateTimes?.[need] ?? 1);
     person.needs[need] = clamp(person.needs[need] - rate / 60);
   }
 
   let decidedNow = false;
+  if (world.wellbeing && person.activity && interrupt(world, person)) decidedNow = true;
   if (!person.activity) {
     decide(world, person);
     decidedNow = true;
@@ -284,6 +349,8 @@ function stepPerson(world, person) {
   for (const [need, gain] of Object.entries(a.action.gain)) {
     person.needs[need] = clamp(person.needs[need] + gain / a.action.minutes);
   }
+  // Minutes of sleep (or of a nap that counts as sleep) for the sleep debt (LIFE_SYSTEMS 4d).
+  if (world.wellbeing && (a.action.sleep || a.action.countsAsSleep)) person.sleptMinutes += 1;
   a.minutesLeft -= 1;
   if (a.minutesLeft <= 0) {
     if (a.next) {
@@ -304,6 +371,15 @@ export function step(world) {
   if (world.time % MINUTES_PER_DAY === 0) queueDay(world, false);
   fireDue(world);
   for (const line of runWeeklyFlows(world, world.time % MINUTES_PER_DAY)) houseLog(world, line);
+  // Once per game hour (not per minute): couplings set the targets, lagged stocks move towards
+  // them, and at checkHour each person's sleep is counted (LIFE_SYSTEMS 3b, 4d).
+  if (world.couplings && world.time % 60 === 0) {
+    applyCouplings(world);
+    stepStocks(world, 1);
+    if (hourOf(world.time) === world.wellbeing.sleepDebt.checkHour) {
+      for (const person of world.people) settleSleep(world, person);
+    }
+  }
   for (const person of world.people) stepPerson(world, person);
 }
 

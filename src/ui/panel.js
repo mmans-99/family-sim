@@ -2,6 +2,7 @@
 // the latest lines from the activity log. It only reads the world; it never changes it.
 import { read } from '../sim/stocks.js';
 import { nextMoneyEvent, pounds } from '../sim/household.js';
+import { stressId, sleepId, stressLabel } from '../sim/wellbeing.js';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -28,18 +29,41 @@ export function whyText(person, world) {
   if (!w) return '';
   const needName = (id) => world.needDefs[id]?.label.toLowerCase() ?? id;
   const parts = [];
+  // An interruption (LIFE_SYSTEMS 4d) says what was stopped and why, first.
+  const stop = w.interrupted
+    ? `Stopped ${world.actions.find((a) => a.id === w.interrupted.action)?.label.toLowerCase() ?? w.interrupted.action}`
+      + ` (${needName(w.interrupted.need)} ${w.interrupted.value}) · `
+    : '';
   if (w.reason === 'need') {
     const main = w.need === 'routine'
       ? 'a household chore, no need involved'
       : `lowest need: ${needName(w.need)} (${w.needs[w.need]})`;
     parts.push(main, `score ${w.score}`);
     if (w.fit !== undefined && w.fit !== 1) parts.push(`personality ×${w.fit}`);
+    if (w.stress !== undefined) parts.push(`stress ${w.stress}`);
+    if (w.mood !== undefined) parts.push(`mood ×${w.mood}`);
+    if (w.penalty !== undefined) parts.push(`stress penalty −${w.penalty}`);
     parts.push(`${w.squares} squares away`, w.habit);
     if (w.next.length) parts.push(`next best: ${w.next.map((n) => `${n.label} ${n.score}`).join(', ')}`);
   } else {
     parts.push(`no need strong enough (${w.reason})`, `${w.squares} squares to wander`);
   }
-  return `Why ${w.chosen.toLowerCase()}: ${parts.join(' · ')}`;
+  return `${stop}Why ${w.chosen.toLowerCase()}: ${parts.join(' · ')}`;
+}
+
+// Stress and sleep debt under a person's needs (LIFE_SYSTEMS 4d). Empty when the game has none.
+function wellbeingRows(world, p) {
+  const cfg = world.wellbeing;
+  const s = cfg ? world.stocks[stressId(cfg, p.id)] : null;
+  const d = cfg ? world.stocks[sleepId(cfg, p.id)] : null;
+  if (!s || !d) return '';
+  const v = Math.round(s.value);
+  // Stress is bad when high, so the colours run the other way from the needs.
+  const colour = v < 30 ? '#5a9e4b' : v < 60 ? '#d99a2b' : '#c8483c';
+  return `<div class="need"><span>Stress</span>`
+    + `<span class="track"><span class="fill" style="width:${v}%;background:${colour}"></span></span>`
+    + `<span class="num">${v}</span></div>`
+    + `<div class="wb">Stress ${v} (${stressLabel(s.value, cfg)}) · Sleep debt ${d.value.toFixed(1)} h</div>`;
 }
 
 // Green when a need is met, amber when it is getting low, red when it is urgent.
@@ -89,6 +113,6 @@ export function renderPanel(el, world, roomName) {
     return `<div class="person"><div class="who"><b>${esc(p.name)}</b> (${esc(p.role)}, ${p.age})`
       + ` · ${esc(doingText(p))} · ${esc(roomName(world, p))}</div>`
       + `<div class="traits">${esc(traits)}</div>`
-      + `<div class="needs">${bars}</div>${why}<ol class="log">${lines}</ol></div>`;
+      + `<div class="needs">${bars}${wellbeingRows(world, p)}</div>${why}<ol class="log">${lines}</ol></div>`;
   }).join('');
 }

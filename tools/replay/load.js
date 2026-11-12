@@ -19,5 +19,7 @@ export function loadData(rootDir) {
       flows: read(rootDir, 'flows.json'),
     },
     replay: read(rootDir, 'replay.json'),
+    wellbeing: read(rootDir, 'wellbeing.json'),
+    couplings: read(rootDir, 'couplings.json'),
   };
 }

@@ -103,10 +103,21 @@ export function runSeedDetailed(data, { seed, years, probes = DEFAULT_PROBES, da
       }
     }
   }
+  // The wellbeing probe's checks (its day-by-day ledger reads and its end-of-run checks).
+  if (ctx.probe.wellbeing) results.push(...ctx.probe.wellbeing.results);
 
   const warnings = [];
   const unpaid = run.log?.unpaid ?? 0;
   if (unpaid) warnings.push(`Seed ${seed}: ${unpaid} bill line(s) could not be paid in full`);
+  const perDay = cfg.wellbeing?.warnInterruptsPerDay;
+  if (run.wellbeing && perDay !== undefined) {
+    const days = years * DAYS_PER_YEAR;
+    for (const [pid, block] of Object.entries(run.wellbeing.people)) {
+      if (block.interruptions / days > perDay) {
+        warnings.push(`Seed ${seed}: ${(block.interruptions / days).toFixed(1)} interruptions a day for ${pid}: check for actions stopping and starting in a loop.`);
+      }
+    }
+  }
 
   const report = {
     seed,
@@ -151,6 +162,23 @@ export function runMany(data, { seeds, years, from = 1, daily = false, onSeed })
 
   const warnings = reports.flatMap((r) => r.warnings);
   const n = reports.length;
+
+  // Wellbeing across the seeds (the first person; Sarah is the only one until L7).
+  const firstPerson = (r) => Object.keys(r.run.wellbeing?.people ?? {})[0];
+  const stressOf = (r) => r.run.wellbeing.people[firstPerson(r)].stress;
+  const sleepOf = (r) => r.run.wellbeing.people[firstPerson(r)].sleepDebt;
+  const hasWellbeing = n > 0 && reports.every((r) => r.run.wellbeing);
+  const means = hasWellbeing ? reports.map((r) => stressOf(r).mean) : [];
+  const wellbeingAcross = hasWellbeing ? {
+    stressMeanRange: [Math.min(...means), Math.max(...means)],
+    stressHighest: Math.max(...reports.map((r) => stressOf(r).max)),
+    sleepDebtMax: Math.max(...reports.map((r) => sleepOf(r).max)),
+    interruptions: reports.reduce((sum, r) => sum + Object.values(r.run.wellbeing.people)
+      .reduce((s, b) => s + b.interruptions, 0), 0),
+    couplingsHeld: Object.fromEntries(Object.keys(reports[0].run.wellbeing.couplings).map((id) => [
+      id, reports.reduce((sum, r) => sum + (r.run.wellbeing.couplings[id] ?? 0), 0),
+    ])),
+  } : null;
   if (moneyIdentical && n > 1) {
     warnings.push('Every seed has the same money: nothing random touches money yet (expected until L9/L11).');
   }
@@ -161,6 +189,18 @@ export function runMany(data, { seeds, years, from = 1, daily = false, onSeed })
     warnings.push('No turning points: money follows the same pattern every month (expected until shocks and job changes exist).');
   } else if (singleCauseShare >= cfg.turningPoints.warnSingleCauseShare) {
     warnings.push('Most turning points have a single cause: the world is still a stage (section 15).');
+  }
+  if (wellbeingAcross) {
+    if (wellbeingAcross.interruptions === 0) {
+      warnings.push('No interruptions: no need fell under 10 (expected until obligations and children exist, L6/L7).');
+    }
+    if (wellbeingAcross.sleepDebtMax === 0) {
+      warnings.push('Sleep debt stayed at 0: sleep is never cut short yet (expected until L6/L7).');
+    }
+    const never = Object.keys(wellbeingAcross.couplingsHeld).filter((id) => wellbeingAcross.couplingsHeld[id] === 0);
+    if (never.length) {
+      warnings.push(`Coupling never held: ${never.join(', ')} (expected until money trouble and broken sleep exist).`);
+    }
   }
 
   return {
@@ -174,6 +214,7 @@ export function runMany(data, { seeds, years, from = 1, daily = false, onSeed })
       actionsDistinct,
       singleCauseShare,
       turningPoints: points.length,
+      ...(wellbeingAcross ? { wellbeing: wellbeingAcross } : {}),
     },
     warnings,
     ok: reports.every((r) => r.invariants.every((i) => i.ok)),

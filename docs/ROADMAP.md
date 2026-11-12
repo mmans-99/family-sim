@@ -25,7 +25,7 @@ Build these before Phase 2: everything after rests on them. Step numbers match L
 - [x] L1 Calendar and two clocks (each game day ≈ 13 calendar days; dated bills, paydays, holidays). `src/sim/calendar.js`, `data/calendar.json`; date range on the clock; Household log
 - [x] L2 Stock engine + household money: accounts, bills, mortgage as ledgers (built 2026-11-11; see `docs/LIFE_SYSTEMS.md` 3a "as built"; panel Household block; save version 3)
 - [x] L3 Replay harness: run many seeds for years with no screen and report the lives (built 2026-11-11; `node tools/replay.js`; `docs/LIFE_SYSTEMS.md` 15a "as built")
-- [ ] L4 Couplings and lags: stress, sleep debt; low needs interrupt actions (brief written 2026-11-11 in `docs/LIFE_SYSTEMS.md` 4d; waiting for approval)
+- [x] L4 Couplings and lags: stress, sleep debt; low needs interrupt actions (built 2026-11-12; `docs/LIFE_SYSTEMS.md` 4d "as built"; two deviations noted in STATUS)
 - [ ] L5 Beliefs: people act on what they think, not the true values
 
 ## Landscape view (UI step, before L2)

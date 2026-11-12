@@ -4,6 +4,7 @@
 
 export const INVARIANTS = [
   'finite', 'limits', 'reconciles', 'ledgerComplete', 'mortgageFalls', 'calendarExact', 'needsInRange',
+  'stressInRange', 'sleepDebtInRange', 'wellbeingReconciles', 'lagNoOvershoot',
 ];
 
 const result = (id, ok, detail) => ({ id, ok, detail });
@@ -60,6 +61,40 @@ export function checkCalendarExact({ rule, expected, fired }) {
 export function checkNeedsInRange({ label, low, high }) {
   const good = Number.isFinite(low) && Number.isFinite(high) && low >= 0 && high <= 100;
   return result('needsInRange', good, good ? '' : `${label} went to ${low}..${high}, allowed 0..100`);
+}
+
+// Stress stays between its min and max (0..100) at every minute of the run. low and high are the
+// lowest and highest values seen.
+export function checkStressInRange({ stock, low, high, min = 0, max = 100 }) {
+  const good = Number.isFinite(low) && Number.isFinite(high) && low >= min && high <= max;
+  return result('stressInRange', good,
+    good ? '' : `${stock} went to ${low}..${high}, allowed ${min}..${max}`);
+}
+
+// Sleep debt stays between 0 and 24 hours at every minute of the run.
+export function checkSleepDebtInRange({ stock, low, high, min = 0, max = 24 }) {
+  const good = Number.isFinite(low) && Number.isFinite(high) && low >= min && high <= max;
+  return result('sleepDebtInRange', good,
+    good ? '' : `${stock} went to ${low}..${high}, allowed ${min}..${max}`);
+}
+
+// The change in a wellbeing stock equals the ledger entries the probe captured, to the penny.
+export function checkWellbeingReconciles({ stock, start, end, total }) {
+  const off = cents(end - start - total);
+  const good = Math.abs(off) < 0.005;
+  return result('wellbeingReconciles', good,
+    good ? '' : `${stock} moved ${cents(end - start)} but its ledger entries add up to ${cents(total)} (off by ${off})`);
+}
+
+// A lagged move (a 'Drift' entry) has the sign of target − before and never passes the target
+// (a half-life formula cannot overshoot). The 0.005 allows for rounding to the penny.
+export function checkLagNoOvershoot({ stock, t, before, amount, target }) {
+  const gap = cents(target - before);
+  const sameSign = gap === 0 ? amount === 0 : Math.sign(amount) === Math.sign(gap);
+  const within = Math.abs(amount) <= Math.abs(gap) + 0.005;
+  const good = sameSign && within;
+  return result('lagNoOvershoot', good,
+    good ? '' : `${stock} at minute ${t} moved ${amount} from ${before} towards ${target} (gap ${gap})`);
 }
 
 // One line per invariant for the report: ok only if every check of that id passed. The detail

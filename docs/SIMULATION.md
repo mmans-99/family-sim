@@ -40,6 +40,16 @@ Data: `data/needs.json`, `data/actions.json`, `data/people.json`, `stairs` in `d
 - **Frosted cover:** actions marked `"hide": true` (the toilet and the bath) cover the whole
   furniture and the figure in it with a moving frosted-glass mosaic while in use. Drawing only.
 
+### Stress, sleep debt and interruptions (as built, L4)
+Code: `src/sim/wellbeing.js`, plus the hourly hook and the interruption rule in `src/sim/world.js`. Data: `data/wellbeing.json`, `data/couplings.json`, `kind` and `countsAsSleep` in `data/actions.json`.
+- **Stress** is a lagged stock per person, 0 to 100, with a half-life of 48 game hours. Its target is a base (20 + 3 × (anxious − 5), so 5 to 35) plus the pushes from couplings that hold this hour. It drifts towards the target; it never jumps.
+- **Couplings** are checked once per game hour: a low need (any need under 25: +5 each), a long sleep debt (over 6 hours: +15, fun drops 1.4× as fast, energy 1.2×), a joint account under £200 (+20 for each adult), an overdraft (+15 for each adult), and stress over 60 (comfort drops 1.2× as fast).
+- **Sleep debt** is settled at 18:00 each day: hours of sleep (including naps that count) against 8 hours owed. Repayment is at most 2 hours a day.
+- **Mood:** fun actions score × (1 − stress / 200). **Chores** lose 0.1 points for each point of stress above 50.
+- **Interruption:** a need under 10 stops the current action, unless it is sleep or the action fills that need. The person picks the best action that fills the need. If none does, they wait 30 minutes before trying again.
+- The face looks uneasy from stress 60. The panel shows stress and sleep debt under each person's needs.
+- Today's world rarely reaches these limits: no need falls under 10, sleep debt stays 0, and stress rests at base. They come alive with obligations and children (L6/L7) and money trouble (L9/L11).
+
 ## Life-like world: where the plan lives
 The plan for everything beyond section 0 (calendar, stocks and ledgers, couplings,
 beliefs, households and invisible work, positions and firms, places and chance meetings,

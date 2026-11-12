@@ -3,7 +3,18 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money) and L3 (replay harness) are built. Next is L4 (couplings, stress, sleep debt, interruptions): the brief is written (LIFE_SYSTEMS 4d) and waits for the user's approval.
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money), L3 (replay harness) and L4 (couplings, stress, sleep debt, interruptions) are built. Next is L5 (beliefs and observations): not yet written up; it needs a brief and the user's approval first.
+
+## Latest (2026-11-12) — L4 built (stress, sleep debt, couplings, interruptions)
+- **Built on the user's approval** ("L4, build it"), following the brief in `docs/LIFE_SYSTEMS.md` 4d. New: `src/sim/wellbeing.js`, `data/wellbeing.json`, `data/couplings.json`. Changed: `src/sim/stocks.js` (`setTarget`, `stepStocks`, lag fields), `src/sim/world.js` (hourly hook, interruptions, mood and stress penalty in the score, `why` trace), `src/sim/save.js` (save version 4, reads 1 to 4), `src/render/people.js` (face uneasy at stress 60), `src/ui/panel.js` (stress and sleep debt rows, `Stopped …` in the why line), `src/main.js` (loads the two new files), `data/actions.json` (`kind`, `countsAsSleep`), `data/replay.json`, and the harness (`tools/replay/` gets a `wellbeing` probe and four invariants; the summary gets a stress line).
+- **Opt-in:** the new data is passed to `createWorld` as `wellbeing` and `couplings`, both or neither. Old tests build worlds without them and pass unchanged.
+- **Tests:** 136 passing (120 before): `tests/wellbeing.test.js` (14 tests: setup, base stress, lag, money pushes, sleep debt, mood and penalty, interruptions, same seed, save v4 and v3, face, setTarget) and 2 more in `tests/replay.test.js`.
+- **Harness, 20 seeds × 10 game years:** all 11 invariants pass. Joint account still £159,759.25 for seed 1 (money does not depend on stress); seed 1, one year, still £19,862.96. Stress means per seed 5.3–35.3 (base 5 to 35 by anxious trait), highest 36.5. Sleep debt 0 in every seed. Interruptions 0. Run time 105 s on this run (70 s last time; the hourly work and the extra probe account for part of it, the rest may be machine variance).
+- **Where it differs from the brief's expectations (for the user to look at):**
+  1. **Low needs never reach the hourly check.** Bladder dips to 23.9 in most seeds, but the dip is short and the toilet resets it before the next whole hour, so `lowNeeds` never holds (0 across 20 seeds). The brief expected a few hours a year. Not changed: a fix (for example, checking every minute, or a lower threshold) changes the design, so it is for the user to decide.
+  2. **`lowBalance` and `overdrawn` held** for about 3 game hours per seed over 10 years (60 hours total each), where the brief expected them never to hold. The joint account dips below £200 and into the overdraft around some bill dates, and the rules say so.
+  3. Warnings in the run list the couplings that never held (now `highStress`, `lowNeeds`, `sleepDebt`) instead of the brief's list. The text is computed, not fixed.
+- **Not checked:** the face change and the panel line on a real phone and in the screenshot steps (HOUSE_VIEW). The sandbox has no browser to take screenshots, so this is untested by eye.
 
 ## Latest (2026-11-11, night) — L4 brief written (docs only)
 - **L4 brief** is in `docs/LIFE_SYSTEMS.md` 4d, written for another model to code: `data/wellbeing.json`, `data/couplings.json`, `kind` and `countsAsSleep` in `data/actions.json`, lags in `stocks.js` (`setTarget`, `stepStocks`), new `src/sim/wellbeing.js`, hourly hook in `step()`, interruption rule, mood factor and stress penalty in the score, save version 4, panel stress line, the face at stress ≥ 60, a wellbeing probe and four invariants in the harness, 16 tests. **No code written.**
@@ -273,11 +284,12 @@ The user asked for the project to be read and the house view fixed. The view was
 - The sandbox can't reach github.io, so the live page is checked by the user, not by me.
 
 ## Next step
-1. User approves the L4 brief (LIFE_SYSTEMS 4d) and its tuning defaults, or changes them; then build it (any model can follow the brief).
-2. User checks the Household block on a real phone (sideways and upright).
-3. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
-4. Source the school term dates (needed before L6/L7).
-5. Record the exact Sierrassets licence wording in DECISIONS.md.
+1. User decides on the two L4 deviations above (low needs never seen hourly; the money couplings holding a few hours), and checks the stress row and the face on a real phone and in screenshots.
+2. Write the L5 brief (beliefs and observations, LIFE_SYSTEMS 4c), get approval, then build it.
+3. User checks the Household block on a real phone (sideways and upright).
+4. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
+5. Source the school term dates (needed before L6/L7).
+6. Record the exact Sierrassets licence wording in DECISIONS.md.
 
 ## Known issues
 - Calendar (L1/L3): a game year is 365 calendar days, so leap days are not counted. Ten game years run from 1 Mar 2026 to 26 Feb 2036 (DECISIONS 2026-11-11).
@@ -287,7 +299,7 @@ The user asked for the project to be read and the house view fixed. The view was
 - School events have no owner yet (L6/L7).
 - Weekdays are computed but not shown: game days do not match real weekdays.
 - Sarah potters about a lot between meals, because nothing else needs doing yet. Childcare (Phase 2) and later outings will fill the day.
-- Actions are never interrupted: a bath runs its full time even if she badly needs the toilet.
+- Interruptions are in (L4) but rarely fire: no need falls under 10 with today's world (the needs stay near 24 at the lowest). They come alive with obligations and children (L6/L7).
 - No thought bubbles or real mood yet; her face follows her needs as a stand-in.
 - Her face only shows on front-facing frames; from the side or back it is the plain template face.
 - The sleeping head is slightly wider than one pillow on the double bed.

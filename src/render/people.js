@@ -24,10 +24,12 @@ export function facing(dx, dy) {
 }
 
 // A face for front-facing frames, from how the person's needs stand. Display only.
-export function mood(needs) {
+export function mood(needs, stress = 0) {
   const values = Object.values(needs);
   const lowest = Math.min(...values);
   const average = values.reduce((s, v) => s + v, 0) / values.length;
+  // Stress from 60 shows as uneasy, whatever the needs (LIFE_SYSTEMS 4d). 0 when the game has none.
+  if (stress >= 60) return 'uneasy';
   if (lowest < 25) return 'uneasy';
   if ((needs.energy ?? 100) < 30) return 'tired';
   if (average >= 80) return 'happy';
@@ -48,7 +50,7 @@ export function peopleToDraw(world, floors, place = {}, frac = 0, now = 0) {
   const tick = Math.floor(now / FRAME_MS) % 4;
   for (const p of world.people) {
     const a = p.activity;
-    const face = mood(p.needs);
+    const face = mood(p.needs, world.stocks?.[`stress.${p.id}`]?.value ?? 0);
     let spot;
     if (a?.phase === 'walk') {
       const along = Math.min(a.path.length - 1, a.pos + WALK_SQUARES_PER_MINUTE * frac);

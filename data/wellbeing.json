@@ -1,0 +1,19 @@
+{
+  "about": "Stress, sleep debt, mood and interruptions (LIFE_SYSTEMS 4b, 4d). All numbers are tuning unless a source is given.",
+  "tuning": true,
+  "stress": {
+    "id": "stress.{p}", "min": 0, "max": 100, "floor": "hard", "ceiling": "hard", "ledgerKeep": 60,
+    "halfLifeHours": 48,
+    "base": 20, "anxiousPerPoint": 3,
+    "bands": [ { "below": 30, "label": "calm" }, { "below": 60, "label": "tense" }, { "below": 101, "label": "stressed" } ]
+  },
+  "sleepDebt": {
+    "id": "sleepdebt.{p}", "min": 0, "max": 24, "floor": "hard", "ceiling": "hard", "ledgerKeep": 60,
+    "needHours": 8,
+    "needSource": "NHS Every Mind Matters, 'Sleep' (nhs.uk/every-mind-matters/mental-health-issues/sleep/), read 12 Nov 2026: 'Most healthy adults need around 7 to 9 hours of sleep a night'. 8 hours is the middle of that range (tuning).",
+    "checkHour": 18, "maxRepayPerDay": 2
+  },
+  "mood": { "factorPer": 200, "kinds": ["fun"] },
+  "stressPenalty": { "from": 50, "perPoint": 0.1, "kinds": ["chore"] },
+  "interrupt": { "below": 10, "retryMinutes": 30, "logPrefix": "Stopped" }
+}

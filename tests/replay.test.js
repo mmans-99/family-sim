@@ -13,7 +13,8 @@ import { runSeed, runSeedDetailed, runMany } from '../tools/replay/run.js';
 import { findTurningPoints } from '../tools/replay/turning.js';
 import {
   checkFinite, checkLimits, checkReconciles, checkLedgerComplete, checkMortgageFalls,
-  checkCalendarExact, checkNeedsInRange,
+  checkCalendarExact, checkNeedsInRange, checkStressInRange, checkLagNoOvershoot,
+  checkSleepDebtInRange, checkWellbeingReconciles, INVARIANTS,
 } from '../tools/replay/checks.js';
 import { textSummary } from '../tools/replay/summary.js';
 
@@ -113,4 +114,25 @@ test('command line: writes the report and summary, exits 0', () => {
   const json = JSON.parse(readFileSync(join(dir, 'replay-report.json'), 'utf8'));
   assert.equal(json.ok, true);
   assert.match(textSummary(json), /Invariants: all passed/);
+});
+
+test('the wellbeing invariants can fail: out-of-range stress, an overshooting lag, a broken ledger', () => {
+  assert.equal(checkStressInRange({ stock: 'stress.sarah', low: 4, high: 101 }).ok, false);
+  assert.equal(checkStressInRange({ stock: 'stress.sarah', low: 4, high: 60 }).ok, true);
+  assert.equal(checkSleepDebtInRange({ stock: 'sleepdebt.sarah', low: -0.5, high: 3 }).ok, false);
+  const over = checkLagNoOvershoot({ stock: 'stress.sarah', t: 9, before: 20, amount: 6, target: 25 });
+  assert.equal(over.ok, false);
+  assert.match(over.detail, /stress\.sarah at minute 9/);
+  assert.equal(checkLagNoOvershoot({ stock: 'stress.sarah', t: 9, before: 20, amount: 0.1, target: 25 }).ok, true);
+  assert.equal(checkLagNoOvershoot({ stock: 'stress.sarah', t: 9, before: 20, amount: -0.1, target: 25 }).ok, false);
+  assert.equal(checkWellbeingReconciles({ stock: 'stress.sarah', start: 20, end: 21, total: 0.5 }).ok, false);
+  assert.equal(INVARIANTS.length, 11);
+});
+
+test('stress rests near its base over a year (plus the occasional low-bladder push)', () => {
+  for (const r of [first.report, second.report]) {
+    const base = 20 + 3 * (r.personality.sarah.anxious - 5);
+    const mean = r.run.wellbeing.people.sarah.stress.mean;
+    assert.ok(Math.abs(mean - base) <= 6, `seed ${r.seed}: mean ${mean} vs base ${base}`);
+  }
 });

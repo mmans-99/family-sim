@@ -1,7 +1,12 @@
 {
   "about": "Settings for the replay harness (tools/replay.js, LIFE_SYSTEMS 15a). All thresholds are tuning.",
   "tuning": true,
-  "moneyStocks": ["acct.joint", "acct.savings", "debt.overdraft", "debt.mortgage"],
+  "moneyStocks": [
+    "acct.joint",
+    "acct.savings",
+    "debt.overdraft",
+    "debt.mortgage"
+  ],
   "turningPoints": {
     "minChange": 1000,
     "timesMedian": 3,
@@ -11,13 +16,38 @@
   },
   "unpaidPrefix": "Could not pay",
   "notYet": [
-    { "what": "stress and sleep debt per adult", "step": "L4" },
-    { "what": "beliefs against the truth", "step": "L5" },
-    { "what": "other family members", "step": "L7" },
-    { "what": "income with jumps or gaps (job changes)", "step": "L9" },
-    { "what": "contacts graph size by year", "step": "L10" },
-    { "what": "price changes and the 2029 remortgage", "step": "L11" },
-    { "what": "health curves and deaths", "step": "L15" },
-    { "what": "address history (moving house)", "step": "later" }
-  ]
+    {
+      "what": "beliefs against the truth",
+      "step": "L5"
+    },
+    {
+      "what": "other family members",
+      "step": "L7"
+    },
+    {
+      "what": "income with jumps or gaps (job changes)",
+      "step": "L9"
+    },
+    {
+      "what": "contacts graph size by year",
+      "step": "L10"
+    },
+    {
+      "what": "price changes and the 2029 remortgage",
+      "step": "L11"
+    },
+    {
+      "what": "health curves and deaths",
+      "step": "L15"
+    },
+    {
+      "what": "address history (moving house)",
+      "step": "later"
+    }
+  ],
+  "wellbeing": {
+    "high": 60,
+    "warnInterruptsPerDay": 6,
+    "tuning": true
+  }
 }

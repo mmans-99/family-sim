@@ -23,7 +23,7 @@ simulator/
 │   ├── make_extras.py      draws assets/extras/extras.png (Python + Pillow)
 │   ├── make_mum.py         builds assets/people/sarah.* from Eris Esra's 16x32 template (template not in repo)
 │   ├── replay.js           replay harness command line: `node tools/replay.js --seeds 20 --years 10` (writes replay-out/, ignored by git)
-│   └── replay/             replay harness (LIFE_SYSTEMS 15a): load.js (reads data/, the only file access), run.js (seeds, runMany), probes.js (money, calendar, needs, actions, log), checks.js (seven invariants), turning.js (turning points), summary.js (text summary)
+│   └── replay/             replay harness (LIFE_SYSTEMS 15a): load.js (reads data/, the only file access), run.js (seeds, runMany), probes.js (money, calendar, needs, actions, log, wellbeing), checks.js (eleven invariants: seven for money and calendar, four for wellbeing), turning.js (turning points), summary.js (text summary)
 ├── data/
 │   ├── house.json          house: floors, rooms, doorways, fences, stairs, furniture
 │   ├── calendar.json       calendar start (1 Mar 2026) and dated rules: mortgage, pay, bills, savings interest, energy cap, Christmas
@@ -33,7 +33,9 @@ simulator/
 │   ├── needs.json          needs and how fast they drop
 │   ├── actions.json        what people can do with furniture, and what it gives them
 │   ├── people.json         who is simulated (Sarah for now) and where they start
-│   └── replay.json         replay harness settings: money stocks, turning-point thresholds, what is not measured yet (tuning)
+│   ├── replay.json         replay harness settings: money stocks, turning-point thresholds, wellbeing thresholds, what is not measured yet (tuning)
+│   ├── wellbeing.json      stress (lagged, half-life 48 game hours), sleep debt, mood and interrupt settings (tuning; sleep need cited)
+│   └── couplings.json      rules that push the stress target or change a need's rate, checked hourly (tuning)
 ├── src/
 │   ├── main.js             starts everything: clock, views, camera, drawing loop
 │   ├── sim/
@@ -44,7 +46,8 @@ simulator/
 │   │   ├── rng.js          seeded random numbers (mulberry32), saveable state, subRng for separate streams
 │   │   ├── housemap.js     walking map from house.json: squares, steps, stairs, routes, where to stand to use furniture
 │   │   ├── world.js        people, needs, the brain, walking, actions, personality, log; step() = one game minute
-│   │   └── save.js         save to plain JSON, load from it, time away, catch-up (pure logic)
+│   │   ├── save.js         save to plain JSON, load from it, time away, catch-up (pure logic)
+│   │   └── wellbeing.js    stress, sleep debt, couplings, mood factor, chore penalty, stress label (pure logic; opt-in)
 │   ├── save/
 │   │   └── store.js        keeps the save in the browser (localStorage); the only save code that touches the browser
 │   ├── render/
@@ -65,12 +68,13 @@ simulator/
     ├── household.test.js   tax and NI, mortgage schedule, start balances, next event, one game year as a hand sum, save with money
     ├── world.test.js       routes, stairs, back door, scoring, chores, same-seed days, a two-day run
     ├── save.test.js        save round trip, time away, catch-up, bath prelude, personality
+    ├── wellbeing.test.js   stress setup and base, lags, money pushes, sleep debt, mood and penalty, interruptions, same seed, save v4 and v3, face
     ├── render.test.js      scene contents, plan camera, sprite maps, furniture layout, walking routes
     ├── palette.test.js     palette snapping
     ├── raster.test.js      pixel-exact fills and lines
     └── replay.test.js      replay harness: same seed, read only, invariants fail when they should, turning points, two years, command line
 ```
-Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/random.js` (random helpers), stock lags (`target`, `halfLifeHours`, `stepStocks`, L4), `couplings.js`, `beliefs.js`, the labour ledger and bargaining (L8), `firms.js` (positions, firms, labour market), `places.js` (places, contacts, encounters), `economy.js`, `institutions.js`, `holidays.js`, `health.js`, `life.js`, `weather.js`, `commentary.js`, `src/save/store.js`, and `tools/replay.js` (headless multi-seed replay). Data to come: `couplings.json`, `obligations.json`, `labour.json`, `agecurves.json`, `lifecourse.json`, `firms.json`, `positions.json`, `places.json`, `economy.json`, `institutions.json`, `holidays.json`, `text/*.json`. Also `manifest.json` and `sw.js` for offline use.
+Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/random.js` (random helpers), `beliefs.js`, the labour ledger and bargaining (L8), `firms.js` (positions, firms, labour market), `places.js` (places, contacts, encounters), `economy.js`, `institutions.js`, `holidays.js`, `health.js`, `life.js`, `weather.js`, `commentary.js`, `src/save/store.js`, and `tools/replay.js` (headless multi-seed replay). Data to come: `couplings.json`, `obligations.json`, `labour.json`, `agecurves.json`, `lifecourse.json`, `firms.json`, `positions.json`, `places.json`, `economy.json`, `institutions.json`, `holidays.json`, `text/*.json`. Also `manifest.json` and `sw.js` for offline use.
 
 ## The tick
 - The sim steps in fixed game minutes: `step(world)` in `src/sim/world.js` is one game minute.
@@ -103,8 +107,8 @@ Planned, not built yet (details and order in `docs/LIFE_SYSTEMS.md`): `src/sim/r
 ### Landscape view (as built 2026-11-11)
 Design in `docs/HOUSE_VIEW.md` section 10. `src/render/follow.js` is the pure follow-camera maths (aim with look-ahead, glide, edge clamp, zoom levels, minimap mapping; tested in `tests/follow.test.js`). `src/render/minimap.js` draws the minimap canvas. `src/ui/camera-controls.js` handles drag, pinch and wheel through hooks. `src/main.js` holds `WORLD` (the floors and their placement, which the camera moves over), the camera state, the frame loop and the panel and face controls. The floating overlays and the side panel are HTML and CSS in `index.html`. There is no separate `hud.js`. `manifest.webmanifest` sets full screen, with orientation "any" so portrait still works. `src/sim/` and the save format do not change.
 
-## Save format (version 3, as built)
-`src/sim/save.js` writes one plain JSON object: `{ version, savedAt, seed, clock: {totalMinutes, speed, carryMs}, time, rng, people[], log[], calendar: {queue, fired}, stocks, loans }`. Version 3 adds money (`stocks`: each stock's value, ledger and ledger totals; `loans`: the mortgage's rate, term, fixed-until date and monthly payment). Version 2 (calendar) and version 1 (no calendar) saves still load; they get their money from `data/` for the save's date (`setupMoney`). Flow definitions and tax rules are not saved: they come from `data/`.
+## Save format (version 4, as built)
+`src/sim/save.js` writes one plain JSON object: `{ version, savedAt, seed, clock: {totalMinutes, speed, carryMs}, time, rng, people[], log[], calendar: {queue, fired}, stocks, loans, couplings: {fired} | null }`. Version 3 adds money (`stocks`: each stock's value, ledger and ledger totals; `loans`: the mortgage's rate, term, fixed-until date and monthly payment). Version 4 adds the wellbeing state: each person's `rateTimes`, `sleptMinutes`, `sleepWindowStart` and `noInterruptBefore` (only in games with the couplings), and `couplings.fired`. Stress and sleep-debt stocks are in `stocks`. Version 3 saves still load: their money is merged in and stress starts at its base with sleep debt 0. Versions 2 and 1 still load: they get their money from `data/` for the save's date (`setupMoney`). Flow definitions, tax rules, wellbeing and coupling rules are not saved: they come from `data/`.
 - `calendar` holds the queue of dated events not yet fired and the count of each rule's firings. The rules come from `data/calendar.json`.
 - `savedAt` is real time in ms; the time away is the real time since then, at the saved speed, capped at one game year.
 - `rng` is the main random generator's position (`getState()`); `people[]` holds each person's `at`, `needs`, `personality`, `lastDone`, `why` and `activity`.

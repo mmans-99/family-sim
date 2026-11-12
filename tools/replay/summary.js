@@ -28,6 +28,11 @@ export function textSummary(report) {
   lines.push(`Seeds: money ${across.moneyIdentical ? 'identical' : 'differs'}; daily action counts differ `
     + `(${across.actionsDistinct} of ${n} seeds distinct)`);
   lines.push(`Turning points: ${across.turningPoints ? `${across.turningPoints} across the seeds` : 'none'}`);
+  if (across.wellbeing) {
+    const w = across.wellbeing;
+    lines.push(`Stress (Sarah): seed means ${w.stressMeanRange[0]}–${w.stressMeanRange[1]}; highest ${w.stressHighest}; `
+      + `sleep debt max ${w.sleepDebtMax.toFixed(1)} h; interruptions ${w.interruptions}`);
+  }
   if (report.warnings.length) {
     lines.push('Warnings:');
     for (const w of report.warnings) lines.push(`- ${w}`);

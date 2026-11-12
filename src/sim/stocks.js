@@ -27,8 +27,42 @@ export function addStock(world, def) {
     ledger: [],
     ledgerTotals: {},
     ledgerKeep: def.ledgerKeep ?? 60,
+    // Lagged stocks (LIFE_SYSTEMS 3, 4d): the value moves towards target; halfLifeHours is the
+    // time to close half the gap. pushes says what makes up the target (for the ledger).
+    halfLifeHours: def.halfLifeHours ?? null,
+    target: def.target ?? null,
+    pushes: { ...(def.pushes ?? {}) },
+    base: def.base ?? null,
   };
   return world.stocks[def.id];
+}
+
+// Set where a lagged stock is heading. The target is kept inside the stock's limits.
+export function setTarget(world, id, target, pushes = {}) {
+  const s = stockOf(world, id);
+  let t = cents(target);
+  if (t < s.min) t = s.min;
+  if (s.max !== null && t > s.max) t = s.max;
+  s.target = t;
+  s.pushes = { ...pushes };
+  return t;
+}
+
+// Move every lagged stock towards its target by the share its half-life allows over `hours`.
+// The move is written as a 'Drift' ledger entry (ref: target, before, pushes). It never passes
+// the target, and when the move rounds to 0 nothing is written. Stocks are visited in key
+// order so the ledger order is fixed.
+export function stepStocks(world, hours = 1) {
+  for (const id of Object.keys(world.stocks).sort()) {
+    const s = world.stocks[id];
+    if (!s.halfLifeHours || s.target === null) continue;
+    const gap = s.target - s.value;
+    const move = cents(gap * (1 - 0.5 ** (hours / s.halfLifeHours)));
+    if (move !== 0) {
+      const before = s.value;
+      change(world, id, move, 'Drift', { target: s.target, before, pushes: { ...s.pushes } });
+    }
+  }
 }
 
 export function read(world, id) {

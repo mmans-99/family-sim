@@ -10,7 +10,7 @@ file's section 1 (rules) and the section for the step you are building. Read
 
 **Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
 (calendar). L2 is built (money, 2026-11-11; see 3a "as built"), with the mapping approved by the user on 2026-11-11 and the refinements listed in
-the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). L4 (stress, sleep debt, couplings, interruptions) has a detailed brief in 4d, not built yet. Each later step must be approved by the user before its code is written
+the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). L4 (stress, sleep debt, couplings, interruptions) is built (2026-11-12; see 4d "as built"). Each later step must be approved by the user before its code is written
 (CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 
 ---
@@ -506,7 +506,9 @@ People never read the true world values. Each person has `person.beliefs`:
 Tests: after the account drops, Sarah's belief stays at the old value until she checks; an
 anxious and a calm Sarah given the same old belief drift in opposite directions.
 
-### 4d. L4 build brief: stress, sleep debt, couplings, interruptions (written 2026-11-11; not built, waiting for the user's approval)
+### 4d. L4 build brief: stress, sleep debt, couplings, interruptions (written 2026-11-11; approved and built 2026-11-12)
+
+**As built.** Steps 1 to 9 are done, with the files listed in Step 1 to 7. Where the build differs from this brief: the sleep need source is the NHS Every Mind Matters page (7 to 9 hours, 8 used as the tuning middle); the interruption checks the whole brain (`decide` with a need filter) instead of a separate path; the "Stopped …" line is inserted before the new choice's line. Measured on 20 seeds × 10 years: all 11 invariants pass; **two deviations from the expected warnings** (for the user to decide, see STATUS and DECISIONS 2026-11-12): low needs never reach the hourly coupling check (`lowNeeds` never holds), and `lowBalance` and `overdrawn` hold for about 3 game hours per seed. 136 tests pass (120 before). Face and panel are not checked on a device or in screenshots yet.
 
 This is the exact plan for step L4. It is written so another model can build it without the
 chat history. It builds sections **3b** (couplings and lags) and **4b** (stress, mood and the
