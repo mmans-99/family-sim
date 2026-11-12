@@ -10,7 +10,7 @@ file's section 1 (rules) and the section for the step you are building. Read
 
 **Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
 (calendar). L2 is built (money, 2026-11-11; see 3a "as built"), with the mapping approved by the user on 2026-11-11 and the refinements listed in
-the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). L4 (stress, sleep debt, couplings, interruptions) is built (2026-11-12; see 4d "as built"). Each later step must be approved by the user before its code is written
+the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). L4 (stress, sleep debt, couplings, interruptions) is built (2026-11-12; see 4d "as built"). L5 (beliefs and observations) has a detailed brief in 4e, not built yet. Each later step must be approved by the user before its code is written
 (CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 
 ---
@@ -881,6 +881,359 @@ fails, the opt-in rule (rule 3) was broken: fix the code, not the test.
 No obligations (L6), no beliefs (L5), no other family members (L7), no change to money flows (the
 family does not spend less when stressed: that is behaviour for L5/L8), no stress turning points in
 the harness (turning points stay money-only until a stress shock exists), no thought bubbles.
+
+### 4e. L5 build brief: beliefs and observations (written 2026-11-12; not built, waiting for the user's approval)
+
+This is the exact plan for step L5. It is written so another model can build it without the
+chat history. It builds section **4c** (beliefs, the observation layer). Where this brief and 4c
+differ, **this brief wins**. Obligations (4a, L6) and conversations between people (Phase 2) are
+**not** part of L5.
+
+**Words used here.**
+- *Truth*: the real value in the world, e.g. the joint account's balance in `world.stocks`.
+- *Belief*: what one person *thinks* a value is. Kept on the person (`person.beliefs`). It can be
+  old or wrong. People decide from beliefs, never from the truth.
+- *Subject*: one thing a belief can be about. L5 has one subject: `money.joint`, "how much is in
+  the joint account". Its truth is the joint account **minus** the overdraft, so one number covers
+  both (below £0 means overdrawn).
+- *Observation*: an event that updates a belief. L5 has two kinds:
+  1. **Checking** (the bank app): the belief becomes exactly the truth, and its age goes back to 0.
+  2. **Noticing** a money event (pay arriving, the mortgage going out, the food shop): the belief
+     moves by that amount. It does not reset the age, because she did not see the balance.
+  Money events she does **not** notice (small spending, subscriptions, phone bills) change the
+  truth but not the belief. That is how the belief drifts away from the truth.
+- *Age*: hours since the person last checked. The older the belief, the more they want to check.
+- *Bias drift*: an old belief slides in the direction of the person's temper. An anxious person
+  slowly thinks there is less money than there is; a calm person thinks there is more.
+- *Worry score*: the score the brain gives to checking, built from the belief (its age, and whether
+  it is low), never from the truth.
+- *Anywhere action*: an action with no furniture, done where the person stands (checking a phone).
+
+#### What exists now (checked 2026-11-12, so the brief matches the code)
+- L4 is built (commit `5de4127`). `src/sim/wellbeing.js` runs couplings hourly. Two couplings
+  read the **true** money: `lowBalance` (`acct.joint` below 200) and `overdrawn` (`debt.overdraft`
+  above 0), in `matchesFor()`. That breaks the rule "people never read a true world value", and
+  L5 fixes it.
+- Nothing else in the brain reads money. There is no money-related action yet.
+- Money flows run in `src/sim/household.js`: `runFlowsForRule(world, ruleId)` (dated flows; the
+  mortgage goes through `payMortgage`) and `runWeeklyFlows(world, minuteOfDay)` (food, everyday,
+  clothing at 10:00). Every change goes through `change()`, which returns the amount applied
+  (overdraft spill included). The flow ids are in `data/flows.json`.
+- Actions need furniture: `decide()` looks for the nearest `world.house.furniture` with
+  `name === action.object`. The renderer already copes with `activity.item === null` (pottering
+  uses it), and so does the save (`encodeActivity` stores `null`).
+- `tests/world.test.js` "every action has at least one piece of furniture it can be done at"
+  loops over every action in `data/actions.json` (see rule 3).
+- `scoreAction(person, action, hour, stress = 0, cfg = null)` is exported and used by tests.
+- Save version 4 (`src/sim/save.js`), reads 1 to 4.
+- The replay harness has 11 invariants (`tools/replay/checks.js`) and a `notYet` line for L5 in
+  `data/replay.json`.
+- **Measured in the current game (seed 1, one game year, 2026-11-12):**
+  - The joint account (less overdraft) goes under £200 **once**: game day 2, for 3 game hours,
+    down to −£347. The mortgage (1 April, 06:00) goes out before Tom's pay (28 March, 09:00) on
+    the same game day. After that the account only grows (about £19,860 by the end of year 1).
+    So `lowBalance` and `overdrawn` held for 3 hours in each seed's first year (L4 deviation 2).
+  - If Sarah noticed only the big items (pay, mortgage, council tax, energy, water, insurance,
+    food) and never checked, her belief would end the year **£14,900 above the truth** when food
+    is not noticed either, or about **£7,900 above** with food noticed: roughly **£280 per game
+    day** of unnoticed spending (everyday £82.10 and clothing £35 a week, phones, broadband, the
+    TV Licence, streaming, apps, life cover, Oliver's club).
+  - Sarah makes about 19 scored decisions per game day; the scores' median is 1.7 (10th
+    percentile 1.1, 90th 4.6). Between meals nothing scores 1 or more, so she potters a lot. A
+    check scoring just over 1 will win most free moments.
+
+#### Rules for this step
+1. Everything in section 1 (no DOM in `src/sim/`, plain JSON state, numbers in `data/` with a
+   source or `"tuning": true`, the why trace grows).
+2. **No new random numbers.** The bank app is exact and notifications are exact, so L5 has no
+   noise. (Noisy observations arrive with conversations in Phase 2; they will use their own
+   stream `subRng(seed, 'beliefs')` then.) Sarah's same-seed day **will** change, because
+   checking is a new option. Two runs of the same seed must still be identical.
+3. **Opt-in data, as in L2 and L4.** `createWorld` takes a new optional input `beliefs` (from
+   `data/beliefs.json`). Without it: no `person.beliefs`, the check action scores 0 and is never
+   chosen, and couplings use their `ifNoBeliefs` condition, which is exactly L4's. So every
+   existing test passes unchanged, with **one** exception, which the user must approve: the
+   world test above must skip actions with `"anywhere": true` (they have no furniture by design).
+   Change only that line (`if (a.anywhere) continue;`) and say so in DECISIONS.
+4. **People read beliefs, never the truth.** `truthOf()` (below) may be called only by
+   observations, the panel's build-time line, the why trace's "really" field and the harness.
+   The brain's scores and the couplings must not call it. A test checks this (test 8).
+5. **Hourly, not per minute.** Bias drift runs once per game hour, like the couplings.
+6. Beliefs are **not stocks**: they have no ledger. They are plain objects on the person.
+7. Work on `main`; ask before changing anything outside the files listed here.
+
+#### Step 1. Data files
+
+`data/beliefs.json` (new):
+```json
+{
+  "about": "Beliefs (LIFE_SYSTEMS 4c, 4e): what people think a value is. truth: the stocks added (plus) and taken away (minus) to get the real value. who: each or adults. noticed: flow ids (data/flows.json) the person hears about when they run; the belief moves by the amount applied. Any other change to the truth goes unnoticed until they check. drift: once a game hour, a belief older than afterHours moves by perDayPerPoint × (5 − anxious) ÷ 24 pounds, up to maxDrift pounds in total since the last check (anxious above 5 drifts down, below 5 up). check: the worry score for the action that observes this subject. All numbers are tuning.",
+  "tuning": true,
+  "subjects": [
+    {
+      "id": "money.joint",
+      "label": "joint account",
+      "who": "adults",
+      "truth": { "plus": ["acct.joint"], "minus": ["debt.overdraft"] },
+      "noticed": ["pay.tom", "mortgage", "counciltax", "energy", "water", "insurance.buildings", "insurance.contents", "food"],
+      "drift": { "afterHours": 24, "perDayPerPoint": 15, "maxDrift": 1000 },
+      "check": {
+        "source": "checked the bank app",
+        "logText": "Checked the bank app: {value} in the joint account",
+        "perDayOld": 1.5,
+        "worryBelow": 1000,
+        "lowBonus": 3,
+        "stressPer": 100
+      }
+    }
+  ]
+}
+```
+- `noticed`: Sarah does the food shop, so she notices it; Tom's pay, the mortgage and the big
+  bills are letters or bank alerts she reads. Everyday spending, clothing, phones, broadband and
+  subscriptions are not noticed (small, scattered). This is a tuning choice for the user.
+- With these numbers an anxious-10 Sarah drifts −£75 a game day and a calm-0 Sarah +£75; anxious 5
+  does not drift. `maxDrift` stops a belief sliding for ever if nobody checks.
+
+`data/actions.json` (edit): add one action, and update the `about` to explain the new fields
+(`anywhere`, `observes`):
+```json
+{ "id": "checkBank", "label": "Checking the bank app", "object": null, "anywhere": true, "minutes": 3,
+  "gain": {}, "observes": "money.joint", "cooldown": 240, "hours": [7, 23], "offHours": 0,
+  "likes": { "anxious": 0.5 } }
+```
+- `anywhere`: no furniture; done on the square the person is on, with no walk.
+- `observes`: when the action finishes (its last minute), the person checks that subject. An
+  action interrupted before its end observes nothing.
+- `likes.anxious` 0.5: an anxious-10 person's worry score is ×1.5, an anxious-0 person's ×0.5
+  (`traitFit`, already built).
+
+`data/couplings.json` (edit): `lowBalance` and `overdrawn` read the belief. Each keeps its L4
+condition as `ifNoBeliefs`, used only in worlds built without `beliefs`:
+```json
+{ "id": "lowBalance", "who": "adults",
+  "if": { "belief": "money.joint", "below": 200 },
+  "ifNoBeliefs": { "stock": "acct.joint", "below": 200 },
+  "then": [ { "target": "stress.{p}", "add": 20 } ] },
+{ "id": "overdrawn", "who": "adults",
+  "if": { "belief": "money.joint", "below": 0 },
+  "ifNoBeliefs": { "stock": "debt.overdraft", "above": 0 },
+  "then": [ { "target": "stress.{p}", "add": 15 } ] }
+```
+Update the file's `about` to explain `belief` conditions and `ifNoBeliefs`.
+
+`data/people.json`: no change to the people. Update the `about`: the anxious trait now also sets
+how money beliefs drift and how often a person checks.
+
+`data/replay.json`: remove the `notYet` line for L5; add
+`"beliefs": { "warnChecksPerDay": 6, "tuning": true }`.
+
+#### Step 2. `src/sim/beliefs.js` (new, pure, no random numbers)
+```js
+export function setupBeliefs(world, beliefs)            // world.beliefs = { subjects: clone }, person.beliefs for each person the subject is for
+export function truthOf(world, subjectId)               // Σ plus stocks − Σ minus stocks, to the penny; null if any stock is missing
+export function checkSubject(world, person, subjectId)  // the check observation: value = truth, seenAt = now, drifted = 0; returns the log text
+export function noticeFlow(world, flowId, stockId, applied) // every person whose belief notices flowId: value += applied (− if stockId is in minus)
+export function driftBeliefs(world)                     // once a game hour: bias drift for old beliefs
+export function beliefAgeHours(belief, time)            // (time − seenAt) / 60
+export function worryScore(person, action, time, world, stress) // the check action's score term, from the belief only
+```
+- A belief is plain JSON: `{ value, seenAt, source, drifted }` (`drifted`: pounds of bias drift
+  since the last check, for `maxDrift`). Stored as `person.beliefs[subjectId]`.
+- `setupBeliefs`: for each subject, skip it if `truthOf` is `null` (a world without money). For
+  each person matching `who` (`each`, or `adults` = `age >= 18`): belief = `{ value: truth,
+  seenAt: world.time, source: 'known at the start', drifted: 0 }`. People the subject is not for
+  get no belief (and `person.beliefs = {}` is still set, so the code never meets `undefined`).
+- `checkSubject`: sets the belief exactly to `truthOf`, `seenAt = world.time`,
+  `source = check.source`, `drifted = 0`. Returns `check.logText` with `{value}` replaced by
+  `pounds(value)` (import `pounds` from `household.js`).
+- `noticeFlow`: for each subject listing `flowId` in `noticed`, with `stockId` in its `plus`
+  (add `applied`) or `minus` (subtract it), for each person holding that belief:
+  `value = cents(value ± applied)`. `seenAt` and `source` stay. If `applied` is 0, do nothing.
+- `driftBeliefs`: for each person and belief, if `beliefAgeHours ≥ drift.afterHours`:
+  `step = drift.perDayPerPoint × (5 − anxious) / 24`; clamp so `|drifted + step| ≤ maxDrift`;
+  `value = cents(value + step)`, `drifted = cents(drifted + step)`. Anxious 5: no change.
+- `worryScore` (only for actions with `observes`, and only when the person holds that belief;
+  else 0): with `b` the belief and `c` its subject's `check`:
+  `term = beliefAgeHours(b, time) / 24 × c.perDayOld + (b.value < c.worryBelow ? c.lowBonus : 0)`,
+  then `× (1 + stress / c.stressPer)`. It reads the belief and the person's stress only.
+
+#### Step 3. Hooks
+**`src/sim/household.js`**: right after each `change()` on a flow's stock, if `world.beliefs`
+exists, call `noticeFlow(world, flow.id, flow.stock, applied)`. Three places: the mortgage in
+`payMortgage` (the `applied` on `acct.joint`, not the capital line on `debt.mortgage`), the
+other dated flows in `runFlowsForRule`, and `runWeeklyFlows`. Return values and log lines stay
+as they are.
+
+**`src/sim/wellbeing.js`** `matchesFor` / `applyCouplings`: before working out a rule's matches,
+pick its condition: if `world.beliefs` exists use `rule.if`, else `rule.ifNoBeliefs ?? rule.if`.
+New condition type: `{ "belief": "<subjectId>", "below" | "above": n }` → the person's
+`beliefs[subjectId]`; `null` (skip the rule) if they have no such belief; else 1 or 0. Never
+call `truthOf` here.
+
+**`src/sim/world.js`**:
+1. `createWorld({ …, beliefs = null })`: after `setupMoney` and `setupWellbeing`, if `beliefs` is
+   given call `setupBeliefs(world, beliefs)`.
+2. `step(world)`: at each whole game hour, **before** the couplings block:
+   `if (world.beliefs && world.time % 60 === 0) driftBeliefs(world);` (so the couplings see
+   the drifted belief that hour).
+3. `scoreAction(person, action, hour, stress = 0, cfg = null, ctx = null)`: `ctx` is
+   `{ time, world }` or `null`. Add `worryScore(...)` to the score **after** `base` and the need
+   terms and **before** `traitFit` (so `likes.anxious` scales it). With `ctx` null, an action
+   with `observes` scores exactly as now (0, so it is never chosen). `decide` passes
+   `{ time: world.time, world }` only when `world.beliefs` exists.
+4. `decide`, anywhere actions: if `action.anywhere`, the best spot is
+   `{ item: null, sq: person.at, d: 0 }` (no furniture search). The activity then starts with
+   `path: [person.at]` and phase `'do'` at once, as any choice with a one-square path does.
+5. `stepPerson`, observation: when an activity in phase `'do'` reaches `minutesLeft <= 0` and its
+   action has `observes`, call `checkSubject(world, person, action.observes)` and write the
+   returned text as a line by that person (`say`), **before** clearing the activity.
+6. Why trace: when the chosen action has `observes` and the person holds that belief, add
+   `why.belief = { subject, thinks: b.value, checkedHoursAgo: round1(age), really: truthOf(...) }`.
+   `really` is for the build-time view only (rule 4 allows it here: it is written after the
+   choice and never feeds a score).
+
+#### Step 4. Save format version 5 (`src/sim/save.js`)
+- `SAVE_VERSION = 5`; `READABLE_VERSIONS = [1, 2, 3, 4, 5]`.
+- `toSave`: per person `beliefs: clone(p.beliefs)` when `world.beliefs` exists. The subjects come
+  from data, not the save.
+- `fromSave(save, data)` takes `beliefs` in `data` and passes it to `createWorld`. For version 5,
+  restore each person's `beliefs`. For versions below 5, keep what `setupBeliefs` made at load
+  time (belief = the loaded truth, `seenAt` = the save's time, source `known at the start`).
+  **Order matters:** `createWorld` runs `setupBeliefs` with the data's starting money, and the
+  loader then replaces the stocks with the saved ones. So for versions below 5, call
+  `setupBeliefs` again **after** the stocks are restored (or set each belief from `truthOf`
+  there). A test checks the loaded belief equals the saved money (test 13).
+
+#### Step 5. Panel and page (watch only)
+- `src/main.js`: add `'beliefs.json'` to the list it fetches and pass it in `data`.
+- `src/ui/panel.js`: under the stress row (only while `SHOW_WHY` is on, because it shows the
+  truth): `Thinks joint account £2,140 (checked 5 h ago) · really £1,860`. Only when the person
+  holds the belief.
+- `whyText`: when `why.belief` is set, add `money: thinks £2,140 (checked 5 h ago), really £1,860`.
+- No change to the house view or the face. The Household block keeps showing the true balances:
+  that is the player's view, not a person's.
+
+#### Step 6. Replay harness (`tools/replay/`)
+- `load.js`: also load `beliefs.json` (inside `data`).
+- New probe **beliefs** (`since: 'L5'`), added to `DEFAULT_PROBES` after `wellbeing`. Read only;
+  it may call `truthOf` (rule 4).
+  - `minute`: per person and belief: `gap = value − truth`; keep sum of `|gap|`, sum of `gap`,
+    max `|gap|`, max age in hours, count; check `Number.isFinite(value)` and `seenAt <= world.time`.
+    If `seenAt === world.time` and `source` is the subject's `check.source`, record whether
+    `|gap| < 0.005` (the check was exact). Count the person's new log lines that start with the
+    check text up to `{value}` ("Checked the bank app"), as checks.
+  - `year` / `end`: per person and subject `{ meanAbsGap, meanGap, maxAbsGap, maxAgeHours, checks }`
+    (pounds to the penny, hours to one decimal).
+- New invariants in `checks.js` (add the ids to `INVARIANTS`, making 14):
+  - `beliefFinite`: every belief value seen is a finite number.
+  - `beliefSeenAtPast`: `seenAt` is never later than the current time.
+  - `checkExact`: every check left the belief equal to the truth to the penny.
+- New warnings in `runMany`:
+  - no seed has any check → *"Nobody checked the bank app: the check action never wins (a bug, or the worry score is too low)."*
+  - any seed with more than `warnChecksPerDay` checks per game day → *"Seed N: X checks a day: check for a loop."*
+  - every seed's `maxAbsGap` under £1 → *"Beliefs always matched the truth: the unnoticed flows are not working."*
+- `across.beliefs`: `{ meanAbsGapRange: [lowest, highest], maxAbsGap, checksPerDayRange: [lowest, highest] }` (the first person, Sarah).
+- `summary.js`: one new line after the stress line, for example
+  `Beliefs (Sarah, joint account): mean gap £120–£310; largest £1,240; checks a day 0.8–2.4`
+  (figures here show the layout, not expected values).
+
+#### Step 7. Tests
+Keep each new file under about 5 seconds. Build worlds **with** money, wellbeing, couplings and
+beliefs (load them as `tests/wellbeing.test.js` does, plus `stocks.json`, `tax.json`,
+`flows.json` as `tests/household.test.js` does). Tests may set values directly to force a case.
+
+`tests/beliefs.test.js` (new):
+1. **Setup:** Sarah (adult) has `beliefs['money.joint']` equal to `truthOf` (£2,500 at the start),
+   `seenAt` = start time, source `known at the start`. A world without `beliefs` has no
+   `world.beliefs` and `person.beliefs` is undefined. A world with beliefs but no money has
+   `person.beliefs = {}`.
+2. **Truth:** with £300 in the joint account and £0 overdraft, `truthOf` is 300; with £0 and £150
+   overdraft, −150.
+3. **Unnoticed change:** `change(world, 'acct.joint', −500, 'test')`: the truth falls by 500; the
+   belief does not move.
+4. **Noticed and unnoticed flows:** call `runFlowsForRule(world, 'mortgage')`: the belief falls by
+   the mortgage payment (£1,339.23). `runFlowsForRule(world, 'bills20')` (broadband and phones):
+   the belief does not move. `runWeeklyFlows` at 10:00: the belief falls by the food amount only.
+5. **Checking:** force Sarah into `checkBank` in phase `do` with `minutesLeft: 1`, belief £9,999:
+   after one `step`, belief = truth, `seenAt = world.time`, source `checked the bank app`, and the
+   log has `Checked the bank app: £2,500.00 in the joint account` (use the real truth).
+   Interrupted before the end (set `activity = null` with `minutesLeft: 2` left): nothing observed.
+6. **Bias drift:** two worlds, Sarah anxious 10 and anxious 0, same belief, `seenAt` 2 game days
+   ago: after 24 calls of `driftBeliefs`, the first fell by £75 and the second rose by £75 (to the
+   penny); anxious 5 did not move; a belief 2 hours old does not drift; after 400 calls the
+   total drift stops at `maxDrift` (£1,000).
+7. **Anywhere action:** when `checkBank` is chosen, the activity's `item` is `null`, its `path` has
+   one square and its phase is `do` at once; Sarah does not move.
+8. **Couplings read beliefs, not the truth:** truth £5,000, belief £100 → after `applyCouplings`
+   `pushes.lowBalance` is 20. Truth £100 (and overdrawn), belief £5,000 → no `lowBalance` or
+   `overdrawn` push. In a world **without** beliefs the L4 behaviour holds (the existing L4 test 5
+   passes unchanged).
+9. **Worry score:** without `ctx`, `scoreAction(sarah, checkBank, 12)` is 0. With beliefs: 0 at
+   age 0; `1.5 × fit` at 24 h old; adds `3 × fit` when the belief is under £1,000; at stress 50
+   it is ×1.5; anxious 10 scores 3× anxious 0. The score does not change when only the truth
+   changes (set the truth to £0: same score).
+10. **Why trace:** a decision that picks `checkBank` has `why.belief` with `thinks`,
+    `checkedHoursAgo` and `really`; `whyText` contains `money: thinks £`.
+11. **Same seed, same two days** with all the new data: logs, needs, stocks and beliefs equal.
+12. **No random numbers:** `world.rng.getState()` is the same before and after `driftBeliefs`,
+    `noticeFlow` and `checkSubject`.
+13. **Save version 5:** saved after 2,000 minutes and loaded, the game carries on equal to the
+    live one for 3,000 more (log, stocks, beliefs). A version 4 save (delete `beliefs` from each
+    person, `version: 4`) loads with belief = the saved money's truth and `seenAt` = the save's
+    time (not the £2,500 start money).
+
+`tests/replay.test.js` (add):
+14. Seeds 1 and 2, one year: every invariant passes, including the three new ones; the joint
+    account still ends at **£19,862.96** (beliefs do not move money); each seed has at least one
+    check per 2 game days and no more than `warnChecksPerDay` a day.
+15. `checkExact`, `beliefFinite` and `beliefSeenAtPast` fail on hand-made bad input with a
+    useful detail.
+
+All other old tests must pass **unchanged** (they build worlds without `beliefs`). The only old
+test edited is the furniture one (rule 3).
+
+#### Step 8. Check and docs
+1. `npm test`: everything passes.
+2. `node tools/replay.js --seeds 20 --years 10`. **Expected:** all 14 invariants pass; money as
+   before (seed 1 joint £159,759.25); checks about 0.7 to 2.5 a game day (calm people less,
+   anxious more); mean gap a few hundred pounds, the belief above the truth on average (unnoticed
+   spending), less so for anxious seeds (their drift runs the other way). `lowBalance` and
+   `overdrawn` should now hold **less** than in L4 (3 hours a seed), maybe never: on game day 2 her
+   belief misses the unnoticed spending, so she may think she is above £200 while she is
+   overdrawn. Report the count; either result is correct. Old warnings stay. If anything else
+   shows up (no checks, more than 6 checks a day, a failed invariant), stop and tell the user
+   before changing code. Note the run time (L4: 105 s).
+3. Open the page (`python3 -m http.server 8000`, `?fresh=1`): Sarah checks her phone where she
+   stands; the log shows `Checked the bank app: …`; the panel shows the `Thinks … · really …`
+   line; the why line shows `money: thinks …`. The house view does not change, but take the
+   HOUSE_VIEW screenshots anyway to show she stands still while checking (no walk, no sprite
+   glitch with `item: null`).
+4. Docs (CLAUDE.md "After every change"): STATUS (what was built, the summary's first lines,
+   the new coupling counts), DECISIONS (the world-test edit, anything decided while building),
+   ROADMAP (tick L5), ARCHITECTURE (`src/sim/beliefs.js`, `data/beliefs.json`, save v5,
+   `tests/beliefs.test.js`, 14 invariants), SIMULATION section 0 (beliefs, observations, the worry
+   score, couplings reading beliefs), this section's heading to "built" with an "As built" note.
+5. Commit and push to `main` (no branches), then copy the changed docs to the Project.
+
+#### What this step does not do
+No noisy observations and no `world.rngs` (Phase 2, conversations: "Tom said"). No beliefs about
+anything but the joint account (jobs, prices, other people come with L8–L11). No transfers or
+spending changes driven by belief (L8: who moves money). No letters as objects in the house, no
+phone sprite. Tom, Oliver and Ruby are not added (L7). The player's Household block still shows
+the truth.
+
+#### Choices in this brief for the user to approve or change
+1. One subject only: the joint account less the overdraft.
+2. What Sarah notices: pay, mortgage, council tax, energy, water, insurance, food. Not noticed:
+   everyday spending, clothing, phones, broadband, subscriptions, Oliver's club.
+3. Checking is an anywhere action of 3 minutes, at most every 4 game hours, 07:00–23:00, and it
+   needs the one-line change to the furniture test.
+4. Drift ±£15 a game day per anxious point from 5, after a day without checking, capped at £1,000.
+5. Worry score: 1.5 a day of age, +3 when she thinks the account is under £1,000, ×(1 + stress/100),
+   ×0.5 to ×1.5 by anxious trait.
+6. The two money couplings read the belief from L5 on (L4's true-value conditions stay only for
+   worlds without beliefs).
 
 ---
 

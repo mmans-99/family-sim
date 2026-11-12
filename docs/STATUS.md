@@ -3,7 +3,14 @@
 **Update this at the end of every session.**
 
 ## Current phase
-Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money), L3 (replay harness) and L4 (couplings, stress, sleep debt, interruptions) are built. Next is L5 (beliefs and observations): not yet written up; it needs a brief and the user's approval first.
+Phase 1 is complete: Sarah (Mum) has needs, picks what to do, walks the house, uses the furniture, runs her bath, has a personality that changes her choices, and the game is saved in the browser and caught up when reopened (step L0 of LIFE_SYSTEMS.md). L1 (calendar) is built. The landscape full-screen view and edge scenery are built. L2 (stock engine and household money), L3 (replay harness) and L4 (couplings, stress, sleep debt, interruptions) are built. Next is L5 (beliefs and observations): the brief is written (LIFE_SYSTEMS 4e) and waits for the user's approval.
+
+## Latest (2026-11-12) — L5 brief written (docs only)
+- **L5 brief** is in `docs/LIFE_SYSTEMS.md` 4e, written for another model to code: `data/beliefs.json` (one subject, the joint account less the overdraft), a `checkBank` anywhere action in `data/actions.json`, the two money couplings reading the belief (`ifNoBeliefs` keeps L4's rule for worlds without beliefs), new `src/sim/beliefs.js`, hooks in `household.js`, `wellbeing.js` and `world.js`, save version 5, a panel line ("Thinks … · really …", build-time only), a beliefs probe and three invariants in the harness, 15 tests. **No code written.**
+- **How it works:** checking the bank app makes the belief exact; noticed money events (pay, mortgage, big bills, food) move it; the rest goes unnoticed; old beliefs drift down for anxious people and up for calm ones; the urge to check grows with the belief's age. No random numbers.
+- **Measured while writing it:** the joint account dips under £200 only once (game day 2, 3 hours, to −£347, mortgage before pay). Unnoticed spending is about £280 a game day (£7,908 a year with food noticed), so the belief runs above the truth between checks. Sarah's decision scores have a median of 1.7, so a check scoring just over 1 wins most free moments.
+- **For the user to approve or change:** the six choices listed at the end of 4e, including one edit to an old test (the "every action has furniture" test must skip anywhere actions).
+- The two L4 deviations are still open; L5 changes the second one (money couplings will read beliefs).
 
 ## Latest (2026-11-12) — L4 built (stress, sleep debt, couplings, interruptions)
 - **Built on the user's approval** ("L4, build it"), following the brief in `docs/LIFE_SYSTEMS.md` 4d. New: `src/sim/wellbeing.js`, `data/wellbeing.json`, `data/couplings.json`. Changed: `src/sim/stocks.js` (`setTarget`, `stepStocks`, lag fields), `src/sim/world.js` (hourly hook, interruptions, mood and stress penalty in the score, `why` trace), `src/sim/save.js` (save version 4, reads 1 to 4), `src/render/people.js` (face uneasy at stress 60), `src/ui/panel.js` (stress and sleep debt rows, `Stopped …` in the why line), `src/main.js` (loads the two new files), `data/actions.json` (`kind`, `countsAsSleep`), `data/replay.json`, and the harness (`tools/replay/` gets a `wellbeing` probe and four invariants; the summary gets a stress line).
@@ -285,7 +292,7 @@ The user asked for the project to be read and the house view fixed. The view was
 
 ## Next step
 1. User decides on the two L4 deviations above (low needs never seen hourly; the money couplings holding a few hours), and checks the stress row and the face on a real phone and in screenshots.
-2. Write the L5 brief (beliefs and observations, LIFE_SYSTEMS 4c), get approval, then build it.
+2. User approves the L5 brief (LIFE_SYSTEMS 4e) and its choices, or changes them; then build it (any model can follow the brief).
 3. User checks the Household block on a real phone (sideways and upright).
 4. User checks the landscape view and the new street on a real phone; decide the portrait minimap overlap on "Show all" (DECISIONS, OPEN).
 5. Source the school term dates (needed before L6/L7).
