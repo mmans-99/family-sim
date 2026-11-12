@@ -10,7 +10,7 @@ file's section 1 (rules) and the section for the step you are building. Read
 
 **Status of this plan:** written 2026-11-11. L0 is built (save/load, random streams). L1 is built
 (calendar). L2 is built (money, 2026-11-11; see 3a "as built"), with the mapping approved by the user on 2026-11-11 and the refinements listed in
-the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). L4 (stress, sleep debt, couplings, interruptions) is built (2026-11-12; see 4d "as built"). L5 (beliefs and observations) has a detailed brief in 4e, not built yet. Each later step must be approved by the user before its code is written
+the section 2 note below. L3 (replay harness) is built (2026-11-11; see 15a "as built"). L4 (stress, sleep debt, couplings, interruptions) is built (2026-11-12; see 4d "as built"). L5 (beliefs and observations) is built (2026-11-12; see 4e "as built"). Each later step must be approved by the user before its code is written
 (CLAUDE.md rule). Tick the matching item in `docs/ROADMAP.md` when a step is finished.
 
 ---
@@ -882,7 +882,10 @@ No obligations (L6), no beliefs (L5), no other family members (L7), no change to
 family does not spend less when stressed: that is behaviour for L5/L8), no stress turning points in
 the harness (turning points stay money-only until a stress shock exists), no thought bubbles.
 
-### 4e. L5 build brief: beliefs and observations (written 2026-11-12; not built, waiting for the user's approval)
+### 4e. L5 build brief: beliefs and observations (written 2026-11-12; approved and built 2026-11-12)
+
+**As built.** Steps 1 to 8 are done, with the files in Step 1 to 6. The user approved the six choices below as written ("Code l5", then "Yes sure.. Just use those"). Where the build differs from this brief: beliefs are kept unrounded while they drift (so the drift adds up exactly); the panel line says "seen N h ago" because the starting belief was never checked; the why trace's need is `worry`. The one old test edited is the furniture test (anywhere actions skipped). The tests start at 08:00 because the 07:00 bills fire on the first minute (existing behaviour). Measured on 20 seeds × 10 years: all 14 invariants pass, money unchanged, checks 0.74 to 2 a game day. **Deviation, for the user to decide:** the two money couplings still held for about 60 game hours (`lowBalance`) and 51 (`overdrawn`) in total, where the brief expected fewer or none (see STATUS and DECISIONS 2026-11-12). Panel and house view checked in headless Chrome on desktop and phone portrait; the house view did not change.
+
 
 This is the exact plan for step L5. It is written so another model can build it without the
 chat history. It builds section **4c** (beliefs, the observation layer). Where this brief and 4c
@@ -1223,7 +1226,7 @@ spending changes driven by belief (L8: who moves money). No letters as objects i
 phone sprite. Tom, Oliver and Ruby are not added (L7). The player's Household block still shows
 the truth.
 
-#### Choices in this brief for the user to approve or change
+#### Choices in this brief (approved 2026-11-12 as written)
 1. One subject only: the joint account less the overdraft.
 2. What Sarah notices: pay, mortgage, council tax, energy, water, insurance, food. Not noticed:
    everyday spending, clothing, phones, broadband, subscriptions, Oliver's club.

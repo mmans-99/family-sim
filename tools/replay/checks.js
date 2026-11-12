@@ -5,6 +5,7 @@
 export const INVARIANTS = [
   'finite', 'limits', 'reconciles', 'ledgerComplete', 'mortgageFalls', 'calendarExact', 'needsInRange',
   'stressInRange', 'sleepDebtInRange', 'wellbeingReconciles', 'lagNoOvershoot',
+  'beliefFinite', 'beliefSeenAtPast', 'checkExact',
 ];
 
 const result = (id, ok, detail) => ({ id, ok, detail });
@@ -95,6 +96,26 @@ export function checkLagNoOvershoot({ stock, t, before, amount, target }) {
   const good = sameSign && within;
   return result('lagNoOvershoot', good,
     good ? '' : `${stock} at minute ${t} moved ${amount} from ${before} towards ${target} (gap ${gap})`);
+}
+
+// Every belief stays a real number. problem is the first one the probe found (null when none).
+export function checkBeliefFinite({ problem }) {
+  const good = problem === null;
+  return result('beliefFinite', good, good ? '' : problem);
+}
+
+// No belief was seen at a time later than now. problem is the first one found (null when none).
+export function checkBeliefSeenAtPast({ problem }) {
+  const good = problem === null;
+  return result('beliefSeenAtPast', good, good ? '' : problem);
+}
+
+// Every check (the bank app) left the belief equal to the truth, to the penny. worstGap is the
+// largest gap the probe saw straight after a check.
+export function checkExact({ worstGap, checks }) {
+  const good = Math.abs(worstGap) < 0.005;
+  return result('checkExact', good,
+    good ? `${checks} checks, all exact` : `a check left the belief ${worstGap} pounds away from the truth`);
 }
 
 // One line per invariant for the report: ok only if every check of that id passed. The detail

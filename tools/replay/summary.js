@@ -33,6 +33,11 @@ export function textSummary(report) {
     lines.push(`Stress (Sarah): seed means ${w.stressMeanRange[0]}–${w.stressMeanRange[1]}; highest ${w.stressHighest}; `
       + `sleep debt max ${w.sleepDebtMax.toFixed(1)} h; interruptions ${w.interruptions}`);
   }
+  if (across.beliefs) {
+    const b = across.beliefs;
+    lines.push(`Beliefs (Sarah, joint account): mean gap ${pounds(b.meanAbsGapRange[0])}–${pounds(b.meanAbsGapRange[1])}; `
+      + `largest ${pounds(b.maxAbsGap)}; checks a day ${b.checksPerDayRange[0]}–${b.checksPerDayRange[1]}`);
+  }
   if (report.warnings.length) {
     lines.push('Warnings:');
     for (const w of report.warnings) lines.push(`- ${w}`);

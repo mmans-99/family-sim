@@ -4,6 +4,7 @@
 import { addStock, change, read } from './stocks.js';
 import { calendarDate, calendarSpan, dueOnGameDay, formatDate, gameDayDates } from './calendar.js';
 import { MINUTES_PER_DAY } from './clock.js';
+import { noticeFlow } from './beliefs.js';
 
 const cents = (x) => Math.round(x * 100) / 100;
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -115,6 +116,7 @@ function payMortgage(world, flow) {
   const interest = cents((balance * loan.rate) / 12);
   const payment = cents(Math.min(loan.payment, balance + interest));
   const applied = change(world, flow.stock, -payment, flow.name, { flow: flow.id, interest });
+  noticeFlow(world, flow.id, flow.stock, applied);
   const paid = -applied;
   const capital = cents(Math.min(balance, Math.max(0, paid - interest)));
   if (capital > 0) change(world, 'debt.mortgage', -capital, 'Capital repaid', { flow: flow.id, interest });
@@ -148,6 +150,7 @@ export function runFlowsForRule(world, ruleId) {
     } else {
       const requested = flowAmount(world, flow);
       const applied = change(world, flow.stock, requested, flow.name, flow.id);
+      noticeFlow(world, flow.id, flow.stock, applied);
       lines.push(logLine(flow, requested, applied));
     }
   }
@@ -164,6 +167,7 @@ export function runWeeklyFlows(world, minuteOfDay) {
   for (const flow of world.flows.filter((f) => f.every === 'calendarWeek' && f.hour * 60 === minuteOfDay)) {
     const requested = cents((flow.amount * days) / 7);
     const applied = change(world, flow.stock, requested, flow.name, flow.id);
+    noticeFlow(world, flow.id, flow.stock, applied);
     const short = cents(Math.abs(requested) - Math.abs(applied));
     const dates = gameDayDates(world.time, world.calendar.start);
     lines.push(short > 0.005

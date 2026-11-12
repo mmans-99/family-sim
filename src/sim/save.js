@@ -3,6 +3,7 @@
 // number generator's position, each person's state, and the log. Furniture is saved as its
 // index in data/house.json, so a loaded game must use the same house data.
 import { createWorld, step } from './world.js';
+import { setupBeliefs } from './beliefs.js';
 import { createRng } from './rng.js';
 import { advance, MINUTES_PER_YEAR } from './clock.js';
 
@@ -12,8 +13,10 @@ import { advance, MINUTES_PER_YEAR } from './clock.js';
 // and 2 still load: they get their money from the data, for the save's date (setupMoney).
 // Version 4 added stress, sleep debt and couplings (LIFE_SYSTEMS 4d). Version 3 still loads: its
 // stocks are merged into the new ones, so stress starts at its base and sleep debt at 0.
-export const SAVE_VERSION = 4;
-const READABLE_VERSIONS = [1, 2, 3, 4];
+// Version 5 added beliefs (LIFE_SYSTEMS 4c). Versions 1 to 4 still load: their beliefs start at the
+// truth as it is when the save is loaded (setupBeliefs), with the source "known at the start".
+export const SAVE_VERSION = 5;
+const READABLE_VERSIONS = [1, 2, 3, 4, 5];
 
 // Plain JSON copy (the world holds only plain data).
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -65,6 +68,8 @@ export function toSave(world, clock, savedAt) {
         sleepWindowStart: p.sleepWindowStart,
         noInterruptBefore: p.noInterruptBefore,
       } : {}),
+      // Beliefs (version 5), only in games that have them.
+      ...(world.beliefs ? { beliefs: clone(p.beliefs) } : {}),
     })),
     log: world.log.map((e) => ({ ...e })),
     calendar: { queue: world.calendar.queue.map((e) => ({ ...e })), fired: { ...world.calendar.fired } },
@@ -76,12 +81,12 @@ export function toSave(world, clock, savedAt) {
 
 // Rebuild the world from a save. Throws if the save is from another version or does not fit
 // the house data.
-export function fromSave(save, { house, actions, needs, people, calendar, money, wellbeing = null, couplings = null }) {
+export function fromSave(save, { house, actions, needs, people, calendar, money, wellbeing = null, couplings = null, beliefs = null }) {
   if (!READABLE_VERSIONS.includes(save?.version)) {
     throw new Error(`save version ${save?.version} is not one this game reads (${READABLE_VERSIONS.join(', ')})`);
   }
   const world = createWorld({
-    house, actions, needs, people, calendar, money, wellbeing, couplings, seed: save.seed, time: save.time,
+    house, actions, needs, people, calendar, money, wellbeing, couplings, beliefs, seed: save.seed, time: save.time,
   });
   if (save.calendar) {
     world.calendar.queue = save.calendar.queue.map((e) => ({ ...e }));
@@ -92,6 +97,8 @@ export function fromSave(save, { house, actions, needs, people, calendar, money,
     world.stocks = save.version >= 4 ? clone(save.stocks) : { ...world.stocks, ...clone(save.stocks) };
     world.loans = clone(save.loans);
   }
+  // Before version 5 there were no beliefs saved: they start at the truth the save holds now.
+  if (save.version < 5 && world.beliefs) setupBeliefs(world, world.beliefs);
   if (save.couplings && world.couplings) world.couplings.fired = { ...save.couplings.fired };
   world.rng = createRng(save.seed, save.rng);
   for (const s of save.people) {
@@ -103,6 +110,7 @@ export function fromSave(save, { house, actions, needs, people, calendar, money,
     p.lastDone = { ...s.lastDone };
     p.why = s.why ?? undefined;
     p.activity = s.activity ? decodeActivity(s.activity, world) : null;
+    if (s.beliefs !== undefined && world.beliefs) p.beliefs = clone(s.beliefs);
     if (s.rateTimes !== undefined && world.couplings) {
       p.rateTimes = { ...s.rateTimes };
       p.sleptMinutes = s.sleptMinutes;

@@ -14,7 +14,8 @@ import { findTurningPoints } from '../tools/replay/turning.js';
 import {
   checkFinite, checkLimits, checkReconciles, checkLedgerComplete, checkMortgageFalls,
   checkCalendarExact, checkNeedsInRange, checkStressInRange, checkLagNoOvershoot,
-  checkSleepDebtInRange, checkWellbeingReconciles, INVARIANTS,
+  checkSleepDebtInRange, checkWellbeingReconciles, checkBeliefFinite, checkBeliefSeenAtPast, checkExact,
+  INVARIANTS,
 } from '../tools/replay/checks.js';
 import { textSummary } from '../tools/replay/summary.js';
 
@@ -126,7 +127,7 @@ test('the wellbeing invariants can fail: out-of-range stress, an overshooting la
   assert.equal(checkLagNoOvershoot({ stock: 'stress.sarah', t: 9, before: 20, amount: 0.1, target: 25 }).ok, true);
   assert.equal(checkLagNoOvershoot({ stock: 'stress.sarah', t: 9, before: 20, amount: -0.1, target: 25 }).ok, false);
   assert.equal(checkWellbeingReconciles({ stock: 'stress.sarah', start: 20, end: 21, total: 0.5 }).ok, false);
-  assert.equal(INVARIANTS.length, 11);
+  assert.equal(INVARIANTS.length, 14);
 });
 
 test('stress rests near its base over a year (plus the occasional low-bladder push)', () => {
@@ -135,4 +136,24 @@ test('stress rests near its base over a year (plus the occasional low-bladder pu
     const mean = r.run.wellbeing.people.sarah.stress.mean;
     assert.ok(Math.abs(mean - base) <= 6, `seed ${r.seed}: mean ${mean} vs base ${base}`);
   }
+});
+
+test('the belief invariants can fail: a NaN belief, a belief seen in the future, a check that left a gap', () => {
+  assert.equal(checkBeliefFinite({ problem: null }).ok, true);
+  const nan = checkBeliefFinite({ problem: "Sarah's belief about the money.joint is NaN" });
+  assert.equal(nan.ok, false);
+  assert.match(nan.detail, /NaN/);
+  assert.equal(checkBeliefSeenAtPast({ problem: null }).ok, true);
+  assert.equal(checkBeliefSeenAtPast({ problem: 'seen at minute 900, after now (800)' }).ok, false);
+  assert.equal(checkExact({ worstGap: 0.001, checks: 20 }).ok, true);
+  const off = checkExact({ worstGap: 3.5, checks: 20 });
+  assert.equal(off.ok, false);
+  assert.match(off.detail, /3\.5/);
+});
+
+test('a year with beliefs: Sarah checks at least once every two game days, never more than the warning level', () => {
+  const block = first.report.run.beliefs.people.sarah['money.joint'];
+  assert.ok(block.checks >= 14, `checks: ${block.checks}`);
+  assert.ok(block.checksPerDay <= data.replay.beliefs.warnChecksPerDay, `checks a day: ${block.checksPerDay}`);
+  assert.ok(first.report.invariants.every((i) => i.ok));
 });

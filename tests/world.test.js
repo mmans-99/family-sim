@@ -34,6 +34,7 @@ test('the garden is reached through the back door', () => {
 test('every action has at least one piece of furniture it can be done at', () => {
   const house = load('house.json');
   for (const a of load('actions.json').actions) {
+    if (a.anywhere) continue; // done where the person stands, with no furniture by design (LIFE_SYSTEMS 4e)
     const items = house.furniture.filter((f) => f.name === a.object);
     assert.ok(items.some((i) => map.useSquares(i).length), a.id);
   }

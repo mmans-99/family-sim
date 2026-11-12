@@ -1,14 +1,14 @@
 {
-  "about": "Couplings (LIFE_SYSTEMS 3b, 4d): if a stock or need is past a level, push a stress target or change how fast a need drops. Checked once per game hour. who: each (every person) or adults (age 18 and over). {p} is the person's id. need 'any' counts each of the person's needs below the level; a named need counts 0 or 1. perMatch multiplies the push by the number of matches. All numbers are tuning.",
+  "about": "Couplings (LIFE_SYSTEMS 3b, 4d, 4c): if a stock, need or belief is past a level, push a stress target or change how fast a need drops. Checked once per game hour. who: each (every person) or adults (age 18 and over). {p} is the person's id. need 'any' counts each of the person's needs below the level; a named need counts 0 or 1. perMatch multiplies the push by the number of matches. belief: what the person thinks a subject is worth (data/beliefs.json), never the truth. ifNoBeliefs: the condition used in a world built without beliefs (the L4 behaviour). All numbers are tuning.",
   "tuning": true,
   "rules": [
     { "id": "lowNeeds", "who": "each", "if": { "need": "any", "below": 25 },
       "then": [ { "target": "stress.{p}", "add": 5, "perMatch": true } ] },
     { "id": "sleepDebt", "who": "each", "if": { "stock": "sleepdebt.{p}", "above": 6 },
       "then": [ { "target": "stress.{p}", "add": 15 }, { "need": "fun", "rateTimes": 1.4 }, { "need": "energy", "rateTimes": 1.2 } ] },
-    { "id": "lowBalance", "who": "adults", "if": { "stock": "acct.joint", "below": 200 },
+    { "id": "lowBalance", "who": "adults", "if": { "belief": "money.joint", "below": 200 }, "ifNoBeliefs": { "stock": "acct.joint", "below": 200 },
       "then": [ { "target": "stress.{p}", "add": 20 } ] },
-    { "id": "overdrawn", "who": "adults", "if": { "stock": "debt.overdraft", "above": 0 },
+    { "id": "overdrawn", "who": "adults", "if": { "belief": "money.joint", "below": 0 }, "ifNoBeliefs": { "stock": "debt.overdraft", "above": 0 },
       "then": [ { "target": "stress.{p}", "add": 15 } ] },
     { "id": "highStress", "who": "each", "if": { "stock": "stress.{p}", "above": 60 },
       "then": [ { "need": "comfort", "rateTimes": 1.2 } ] }

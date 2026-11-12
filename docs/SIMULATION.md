@@ -50,6 +50,17 @@ Code: `src/sim/wellbeing.js`, plus the hourly hook and the interruption rule in 
 - The face looks uneasy from stress 60. The panel shows stress and sleep debt under each person's needs.
 - Today's world rarely reaches these limits: no need falls under 10, sleep debt stays 0, and stress rests at base. They come alive with obligations and children (L6/L7) and money trouble (L9/L11).
 
+### Beliefs and observations (as built, L5)
+Code: `src/sim/beliefs.js`, plus the hooks in `src/sim/world.js` (the worry score, the anywhere action, the check at the end of the action, the hourly drift) and `src/sim/household.js` (noticed money). Data: `data/beliefs.json`, `data/actions.json` (`checkBank`), `data/couplings.json`.
+- **A belief** is what a person thinks the joint account holds (the account less the overdraft). It starts at the truth and changes only through observations. People decide from the belief, never from the truth.
+- **Checking** the bank app (`checkBank`, 3 minutes, done where she stands, at most every 4 game hours from 07:00 to 23:00) makes the belief exact and resets its age.
+- **Noticed money:** pay, the mortgage, council tax, energy, water, insurance, and the food shop move the belief by what was paid. Everyday spending, clothing, phones, broadband and subscriptions do not, so the belief drifts away from the truth between checks.
+- **Drift:** a belief older than a day slides down for anxious people (above 5) and up for calm ones, by £15 a day per point from 5, up to £1,000 in total since the last check.
+- **The worry score** for checking is 1.5 a day of age, +3 when she thinks the account is under £1,000, scaled up by stress. It reads the belief only. Anxious people worry about three times as much as calm ones.
+- **Couplings:** the low-balance and overdrawn stress pushes now read the belief. Without beliefs (an old save or a test world) they read the truth, as in L4.
+- **The panel** shows `Thinks … · really …` under Sarah's stress, and the why line says what she thinks; both are build-time views only.
+- Today Sarah checks about once a game day (0.7 to 2 across 20 seeds), and her belief sits on average £54 to £200 from the truth.
+
 ## Life-like world: where the plan lives
 The plan for everything beyond section 0 (calendar, stocks and ledgers, couplings,
 beliefs, households and invisible work, positions and firms, places and chance meetings,

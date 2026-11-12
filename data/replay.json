@@ -17,10 +17,6 @@
   "unpaidPrefix": "Could not pay",
   "notYet": [
     {
-      "what": "beliefs against the truth",
-      "step": "L5"
-    },
-    {
       "what": "other family members",
       "step": "L7"
     },
@@ -48,6 +44,10 @@
   "wellbeing": {
     "high": 60,
     "warnInterruptsPerDay": 6,
+    "tuning": true
+  },
+  "beliefs": {
+    "warnChecksPerDay": 6,
     "tuning": true
   }
 }

@@ -15,6 +15,9 @@ import { stepStocks } from './stocks.js';
 import {
   setupWellbeing, applyCouplings, settleSleep, moodFactor, stressPenalty, stressId,
 } from './wellbeing.js';
+import {
+  setupBeliefs, checkSubject, driftBeliefs, worryScore, truthOf, beliefAgeHours,
+} from './beliefs.js';
 
 export const WALK_SQUARES_PER_MINUTE = 8; // about 1.3 squares a real second at 1x: easy to follow
 const TOP_CHOICES = 3;    // pick among this many best-scoring actions
@@ -55,7 +58,7 @@ const DEFAULT_CALENDAR = { start: { year: 2026, month: 3, day: 1 }, rules: [] };
 
 export function createWorld({
   house, actions, needs, people, calendar = DEFAULT_CALENDAR, money = null, seed = 1, time = 7 * 60,
-  wellbeing = null, couplings = null,
+  wellbeing = null, couplings = null, beliefs = null,
 }) {
   const map = buildMap(house);
   const world = {
@@ -92,6 +95,8 @@ export function createWorld({
     if (!wellbeing || !couplings) throw new Error('wellbeing and couplings must be given together');
     setupWellbeing(world, wellbeing, couplings);
   }
+  // Beliefs (LIFE_SYSTEMS 4c): opt-in. What people think about the money, starting at the truth.
+  if (beliefs) setupBeliefs(world, beliefs);
   queueDay(world, true); // a game that starts mid-day does not fire the events that already passed
   return world;
 }
@@ -147,7 +152,9 @@ export function allowed(person, action, time) {
 }
 
 // How much an action is worth to this person right now, before travel.
-export function scoreAction(person, action, hour, stress = 0, cfg = null) {
+// ctx ({ time, world }) is given only in a world with beliefs: it adds the worry score for actions
+// that check a subject (LIFE_SYSTEMS 4c). Without it such an action scores 0 and is never chosen.
+export function scoreAction(person, action, hour, stress = 0, cfg = null, ctx = null) {
   let score = action.base ?? 0;
   for (const [need, gain] of Object.entries(action.gain)) {
     const now = person.needs[need] ?? 100;
@@ -155,6 +162,7 @@ export function scoreAction(person, action, hour, stress = 0, cfg = null) {
     const urgency = ((100 - now) / 100) ** 2;    // low needs matter much more
     score += useful * urgency;
   }
+  if (ctx && action.observes) score += worryScore(person, action, ctx.time, ctx.world, stress);
   score *= traitFit(person.personality, action.likes);
   if (action.hours && !inHours(hour, action.hours)) score *= action.offHours ?? 0;
   // Stress (LIFE_SYSTEMS 4b): stressed people enjoy fun less and chores slide. Only with cfg.
@@ -188,20 +196,26 @@ function decide(world, person, onlyFor = null) {
   const { dist, prev } = map.distances(person.at);
   const cfg = world.wellbeing ?? null;
   const stress = cfg ? (world.stocks[stressId(cfg, person.id)]?.value ?? 0) : 0;
+  const ctx = world.beliefs ? { time: world.time, world } : null;
 
   const options = [];
   for (const action of world.actions) {
     if (onlyFor && !(action.gain[onlyFor] > 0)) continue;
     if (!allowed(person, action, world.time)) continue;
-    const base = scoreAction(person, action, hour, stress, cfg);
+    const base = scoreAction(person, action, hour, stress, cfg, ctx);
     if (base <= 0) continue;
-    // The nearest piece of furniture of the right kind that can be reached.
     let best = null;
-    for (const item of world.house.furniture.filter((f) => f.name === action.object)) {
-      for (const sq of map.useSquares(item)) {
-        const d = dist.get(sq);
-        if (d === undefined) continue;
-        if (!best || d < best.d) best = { item, sq, d };
+    if (action.anywhere) {
+      // Done where the person stands, with no furniture (checking the bank app).
+      best = { item: null, sq: person.at, d: 0 };
+    } else {
+      // The nearest piece of furniture of the right kind that can be reached.
+      for (const item of world.house.furniture.filter((f) => f.name === action.object)) {
+        for (const sq of map.useSquares(item)) {
+          const d = dist.get(sq);
+          if (d === undefined) continue;
+          if (!best || d < best.d) best = { item, sq, d };
+        }
       }
     }
     if (!best) continue;
@@ -246,7 +260,8 @@ function decide(world, person, onlyFor = null) {
     const why = {
       chosen: pick.action.label,
       reason: 'need',
-      need: dominantNeed(person, pick.action) ?? 'routine', // chores have no need, only a base score
+      // A check is driven by worry about the money, not by a need (dominantNeed would say routine).
+      need: pick.action.observes ? 'worry' : (dominantNeed(person, pick.action) ?? 'routine'), // chores have no need, only a base score
       needs: snapshotNeeds(person),
       score: Math.round(pick.score * 10) / 10,
       squares: pick.d,
@@ -259,6 +274,16 @@ function decide(world, person, onlyFor = null) {
       why.stress = Math.round(stress);
       if (pick.mood !== 1) why.mood = Math.round(pick.mood * 100) / 100;
       if (pick.penalty > 0) why.penalty = Math.round(pick.penalty * 10) / 10;
+    }
+    // What they think the money is, and (build-time view only, never used for a choice) what it really is.
+    const belief = pick.action.observes ? person.beliefs?.[pick.action.observes] : null;
+    if (belief) {
+      why.belief = {
+        subject: pick.action.observes,
+        thinks: Math.round(belief.value * 100) / 100,
+        checkedHoursAgo: Math.round(beliefAgeHours(belief, world.time) * 10) / 10,
+        really: truthOf(world, pick.action.observes),
+      };
     }
     person.lastDone[pick.action.id] = world.time;
     person.why = why;
@@ -353,6 +378,11 @@ function stepPerson(world, person) {
   if (world.wellbeing && (a.action.sleep || a.action.countsAsSleep)) person.sleptMinutes += 1;
   a.minutesLeft -= 1;
   if (a.minutesLeft <= 0) {
+    // A check (LIFE_SYSTEMS 4c): finishing the action makes the belief exact, and says so.
+    if (a.action.observes && world.beliefs) {
+      const text = checkSubject(world, person, a.action.observes);
+      if (text) say(world, person, text);
+    }
     if (a.next) {
       // The prelude is done: go straight on to the real action, at the same furniture.
       person.activity = {
@@ -373,6 +403,8 @@ export function step(world) {
   for (const line of runWeeklyFlows(world, world.time % MINUTES_PER_DAY)) houseLog(world, line);
   // Once per game hour (not per minute): couplings set the targets, lagged stocks move towards
   // them, and at checkHour each person's sleep is counted (LIFE_SYSTEMS 3b, 4d).
+  // Old beliefs drift once per game hour, before the couplings read them (LIFE_SYSTEMS 4c).
+  if (world.beliefs && world.time % 60 === 0) driftBeliefs(world);
   if (world.couplings && world.time % 60 === 0) {
     applyCouplings(world);
     stepStocks(world, 1);

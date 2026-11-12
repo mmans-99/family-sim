@@ -5,8 +5,10 @@ import { calendarDate, formatDate, gameDayDates } from '../../src/sim/calendar.j
 import {
   checkFinite, checkLedgerComplete, checkMortgageFalls, checkLagNoOvershoot,
   checkStressInRange, checkSleepDebtInRange, checkWellbeingReconciles,
+  checkBeliefFinite, checkBeliefSeenAtPast, checkExact,
 } from './checks.js';
 import { stressId, sleepId } from '../../src/sim/wellbeing.js';
+import { truthOf, beliefAgeHours } from '../../src/sim/beliefs.js';
 
 const cents = (x) => Math.round(x * 100) / 100;
 const r1 = (x) => Math.round(x * 10) / 10;
@@ -431,4 +433,99 @@ const wellbeing = {
   },
 };
 
-export const DEFAULT_PROBES = [money, calendar, needs, actions, log, wellbeing];
+// 7. beliefs (since L5): how far each person's belief is from the truth, how old it is, and how
+// often they checked. Read only. This probe is the harness's one reader of the truth (truthOf), as
+// LIFE_SYSTEMS 4e rule 4 allows. The checks are made in end().
+const emptyBelief = () => ({ sumAbs: 0, sumGap: 0, maxAbs: 0, maxAge: 0, n: 0, checks: 0 });
+const beliefBlock = (t, days) => ({
+  meanAbsGap: t.n ? cents(t.sumAbs / t.n) : null,
+  meanGap: t.n ? cents(t.sumGap / t.n) : null,
+  maxAbsGap: cents(t.maxAbs),
+  maxAgeHours: r1(t.maxAge),
+  checks: t.checks,
+  checksPerDay: days ? Math.round((t.checks / days) * 100) / 100 : null,
+});
+
+const beliefs = {
+  id: 'beliefs',
+  since: 'L5',
+  start(world, ctx) {
+    if (!world.beliefs) return;
+    const keys = [];
+    for (const p of world.people) {
+      for (const subjectId of Object.keys(p.beliefs ?? {})) keys.push([p.id, subjectId]);
+    }
+    const st = (ctx.probe.beliefs = {
+      keys, run: {}, year: {}, worstCheck: 0, checkCount: 0, problem: null, future: null, results: [],
+      yChecks: {}, daysRun: 0, yDays: 0,
+    });
+    for (const [pid, sid] of keys) {
+      st.run[`${pid}|${sid}`] = emptyBelief();
+      st.year[`${pid}|${sid}`] = emptyBelief();
+    }
+  },
+  minute(world, ctx) {
+    const st = ctx.probe.beliefs;
+    if (!st) return;
+    for (const p of world.people) {
+      for (const [subjectId, b] of Object.entries(p.beliefs ?? {})) {
+        const key = `${p.id}|${subjectId}`;
+        if (!Number.isFinite(b.value) && !st.problem) st.problem = `${p.name}'s belief about the ${subjectId} is ${b.value}`;
+        if (b.seenAt > world.time && !st.future) st.future = `${p.name}'s belief about the ${subjectId} was seen at minute ${b.seenAt}, after now (${world.time})`;
+        const truth = truthOf(world, subjectId);
+        if (truth === null) continue;
+        const gap = b.value - truth;
+        const age = beliefAgeHours(b, world.time);
+        const subject = world.beliefs.subjects.find((s) => s.id === subjectId);
+        const isCheck = b.seenAt === world.time && b.source === subject.check.source;
+        for (const t of [st.run[key], st.year[key]]) {
+          t.sumAbs += Math.abs(gap);
+          t.sumGap += gap;
+          t.maxAbs = Math.max(t.maxAbs, Math.abs(gap));
+          t.maxAge = Math.max(t.maxAge, age);
+          t.n += 1;
+        }
+        if (isCheck) {
+          st.run[key].checks += 1;
+          st.year[key].checks += 1;
+          st.checkCount += 1;
+          st.worstCheck = Math.max(st.worstCheck, Math.abs(gap));
+        }
+      }
+    }
+  },
+  day(world, ctx) {
+    const st = ctx.probe.beliefs;
+    if (!st) return;
+    st.daysRun += 1;
+    st.yDays += 1;
+  },
+  year(world, ctx) {
+    const st = ctx.probe.beliefs;
+    if (!st) return undefined;
+    const out = { people: {} };
+    for (const [pid, sid] of st.keys) {
+      const key = `${pid}|${sid}`;
+      out.people[pid] ??= {};
+      out.people[pid][sid] = beliefBlock(st.year[key], st.yDays);
+      st.year[key] = emptyBelief();
+    }
+    st.yDays = 0;
+    return out;
+  },
+  end(world, ctx) {
+    const st = ctx.probe.beliefs;
+    if (!st) return undefined;
+    const people = {};
+    for (const [pid, sid] of st.keys) {
+      people[pid] ??= {};
+      people[pid][sid] = beliefBlock(st.run[`${pid}|${sid}`], st.daysRun);
+    }
+    st.results.push(checkBeliefFinite({ problem: st.problem }));
+    st.results.push(checkBeliefSeenAtPast({ problem: st.future }));
+    st.results.push(checkExact({ worstGap: st.worstCheck, checks: st.checkCount }));
+    return { people };
+  },
+};
+
+export const DEFAULT_PROBES = [money, calendar, needs, actions, log, wellbeing, beliefs];

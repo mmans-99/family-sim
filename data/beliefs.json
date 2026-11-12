@@ -1,0 +1,22 @@
+{
+  "about": "Beliefs (LIFE_SYSTEMS 4c, 4e): what people think a value is. truth: the stocks added (plus) and taken away (minus) to get the real value. who: each or adults (age 18 and over). noticed: flow ids (data/flows.json) the person hears about when they run; the belief moves by the amount applied. Any other change to the truth goes unnoticed until they check. drift: once a game hour, a belief older than afterHours moves by perDayPerPoint × (5 − anxious) ÷ 24 pounds, up to maxDrift pounds in total since the last check (anxious above 5 drifts down, below 5 up). check: the worry score for the action that observes this subject, and the log text when they check. All numbers are tuning.",
+  "tuning": true,
+  "subjects": [
+    {
+      "id": "money.joint",
+      "label": "joint account",
+      "who": "adults",
+      "truth": { "plus": ["acct.joint"], "minus": ["debt.overdraft"] },
+      "noticed": ["pay.tom", "mortgage", "counciltax", "energy", "water", "insurance.buildings", "insurance.contents", "food"],
+      "drift": { "afterHours": 24, "perDayPerPoint": 15, "maxDrift": 1000 },
+      "check": {
+        "source": "checked the bank app",
+        "logText": "Checked the bank app: {value} in the joint account",
+        "perDayOld": 1.5,
+        "worryBelow": 1000,
+        "lowBonus": 3,
+        "stressPer": 100
+      }
+    }
+  ]
+}

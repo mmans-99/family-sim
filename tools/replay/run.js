@@ -105,10 +105,23 @@ export function runSeedDetailed(data, { seed, years, probes = DEFAULT_PROBES, da
   }
   // The wellbeing probe's checks (its day-by-day ledger reads and its end-of-run checks).
   if (ctx.probe.wellbeing) results.push(...ctx.probe.wellbeing.results);
+  // The beliefs probe's end-of-run checks (LIFE_SYSTEMS 4e, Step 6).
+  if (ctx.probe.beliefs) results.push(...ctx.probe.beliefs.results);
 
   const warnings = [];
   const unpaid = run.log?.unpaid ?? 0;
   if (unpaid) warnings.push(`Seed ${seed}: ${unpaid} bill line(s) could not be paid in full`);
+  const checksPerDay = cfg.beliefs?.warnChecksPerDay;
+  if (run.beliefs && checksPerDay !== undefined) {
+    const days = years * DAYS_PER_YEAR;
+    for (const [pid, subjects] of Object.entries(run.beliefs.people)) {
+      for (const [sid, block] of Object.entries(subjects)) {
+        if (block.checks / days > checksPerDay) {
+          warnings.push(`Seed ${seed}: ${(block.checks / days).toFixed(1)} checks a day for ${pid} (${sid}): check for a loop.`);
+        }
+      }
+    }
+  }
   const perDay = cfg.wellbeing?.warnInterruptsPerDay;
   if (run.wellbeing && perDay !== undefined) {
     const days = years * DAYS_PER_YEAR;
@@ -179,6 +192,26 @@ export function runMany(data, { seeds, years, from = 1, daily = false, onSeed })
       id, reports.reduce((sum, r) => sum + (r.run.wellbeing.couplings[id] ?? 0), 0),
     ])),
   } : null;
+  // Beliefs across the seeds (Sarah and the joint account; she is the only adult so far).
+  const beliefOf = (r) => r.run.beliefs?.people?.[firstPerson(r)]?.['money.joint'];
+  const hasBeliefs = n > 0 && reports.every((r) => beliefOf(r));
+  const days = years * DAYS_PER_YEAR;
+  const gaps = hasBeliefs ? reports.map((r) => beliefOf(r).meanAbsGap) : [];
+  const perDay = hasBeliefs ? reports.map((r) => beliefOf(r).checks / days) : [];
+  const beliefsAcross = hasBeliefs ? {
+    meanAbsGapRange: [Math.min(...gaps), Math.max(...gaps)],
+    maxAbsGap: Math.max(...reports.map((r) => beliefOf(r).maxAbsGap)),
+    checksPerDayRange: [Math.round(Math.min(...perDay) * 100) / 100, Math.round(Math.max(...perDay) * 100) / 100],
+    checks: reports.reduce((sum, r) => sum + beliefOf(r).checks, 0),
+  } : null;
+  if (beliefsAcross) {
+    if (beliefsAcross.checks === 0) {
+      warnings.push('Nobody checked the bank app: the check action never wins (a bug, or the worry score is too low).');
+    }
+    if (reports.every((r) => beliefOf(r).maxAbsGap < 1)) {
+      warnings.push('Beliefs always matched the truth: the unnoticed flows are not working.');
+    }
+  }
   if (moneyIdentical && n > 1) {
     warnings.push('Every seed has the same money: nothing random touches money yet (expected until L9/L11).');
   }
@@ -215,6 +248,7 @@ export function runMany(data, { seeds, years, from = 1, daily = false, onSeed })
       singleCauseShare,
       turningPoints: points.length,
       ...(wellbeingAcross ? { wellbeing: wellbeingAcross } : {}),
+      ...(beliefsAcross ? { beliefs: beliefsAcross } : {}),
     },
     warnings,
     ok: reports.every((r) => r.invariants.every((i) => i.ok)),

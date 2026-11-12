@@ -3,6 +3,7 @@
 import { read } from '../sim/stocks.js';
 import { nextMoneyEvent, pounds } from '../sim/household.js';
 import { stressId, sleepId, stressLabel } from '../sim/wellbeing.js';
+import { truthOf, beliefAgeHours } from '../sim/beliefs.js';
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -29,15 +30,21 @@ export function whyText(person, world) {
   if (!w) return '';
   const needName = (id) => world.needDefs[id]?.label.toLowerCase() ?? id;
   const parts = [];
+  // What the money is thought to be, and what it really is (LIFE_SYSTEMS 4c). Build-time only.
+  if (w.belief) {
+    parts.push(`money: thinks ${pounds(w.belief.thinks)} (checked ${w.belief.checkedHoursAgo} h ago), really ${pounds(w.belief.really)}`);
+  }
   // An interruption (LIFE_SYSTEMS 4d) says what was stopped and why, first.
   const stop = w.interrupted
     ? `Stopped ${world.actions.find((a) => a.id === w.interrupted.action)?.label.toLowerCase() ?? w.interrupted.action}`
       + ` (${needName(w.interrupted.need)} ${w.interrupted.value}) · `
     : '';
   if (w.reason === 'need') {
-    const main = w.need === 'routine'
-      ? 'a household chore, no need involved'
-      : `lowest need: ${needName(w.need)} (${w.needs[w.need]})`;
+    const main = w.need === 'worry'
+      ? 'worried about the money'
+      : w.need === 'routine'
+        ? 'a household chore, no need involved'
+        : `lowest need: ${needName(w.need)} (${w.needs[w.need]})`;
     parts.push(main, `score ${w.score}`);
     if (w.fit !== undefined && w.fit !== 1) parts.push(`personality ×${w.fit}`);
     if (w.stress !== undefined) parts.push(`stress ${w.stress}`);
@@ -64,6 +71,15 @@ function wellbeingRows(world, p) {
     + `<span class="track"><span class="fill" style="width:${v}%;background:${colour}"></span></span>`
     + `<span class="num">${v}</span></div>`
     + `<div class="wb">Stress ${v} (${stressLabel(s.value, cfg)}) · Sleep debt ${d.value.toFixed(1)} h</div>`;
+}
+
+// What the person thinks the joint account holds, next to what it really holds (LIFE_SYSTEMS 4c).
+// Build-time only, like the why line: the player's view never shows the truth about a belief.
+function beliefRow(world, p) {
+  const belief = p.beliefs?.['money.joint'];
+  if (!belief || !SHOW_WHY) return '';
+  const hours = Math.round(beliefAgeHours(belief, world.time));
+  return `<div class="wb">Thinks joint account ${pounds(belief.value)} (seen ${hours} h ago) · really ${pounds(truthOf(world, 'money.joint'))}</div>`;
 }
 
 // Green when a need is met, amber when it is getting low, red when it is urgent.
@@ -113,6 +129,6 @@ export function renderPanel(el, world, roomName) {
     return `<div class="person"><div class="who"><b>${esc(p.name)}</b> (${esc(p.role)}, ${p.age})`
       + ` · ${esc(doingText(p))} · ${esc(roomName(world, p))}</div>`
       + `<div class="traits">${esc(traits)}</div>`
-      + `<div class="needs">${bars}${wellbeingRows(world, p)}</div>${why}<ol class="log">${lines}</ol></div>`;
+      + `<div class="needs">${bars}${wellbeingRows(world, p)}${beliefRow(world, p)}</div>${why}<ol class="log">${lines}</ol></div>`;
   }).join('');
 }

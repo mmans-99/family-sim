@@ -55,11 +55,18 @@ const whoMatches = (who, person) => who === 'each' || (who === 'adults' && perso
 // is then skipped), otherwise a count. A need condition counts each need below the level ('any')
 // or 0/1 for one named need; a stock condition is 1 or 0.
 function matchesFor(world, cond, person) {
+  const test = (v) => (cond.below !== undefined ? v < cond.below : true)
+    && (cond.above !== undefined ? v > cond.above : true);
   if (cond.need !== undefined) {
-    const test = (v) => (cond.below !== undefined ? v < cond.below : true)
-      && (cond.above !== undefined ? v > cond.above : true);
     if (cond.need === 'any') return Object.values(person.needs).filter(test).length;
     return test(person.needs[cond.need] ?? 100) ? 1 : 0;
+  }
+  // A belief (LIFE_SYSTEMS 4c): what the person thinks the value is, never the truth. null when they
+  // hold no such belief, so the rule is skipped for them.
+  if (cond.belief !== undefined) {
+    const belief = person.beliefs?.[cond.belief];
+    if (!belief) return null;
+    return test(belief.value) ? 1 : 0;
   }
   const s = world.stocks[fill(cond.stock, person.id)];
   if (!s) return null;
@@ -70,7 +77,8 @@ function matchesFor(world, cond, person) {
 
 // Once per game hour: work out each person's pushes and rate multipliers from the couplings that
 // hold right now, then set the stress target. Rates are rebuilt every hour, so a coupling that
-// stops holding stops mattering at the next hour.
+// stops holding stops mattering at the next hour. In a world with beliefs a rule reads the belief
+// (rule.if); without beliefs it uses its true-value condition (rule.ifNoBeliefs), as in L4.
 export function applyCouplings(world) {
   const cfg = world.wellbeing;
   for (const person of world.people) {
@@ -78,7 +86,8 @@ export function applyCouplings(world) {
     const rateTimes = {};
     for (const rule of world.couplings.rules) {
       if (!whoMatches(rule.who, person)) continue;
-      const m = matchesFor(world, rule.if, person);
+      const cond = world.beliefs ? rule.if : (rule.ifNoBeliefs ?? rule.if);
+      const m = matchesFor(world, cond, person);
       if (m === null || m === 0) continue;
       world.couplings.fired[rule.id] = (world.couplings.fired[rule.id] ?? 0) + 1;
       for (const eff of rule.then) {
